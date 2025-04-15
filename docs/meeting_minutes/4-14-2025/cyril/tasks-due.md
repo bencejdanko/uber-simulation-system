@@ -20,3 +20,5 @@ For Monday, April 14th and Tuesday, April 15th, your key responsibilities are:
 *   Updated the development setup documentation for your services.
 
 Please communicate any blockers immediately, especially regarding schema input or common components.
+
+Database Schema Design Document: https://docs.google.com/document/d/1DCxZOrgkYZM8JHG530F7NIxGJahDr2l8iEL8D2LS75U/edit?usp=sharing
