@@ -1,87 +1,56 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
-// Driver interface
-export interface IDriver extends Document {
-  externalDriverId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role: 'driver';
-  status: 'available' | 'busy' | 'offline';
-  vehicle?: {
-    type: string;
-    make: string;
-    model: string;
-    year: number;
-    licensePlate: string;
-  };
-  rating?: number;
-  createdAt: Date;
-  updatedAt: Date;
+export interface Address {
+  street: string;
+  city: string;
+  state: string; // Valid US State Abbreviation or Full Name
+  zipCode: string; // Format: xxxxx or xxxxx-xxxx
 }
 
-// Define the schema
-const driverSchema = new Schema<IDriver>(
-  {
-    externalDriverId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    role: {
-      type: String,
-      enum: ['driver'],
-      default: 'driver',
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ['available', 'busy', 'offline'],
-      default: 'offline',
-    },
-    vehicle: {
-      type: {
-        type: String,
-        enum: ['economy', 'premium', 'suv', 'xl'],
-      },
-      make: String,
-      model: String,
-      year: Number,
-      licensePlate: String,
-    },
-    rating: {
-      type: Number,
-      min: 1.0,
-      max: 5.0,
-      default: 5.0,
-    },
-  },
-  { timestamps: true }
-);
+export interface CarDetails {
+  make: string;
+  model: string;
+  year: number;
+  color: string;
+  licensePlate: string;
+}
 
-// Create and export the model
-export const DriverModel = mongoose.model<IDriver>('Driver', driverSchema);
+export interface Review {
+  reviewId: string;
+  customerId: string; // SSN Format
+  rating: number; // 1-5
+  comment: string;
+  timestamp: string; // ISO 8601 Format
+}
 
-export default DriverModel;
+export interface Introduction {
+  imageUrl?: string; // URL
+  videoUrl?: string; // URL
+}
+
+export interface CurrentLocation {
+  latitude?: number;
+  longitude?: number;
+  timestamp?: string; // ISO 8601 Format
+}
+
+export interface RideHistory {
+  rideId: string;
+  date: string;
+  fare: number;
+}
+
+export interface Driver {
+  driverId: string; // SSN Format: xxx-xx-xxxx
+  firstName: string;
+  lastName: string;
+  address: Address;
+  phoneNumber: string;
+  email: string; // email format
+  carDetails: CarDetails;
+  rating?: number; // float, 1.0-5.0
+  reviews?: Review[];
+  introduction?: Introduction;
+  ridesHistory?: RideHistory[];
+  currentLocation?: CurrentLocation;
+  createdAt: string; // ISO 8601 Format
+  updatedAt: string; // ISO 8601 Format
+}
