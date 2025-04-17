@@ -7,10 +7,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "../../",
     "baseUrl": "./src",
     "paths": {
-      "*": ["node_modules/*", "*"]
+      "*": ["node_modules/*", "*"],
+      "@models/*": ["../../models/*"],
+      "@shared/*": ["../../libs/src/*"],
     }
   },
   "include": ["src/**/*"],

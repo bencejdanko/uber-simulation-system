@@ -8,7 +8,11 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@models/*": ["../../models/*"],
+      "@shared/*": ["../../libs/src/*"]
+    }
   },
   "include": ["src/**/*", "scripts/**/*", "config/**/*", "services/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]

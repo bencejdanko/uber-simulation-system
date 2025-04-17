@@ -1,5 +1,5 @@
-import { Driver } from '../models/driver.model';
-import { DriverInput, DriverUpdate, DriverLocationUpdate } from '../types/driver.types';
+import DriverModel from "@models/driver.model";
+import { Driver, DriverInput, DriverUpdate, DriverLocationUpdate } from '../types/driver.types';
 
 export class DriverService {
     private drivers: Driver[] = [];
