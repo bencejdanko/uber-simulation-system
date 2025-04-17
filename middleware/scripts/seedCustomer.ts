@@ -1,8 +1,11 @@
-require('dotenv').config();
-const connectDB = require('../config/db');
-const Customer = require('../services/models/customer.model');
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const seed = async () => {
+import connectDB from '../config/db';
+import Customer, { ICustomer } from '../services/models/customer.model';
+
+const seed = async (): Promise<void> => {
   try {
     await connectDB();
 
@@ -26,7 +29,7 @@ const seed = async () => {
     console.log('✅ Customer inserted');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding customer failed:', err.message);
+    console.error('❌ Seeding customer failed:', (err as Error).message);
     process.exit(1);
   }
 };

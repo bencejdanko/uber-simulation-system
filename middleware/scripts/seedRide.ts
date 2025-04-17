@@ -1,8 +1,11 @@
-require('dotenv').config();
-const connectDB = require('../config/db');
-const Ride = require('../services/models/ride.model');
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const seed = async () => {
+import connectDB from '../config/db';
+import Ride, { IRide } from '../services/models/ride.model';
+
+const seed = async (): Promise<void> => {
   try {
     await connectDB();
 
@@ -34,7 +37,7 @@ const seed = async () => {
     console.log('✅ Ride inserted');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding ride failed:', err.message);
+    console.error('❌ Seeding ride failed:', (err as Error).message);
     process.exit(1);
   }
 };

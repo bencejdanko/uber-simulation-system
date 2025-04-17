@@ -6,6 +6,14 @@
     "test": "tests"
   },
   "scripts": {
+    "seed": "ts-node scripts/seedBill.ts",
+    "seed:admin": "ts-node scripts/seedAdmin.ts",
+    "seed:bill": "ts-node scripts/seedBill.ts",
+    "seed:customer": "ts-node scripts/seedCustomer.ts",
+    "seed:driver": "ts-node scripts/seedDriver.ts",
+    "seed:review": "ts-node scripts/seedReview.ts",
+    "seed:ride": "ts-node scripts/seedRide.ts",
+    "seed:all": "npm run seed:admin && npm run seed:bill && npm run seed:customer && npm run seed:driver && npm run seed:review && npm run seed:ride",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +22,13 @@
   "description": "",
   "dependencies": {
     "dotenv": "^16.5.0",
-    "mongoose": "^8.13.2"
+    "mongoose": "^8.13.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
+    "path": "^0.12.7"
+  },
+  "packageManager": "pnpm@10.7.1+sha512.2d92c86b7928dc8284f53494fb4201f983da65f0fb4f0d40baafa5cf628fa31dae3e5968f12466f17df7e97310e30f343a648baea1b9b350685dafafffdf5808",
+  "devDependencies": {
+    "@types/node": "^22.14.1"
   }
 }

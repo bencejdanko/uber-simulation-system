@@ -1,8 +1,11 @@
-require('dotenv').config();
-const connectDB = require('../config/db');
-const Bill = require('../services/models/bill.model');
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const seed = async () => {
+import connectDB from '../config/db';
+import Bill, { IBill } from '../services/models/bill.model';
+
+const seed = async (): Promise<void> => {
   try {
     await connectDB();
 
@@ -34,7 +37,7 @@ const seed = async () => {
     console.log('✅ Bill inserted');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding bill failed:', err.message);
+    console.error('❌ Seeding bill failed:', (err as Error).message);
     process.exit(1);
   }
 };

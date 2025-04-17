@@ -1,10 +1,12 @@
 // ✅ Load environment variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const connectDB = require('../config/db');
-const Driver = require('../services/models/driver.model');
+import connectDB from '../config/db';
+import Driver, { IDriver } from '../services/models/driver.model';
 
-const seed = async () => {
+const seed = async (): Promise<void> => {
   try {
     console.log("🔌 Connecting using:", process.env.MONGODB_URI); // Debug check
 
@@ -39,7 +41,7 @@ const seed = async () => {
     console.log('✅ Driver inserted successfully!');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding failed:', err.message);
+    console.error('❌ Seeding failed:', (err as Error).message);
     process.exit(1);
   }
 };

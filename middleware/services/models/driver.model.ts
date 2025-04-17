@@ -1,6 +1,48 @@
-const mongoose = require('mongoose');
+import mongoose, { Document, Schema } from 'mongoose';
 
-const DriverSchema = new mongoose.Schema({
+// Define interface for driver document
+interface IDriverAddress {
+  street: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+}
+
+interface ICarDetails {
+  make: string;
+  model: string;
+  year: number;
+  color: string;
+  licensePlate: string;
+}
+
+interface IIntroduction {
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+interface ILocation {
+  type: string;
+  coordinates: number[];
+  timestamp: Date;
+}
+
+export interface IDriver extends Document {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  address: IDriverAddress;
+  carDetails: ICarDetails;
+  rating: number;
+  introduction: IIntroduction;
+  currentLocation: ILocation;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const DriverSchema = new Schema<IDriver>({
   _id: { type: String, match: /^\d{3}-\d{2}-\d{4}$/, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
@@ -40,4 +82,4 @@ const DriverSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Driver', DriverSchema);
+export default mongoose.model<IDriver>('Driver', DriverSchema);

@@ -1,6 +1,30 @@
-const mongoose = require('mongoose');
+import mongoose, { Document, Schema } from 'mongoose';
 
-const RideSchema = new mongoose.Schema({
+interface ILocation {
+  type: string;
+  coordinates: number[];
+  addressLine: string;
+}
+
+export interface IRide extends Document {
+  _id: string;
+  customerId: string;
+  driverId: string;
+  pickupLocation: ILocation;
+  dropoffLocation: ILocation;
+  status: string;
+  requestTimestamp: Date;
+  acceptTimestamp: Date;
+  pickupTimestamp: Date;
+  dropoffTimestamp: Date;
+  predictedFare: number;
+  actualFare: number;
+  distance: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const RideSchema = new Schema<IRide>({
   _id: { type: String, required: true },
   customerId: { type: String, required: true },
   driverId: { type: String, required: true },
@@ -34,4 +58,4 @@ const RideSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Ride', RideSchema);
+export default mongoose.model<IRide>('Ride', RideSchema);

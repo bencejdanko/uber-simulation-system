@@ -1,8 +1,11 @@
-require('dotenv').config();
-const connectDB = require('../config/db');
-const Review = require('../services/models/review.model');
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const seed = async () => {
+import connectDB from '../config/db';
+import Review, { IReview } from '../services/models/review.model';
+
+const seed = async (): Promise<void> => {
   try {
     await connectDB();
 
@@ -20,7 +23,7 @@ const seed = async () => {
     console.log('✅ Review inserted');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding review failed:', err.message);
+    console.error('❌ Seeding review failed:', (err as Error).message);
     process.exit(1);
   }
 };

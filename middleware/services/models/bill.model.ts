@@ -1,6 +1,30 @@
-const mongoose = require('mongoose');
+import mongoose, { Document, Schema } from 'mongoose';
 
-const BillSchema = new mongoose.Schema({
+interface ILocation {
+  latitude: number;
+  longitude: number;
+  addressLine: string;
+}
+
+export interface IBill extends Document {
+  _id: string;
+  rideId: string;
+  customerId: string;
+  driverId: string;
+  date: Date;
+  pickupTime: Date;
+  dropoffTime: Date;
+  distanceCovered: number;
+  sourceLocation: ILocation;
+  destinationLocation: ILocation;
+  predictedAmount: number;
+  actualAmount: number;
+  paymentStatus: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const BillSchema = new Schema<IBill>({
   _id: { type: String, required: true },
   rideId: { type: String, required: true },
   customerId: { type: String, required: true },
@@ -26,4 +50,4 @@ const BillSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Bill', BillSchema);
+export default mongoose.model<IBill>('Bill', BillSchema);
