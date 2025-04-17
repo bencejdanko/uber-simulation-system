@@ -18,3 +18,5 @@ dump/
 
 # all logs
 *.log
+
+coverage

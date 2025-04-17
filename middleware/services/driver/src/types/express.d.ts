@@ -3,13 +3,13 @@ import { Request } from 'express';
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: DecodedUser;
     }
   }
 }
 
 export interface DecodedUser {
-  id: string;
+  userId: string;
   role: string;
   [key: string]: any;
 }
