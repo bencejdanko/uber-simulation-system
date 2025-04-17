@@ -7,8 +7,7 @@
     "start": "ts-node -r tsconfig-paths/register src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "postinstall": "node node_modules/mongodb-memory-server/postinstall.js"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
@@ -27,7 +26,6 @@
     "@types/node": "^16.11.7",
     "@types/supertest": "^2.0.16",
     "jest": "^27.0.6",
-    "mongodb-memory-server": "^10.1.4",
     "ts-jest": "^27.1.5",
     "ts-node": "^10.4.0",
     "tsconfig-paths": "^4.2.0",
