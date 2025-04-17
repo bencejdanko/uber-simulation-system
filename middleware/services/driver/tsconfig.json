@@ -7,14 +7,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "../../",
-    "baseUrl": "./src",
+    "rootDir": "../..",
+    "baseUrl": ".",
     "paths": {
-      "*": ["node_modules/*", "*"],
-      "@models/*": ["../../models/*"],
-      "@shared/*": ["../../libs/src/*"],
+      "@models/*": ["../models/*"],
+      "@shared/*": ["../../libs/src/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

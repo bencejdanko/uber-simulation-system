@@ -1,28 +1,28 @@
-import express from 'express';
 import { createServer } from 'http';
 import config from './config';
 import logger from './config/logger';
-import router from './routes/driver.routes';
-import { authMiddleware } from './middleware/auth.middleware';
-import { validateDriverInput } from './middleware/validation.middleware';
+import app, { connectDB } from './app';
 
-const app = express();
 const server = createServer(app);
 
-// Middleware
-app.use(express.json());
-app.use(authMiddleware);
-app.use(validateDriverInput);
+// Initialize database connection before starting the server
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    // Start the server
+    const PORT = config.port || 3000;
+    server.listen(PORT, () => {
+      logger.info(`Driver service is running on http://localhost:${PORT}`);
+    });
 
-// Routes
-app.use('/api/v1/drivers', router);
+    server.on('error', (error) => {
+      logger.error(`Server error: ${error.message}`);
+    });
+  } catch (err) {
+    logger.error(`Failed to start server: ${(err as Error).message}`);
+    process.exit(1);
+  }
+};
 
-// Start the server
-const PORT = config.port || 3000;
-server.listen(PORT, () => {
-    logger.info(`Driver service is running on http://localhost:${PORT}`);
-});
-
-server.on('error', (error) => {
-    logger.error(`Server error: ${error.message}`);
-});
+startServer();

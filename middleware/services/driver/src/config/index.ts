@@ -1,11 +1,13 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Explicitly specify the path to the .env file
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const config = {
   port: process.env.PORT || 3000,
   db: {
-    uri: process.env.DB_URI || 'mongodb://localhost:27017/driver_service',
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/driver_service',
   },
   kafka: {
     brokers: process.env.KAFKA_BROKERS || 'localhost:9092',
