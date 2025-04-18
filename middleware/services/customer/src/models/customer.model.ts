@@ -1,84 +1,42 @@
+// models/customer.model.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Customer interface
 export interface ICustomer extends Document {
-  externalCustomerId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role: 'customer';
-  paymentMethods?: {
-    id: string;
-    type: 'credit_card' | 'paypal' | 'apple_pay' | 'google_pay';
-    last4?: string;
-    isDefault: boolean;
-  }[];
-  rating?: number;
-  createdAt: Date;
-  updatedAt: Date;
+    externalCustomerId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    phone?: string;
+    address: {
+        street: string;
+        city: string;
+        state: string;
+        zipCode: string;
+    };
+    role: 'customer' | 'admin';
+    verified: boolean;
+    paymentCardId?: mongoose.Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-// Define the schema
-const customerSchema = new Schema<ICustomer>(
-  {
-    externalCustomerId: {
-      type: String,
-      required: true,
-      unique: true,
+const customerSchema = new Schema<ICustomer>({
+    externalCustomerId: { type: String, required: true, unique: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, select: false },
+    phone: { type: String },
+    address: {
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        zipCode: { type: String, required: true },
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    role: {
-      type: String,
-      enum: ['customer'],
-      default: 'customer',
-      required: true,
-    },
-    paymentMethods: [
-      {
-        id: String,
-        type: {
-          type: String,
-          enum: ['credit_card', 'paypal', 'apple_pay', 'google_pay'],
-        },
-        last4: String,
-        isDefault: {
-          type: Boolean,
-          default: false,
-        },
-      },
-    ],
-    rating: {
-      type: Number,
-      min: 1.0,
-      max: 5.0,
-      default: 5.0,
-    },
-  },
-  { timestamps: true }
-);
+    role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+    verified: { type: Boolean, default: false },
+    paymentCardId: { type: mongoose.Types.ObjectId, ref: 'PaymentCard' }
+}, { timestamps: true });
 
-// Create and export the model
 export const CustomerModel = mongoose.model<ICustomer>('Customer', customerSchema);
-
-export default CustomerModel;
