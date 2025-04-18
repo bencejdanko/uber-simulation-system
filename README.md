@@ -148,12 +148,12 @@ To ensure efficient and coordinated development, we've broken down the project i
 **Tier 2 (Middleware) - [Assigned To: Bence, Cyril]**
 
 *   **Subtasks:**
-    *   [ ] **API Design:**
-        *   [ ] Design REST APIs for Driver Service.
-        *   [ ] Design REST APIs for Customer Service.
-        *   [ ] Design REST APIs for Billing Service.
-        *   [ ] Design REST APIs for Admin Service.
-        *   [ ] Design REST APIs for Rides Service.
+    *   [x] **API Design:**
+        *   [x] Design REST APIs for Driver Service.
+        *   [x] Design REST APIs for Customer Service.
+        *   [x] Design REST APIs for Billing Service.
+        *   [x] Design REST APIs for Admin Service.
+        *   [x] Design REST APIs for Rides Service.
     *   [ ] **Service Implementation:**
         *   [ ] Implement Driver Service endpoints.
         *   [ ] Implement Customer Service endpoints.

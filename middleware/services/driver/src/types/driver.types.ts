@@ -28,6 +28,7 @@ export interface CurrentLocation {
 }
 
 export interface Driver {
+  _id?: string; // MongoDB ID
   driverId: string; // SSN Format: xxx-xx-xxxx
   firstName: string;
   lastName: string;
