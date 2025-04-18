@@ -5,6 +5,9 @@ import LoginCustomer from './components/LoginCustomer/LoginCustomer';
 import LoginDriver from './components/LoginDriver/LoginDriver';
 import CustomerDashboard from './components/CustomerDashboard/CustomerDashboard';
 import DriverDashboard from './components/DriverDashboard/DriverDashboard';
+import DriverManageRides from "./components/DriverManageRides/DriverManageRides";
+import DriverManageBilling from "./components/DriverManageBilling/DriverManageBilling";
+import DriverEarnings from "./components/DriverEarnings/DriverEarnings";
 import CustomerBillingList from './components/CustomerBillingList/CustomerBillingList';
 import CustomerRequestRide from './components/CustomerRequestRide/CustomerRequestRide';
 import CustomerRideHistory from './components/CustomerRideHistory/CustomerRideHistory';
@@ -21,6 +24,9 @@ function App() {
           <Route path="/login-driver" element={<LoginDriver />} />
           <Route path="/customer/dashboard" element={<CustomerDashboard />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
+          <Route path="/driver/earnings" element={<DriverEarnings />} />
+          <Route path="/driver/manage-rides" element={<DriverManageRides />} />
+          <Route path="/driver/manage-billing" element={<DriverManageBilling />} />
           <Route path="/customer/billing-history" element={<CustomerBillingList />} />
           <Route path="/customer/request-ride" element={<CustomerRequestRide />} />
           <Route path="/customer/ride-history" element={<CustomerRideHistory />} />
