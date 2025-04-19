@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DriverManageRides.css';
 
 const DriverManageRides = () => {
+  const navigate = useNavigate();
+
   const [rides, setRides] = useState([
     {
       id: 'R123-45-6789',
@@ -125,6 +128,21 @@ const DriverManageRides = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="navigation-buttons">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Home
+        </button>
+        <button className="nav-button" onClick={() => navigate('/driver/dashboard')}>
+          Driver Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/driver/earnings')}>
+          Driver Earnings
+        </button>
+        <button className="nav-button" onClick={() => navigate('/admin/dashboard')}>
+          Admin Dashboard
+        </button>
       </div>
     </div>
   );
