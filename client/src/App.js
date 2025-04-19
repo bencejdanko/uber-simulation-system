@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './components/HomePage/HomePage';
 import LoginCustomer from './components/LoginCustomer/LoginCustomer';
 import LoginDriver from './components/LoginDriver/LoginDriver';
+import RegisterCustomer from "./components/RegisterCustomer/RegisterCustomer";
+import RegisterDriver from "./components/RegisterDriver/RegisterDriver";
 import CustomerDashboard from './components/CustomerDashboard/CustomerDashboard';
 import DriverDashboard from './components/DriverDashboard/DriverDashboard';
 import DriverManageRides from "./components/DriverManageRides/DriverManageRides";
@@ -21,6 +23,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login-customer" element={<LoginCustomer />} />
           <Route path="/login-driver" element={<LoginDriver />} />
+          <Route path="/register-customer" element={<RegisterCustomer />} />
+          <Route path="/register-driver" element={<RegisterDriver />} />
           <Route path="/customer/dashboard" element={<CustomerDashboard />} />
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
           <Route path="/driver/earnings" element={<DriverEarnings />} />
