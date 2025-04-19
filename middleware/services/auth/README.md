@@ -8,10 +8,6 @@
 # generate a key pair
 openssl genrsa -out private.pem 2048
 openssl rsa -in private.pem -pubout -out public.pem
-
-# convert to base64
-echo 'ACCESS_TOKEN_PRIVATE_KEY_BASE64='`base64 -w 0 private.pem` >> .env.tmp
-echo 'ACCESS_TOKEN_PUBLIC_KEY_BASE64='`base64 -w 0 public.pem` >> .env.tmp
 ```
 
 ## Ensure the right topic is created
@@ -21,3 +17,18 @@ docker exec -it middleware_kafka_1 /opt/bitnami/kafka/bin/kafka-topics.sh --crea
 ```
 
 ## Copy .env.template, and fill out the variables correctly
+
+# Testing
+
+Run the `/tests` scripts to create and login users.
+
+To confirm Kafka integration, read from the Kafka topic:
+
+```bash
+docker exec -it middleware_kafka_1 /opt/bitnami/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9094 \
+  --topic user.registered \
+  --from-beginning
+```
+
+Confirm existence of new registrations in the MongoDB collections
