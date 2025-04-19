@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DriverEarnings.css';
 
 const DriverEarnings = () => {
+  const navigate = useNavigate();
+
   const trips = [
     {
       billingId: '847-29-1234',
@@ -126,6 +129,18 @@ const DriverEarnings = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="navigation-buttons">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Homepage
+        </button>
+        <button className="nav-button" onClick={() => navigate('/driver/dashboard')}>
+          Driver Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/driver/manage-rides')}>
+          Manage Rides
+        </button>
       </div>
     </div>
   );
