@@ -20,3 +20,6 @@ dump/
 *.log
 
 coverage
+
+private.pem
+public.pem
