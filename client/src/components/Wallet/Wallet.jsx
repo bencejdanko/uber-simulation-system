@@ -5,16 +5,6 @@ import './Wallet.css';
 const Wallet = () => {
   const navigate = useNavigate();
 
-  // Placeholder for authentication check
-  const isAuthenticated = true; 
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // Redirect to login page if not authenticated
-      navigate('/login-customer');
-    }
-  }, [isAuthenticated, navigate]);
-
   const paymentMethods = [
     { id: 'visa', type: 'Visa', last4: '4242', expiryDate: '05/26', isDefault: true },
     { id: 'mastercard', type: 'Mastercard', last4: '5555', expiryDate: '08/25', isDefault: false },
@@ -66,6 +56,24 @@ const Wallet = () => {
           ))}
         </div>
         <button className="add-payment-button">Add Payment Method</button>
+      </div>
+
+      <div className="wallet-navigation">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Home
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
+          Customer Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/ride-history')}>
+          Customer Ride History
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/request-ride')}>
+          Customer Ride Request
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/billing-list')}>
+          Customer Billing
+        </button>
       </div>
     </div>
   );

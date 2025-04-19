@@ -26,6 +26,9 @@ const LoginCustomer = () => {
         <input type="password" placeholder="Password" className="login-input" required />
         <button type="submit" className="login-button">Login</button>
       </form>
+      <button className="home-button" onClick={() => navigate('/')}>
+        Home
+      </button>
     </div>
   );
 };

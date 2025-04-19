@@ -1,129 +1,120 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverEarnings.css';
 
 const DriverEarnings = () => {
   const navigate = useNavigate();
 
-  const trips = [
+  const [billingRecords, setBillingRecords] = useState([
     {
-      billingId: '847-29-1234',
+      id: 'B123-45-6789',
       rideId: 'R123-45-6789',
-      customerId: 'C123-45-6789',
-      driverId: 'D123-45-6789',
-      date: '2025-04-07',
-      pickupTime: '2025-04-07T10:00:00Z',
-      dropoffTime: '2025-04-07T10:30:00Z',
-      distanceCovered: 10,
-      sourceLocation: {
-        latitude: 40.7128,
-        longitude: -74.0060,
-        addressLine: 'Downtown, NY',
-      },
-      destinationLocation: {
-        latitude: 40.7306,
-        longitude: -73.9352,
-        addressLine: 'Airport, NY',
-      },
-      predictedAmount: 25.0,
-      actualAmount: 24.5,
-      paymentStatus: 'PAID',
-      createdAt: '2025-04-07T09:50:00Z',
-      updatedAt: '2025-04-07T10:35:00Z',
-      status: 'Completed',
+      date: '2025-04-15',
+      amount: '$25.00',
+      paymentStatus: 'Paid',
     },
     {
-      billingId: '846-23-5678',
+      id: 'B123-45-6790',
       rideId: 'R123-45-6790',
-      customerId: 'C123-45-6790',
-      driverId: 'D123-45-6790',
-      date: '2025-04-07',
-      pickupTime: '2025-04-07T14:00:00Z',
-      dropoffTime: '2025-04-07T14:20:00Z',
-      distanceCovered: 5,
-      sourceLocation: {
-        latitude: 40.7580,
-        longitude: -73.9855,
-        addressLine: 'Mall, NY',
-      },
-      destinationLocation: {
-        latitude: 40.7128,
-        longitude: -74.0060,
-        addressLine: 'University, NY',
-      },
-      predictedAmount: 30.0,
-      actualAmount: 28.5,
-      paymentStatus: 'PAID',
-      createdAt: '2025-04-07T13:50:00Z',
-      updatedAt: '2025-04-07T14:25:00Z',
-      status: 'Completed',
+      date: '2025-04-14',
+      amount: '$18.75',
+      paymentStatus: 'Pending',
     },
     {
-      billingId: '845-02-3456',
+      id: 'B123-45-6791',
       rideId: 'R123-45-6791',
-      customerId: 'C123-45-6791',
-      driverId: 'D123-45-6791',
-      date: '2025-04-08',
-      pickupTime: '2025-04-08T09:00:00Z',
-      dropoffTime: '2025-04-08T09:45:00Z',
-      distanceCovered: 15,
-      sourceLocation: {
-        latitude: 40.7306,
-        longitude: -73.9352,
-        addressLine: 'Suburbs, NY',
-      },
-      destinationLocation: {
-        latitude: 40.7580,
-        longitude: -73.9855,
-        addressLine: 'Downtown, NY',
-      },
-      predictedAmount: 40.0,
-      actualAmount: 0.0,
-      paymentStatus: 'FAILED',
-      createdAt: '2025-04-08T08:50:00Z',
-      updatedAt: '2025-04-08T09:50:00Z',
-      status: 'Cancelled',
+      date: '2025-04-13',
+      amount: '$0.00',
+      paymentStatus: 'Failed',
     },
-  ];
+  ]);
+
+  const [filterStatus, setFilterStatus] = useState('');
+
+  const handleDownloadReceipt = (billingId) => {
+    console.log(`Downloading receipt for billing ID: ${billingId}`);
+    // Logic to download the receipt can be added here
+  };
+
+  const handleCancelPendingRide = (billingId) => {
+    setBillingRecords((prevRecords) =>
+      prevRecords.map((record) =>
+        record.id === billingId && record.paymentStatus === 'Pending'
+          ? { ...record, paymentStatus: 'Cancelled' }
+          : record
+      )
+    );
+    console.log(`Cancelled pending ride with billing ID: ${billingId}`);
+  };
+
+  const filteredBillingRecords = billingRecords.filter(
+    (record) =>
+      !filterStatus || record.paymentStatus.toLowerCase() === filterStatus.toLowerCase()
+  );
 
   return (
-    <div className="driver-earnings-container">
-      <header className="earnings-header">
-        <div className="earnings-logo">Uber</div>
-        <div className="earnings-title">Driver Earnings</div>
+    <div className="driver-manage-billing-container">
+      <header className="billing-header">
+        <div className="billing-logo">Uber</div>
+        <div className="billing-title">Driver Manage Billing</div>
       </header>
 
-      <div className="earnings-section">
-        <h2 className="section-title">All Trips</h2>
-        <table className="trips-table">
+      <div className="billing-section">
+        <h2 className="section-title">Billing Records</h2>
+
+        <div className="filter-section">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="status-filter"
+          >
+            <option value="">All Payment Statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Failed">Failed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <table className="billing-table">
           <thead>
             <tr>
               <th>Billing ID</th>
+              <th>Ride ID</th>
               <th>Date</th>
-              <th>Pickup Time</th>
-              <th>Drop Off Time</th>
-              <th>Distance (mi)</th>
-              <th>Source</th>
-              <th>Destination</th>
-              <th>Predicted ($)</th>
-              <th>Actual ($)</th>
-              <th>Status</th>
+              <th>Amount</th>
+              <th>Payment Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {trips.map((trip) => (
-              <tr key={trip.billingId}>
-                <td>{trip.billingId}</td>
-                <td>{trip.date}</td>
-                <td>{new Date(trip.pickupTime).toLocaleTimeString()}</td>
-                <td>{new Date(trip.dropoffTime).toLocaleTimeString()}</td>
-                <td>{trip.distanceCovered}</td>
-                <td>{trip.sourceLocation.addressLine || 'N/A'}</td>
-                <td>{trip.destinationLocation.addressLine || 'N/A'}</td>
-                <td>${trip.predictedAmount.toFixed(2)}</td>
-                <td>${trip.actualAmount.toFixed(2)}</td>
-                <td className={trip.status === 'Cancelled' ? 'status-cancelled' : ''}>
-                  {trip.status}
+            {filteredBillingRecords.map((record) => (
+              <tr key={record.id}>
+                <td>{record.id}</td>
+                <td>{record.rideId}</td>
+                <td>{record.date}</td>
+                <td>{record.amount}</td>
+                <td>
+                  <span className={`status ${record.paymentStatus.toLowerCase()}`}>
+                    {record.paymentStatus}
+                  </span>
+                </td>
+                <td>
+                  {record.paymentStatus === 'Pending' ? (
+                    <button
+                      onClick={() => handleCancelPendingRide(record.id)}
+                      className="cancel-button"
+                    >
+                      Cancel Ride
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadReceipt(record.id)}
+                      className="download-button"
+                    >
+                      Download Receipt
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

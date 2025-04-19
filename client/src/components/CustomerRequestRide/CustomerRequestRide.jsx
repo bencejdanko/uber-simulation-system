@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './CustomerRequestRide.css';
 
 const CustomerRequestRide = () => {
+  const navigate = useNavigate();
+
   const [pickupLocation, setPickupLocation] = useState({ latitude: '', longitude: '' });
   const [dropoffLocation, setDropoffLocation] = useState({ latitude: '', longitude: '' });
   const [rideOptions] = useState([
@@ -151,6 +154,21 @@ const CustomerRequestRide = () => {
             </button>
           </form>
         )}
+      </div>
+
+      <div className="navigation-buttons">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Home
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
+          Customer Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/ride-history')}>
+          Customer Ride History
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/billing-list')}>
+          Customer Billing
+        </button>
       </div>
     </div>
   );

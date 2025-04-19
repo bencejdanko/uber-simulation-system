@@ -3,20 +3,20 @@ import './LoginDriver.css';
 import { useNavigate } from 'react-router-dom';
 
 const LoginDriver = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleLogin = (e) => {
-      e.preventDefault();
-  
-      const isAuthenticated = true;  // Placeholder for authentication logic
-  
-      if (isAuthenticated) {
-        console.log('Driver logged in');
-        navigate('/driver/dashboard'); // Navigate to Driver Dashboard
-      } else {
-        console.log('Login failed');
-      }
-    };
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    const isAuthenticated = true; // Placeholder for authentication logic
+
+    if (isAuthenticated) {
+      console.log('Driver logged in');
+      navigate('/driver/dashboard'); // Navigate to Driver Dashboard
+    } else {
+      console.log('Login failed');
+    }
+  };
 
   return (
     <div className="login-container">
@@ -26,6 +26,9 @@ const LoginDriver = () => {
         <input type="password" placeholder="Password" className="login-input" required />
         <button type="submit" className="login-button">Login</button>
       </form>
+      <button className="home-button" onClick={() => navigate('/')}>
+        Home
+      </button>
     </div>
   );
 };

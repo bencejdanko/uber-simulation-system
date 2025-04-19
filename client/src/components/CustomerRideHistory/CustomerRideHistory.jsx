@@ -121,6 +121,21 @@ const CustomerRideHistory = () => {
           </tbody>
         </table>
       </div>
+
+      <div className="navigation-buttons">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Home
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
+          Customer Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/request-ride')}>
+          Customer Ride Request
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/billing-list')}>
+          Customer Billing
+        </button>
+      </div>
     </div>
   );
 };
