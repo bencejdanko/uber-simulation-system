@@ -2,6 +2,32 @@
 version: '3.8'
 
 services:
+  kong:
+      image: kong:latest # Use specific version like kong:3.6 in prod
+      container_name: kong-gateway
+      environment:
+        KONG_DATABASE: 'off'
+        KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yaml
+        KONG_PROXY_LISTEN: 0.0.0.0:8000
+        KONG_ADMIN_LISTEN: 0.0.0.0:8001
+        KONG_PLUGINS: bundled,jwt # Ensure jwt plugin is listed
+        KONG_LOG_LEVEL: info
+        # Might be needed if Kong has trouble resolving internal service names initially
+        # KONG_DNS_ORDER: LAST,SRV,A,CNAME
+      ports:
+        - "8000:8000" # Map host port 80 to Kong's proxy port 8000
+        - "8001:8001" # Optional: Expose Admin API
+      volumes:
+        - ./kong/kong.yaml:/etc/kong/kong.yaml:ro
+      networks:
+        - app-network
+      healthcheck:
+        test: ["CMD", "kong", "health"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 15s # Give more time for declarative config loading
+
   # --- Apache Zookeeper ---
   zookeeper:
     image: bitnami/zookeeper:3.8
@@ -55,6 +81,10 @@ services:
       - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
       - KAFKA_CFG_NUM_PARTITIONS=3 # Default partitions for auto-created topics
 
+      # --- Automatic Topic Creation (Bitnami Feature) ---
+      # Format: "TopicName1:Partitions:ReplicationFactor,TopicName2:Partitions:ReplicationFactor"
+      - KAFKA_CREATE_TOPICS="user.registered:1:1,another.topic:3:1,yet.another.topic:1:1" # Add your topics here
+
       # --- Other Settings ---
       - ALLOW_PLAINTEXT_LISTENER=yes # Required by Bitnami for PLAINTEXT listeners
       - KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS=100 # Faster dev restarts
@@ -65,6 +95,34 @@ services:
       - zookeeper
     networks:
       - app-network
+
+    # --- Auth Service ---
+  auth-service:
+    build:
+      context: ./services/auth # Path relative to docker-compose.yml
+      dockerfile: Dockerfile
+
+    # No need to expose the auth service port unless you want to access it directly
+    # ports:
+    #   - "3000:3000" # Map container port 3000 to host port 3000
+    environment:
+      # IMPORTANT: Connect to Kafka using the INTERNAL listener and service name
+      - KAFKA_BROKERS=kafka:9092
+      - JWT_ISSUER=https://my-auth-service.com
+
+      # Add any other environment variables your auth service needs
+      # e.g., DATABASE_URL, JWT_SECRET, etc.
+      # Make sure these are configured correctly for running inside Docker
+    depends_on:
+      - kafka # Ensure Kafka starts before the auth service
+    networks:
+      - app-network
+    # If your auth service needs the .env file, you might mount it or pass vars via environment:
+    # volumes:
+    #   - ./services/auth/.env:/usr/src/app/.env # Option 1: Mount .env (careful with secrets)
+    # env_file:
+    #   - ./services/auth/.env # Option 2: Load vars from .env file
+
 
 # --- Add other services below (ensure they are on app-network) ---
 # Example: Your API Gateway
