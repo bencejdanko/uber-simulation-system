@@ -26,7 +26,8 @@ services:
       - name: auth-public-routes
         paths:
           - /api/v1/auth/login
-          - /api/v1/auth/register
+          - /api/v1/auth/register/customer
+          - /api/v1/auth/register/driver
         strip_path: false
         # This route should NOT have JWT validation
       - name: auth-jwks-route
@@ -36,35 +37,35 @@ services:
         # This route should NOT have JWT validation
 
   # --- Example: Driver Service Definition (Protected) ---
-  - name: driver-service
-    # IMPORTANT: Make sure 'driver-service' is defined in your docker-compose.yml
-    # and running on port 3001 within the 'app-network'
-    url: http://driver-service:3001
-    plugins:
-      - name: jwt
-        config:
-          key_claim_name: iss       # Look for the 'iss' claim in the JWT
-          claims_to_verify:       # Verify standard claims
-            - exp                 # Check token expiry
-          run_on_preflight: true
-          # Removed invalid 'claims_to_include'
-          # Kong will use these header names to pass corresponding claims upstream
-          # By default, Kong often maps claim 'sub' -> header 'X-User-ID' and
-          # claim 'roles' -> header 'X-User-Roles' if these headers are listed
-          # and the claims exist in the validated token.
-          # Check JWT plugin docs for exact default behavior if needed.
-          header_names:
-            - X-User-ID
-            - X-User-Roles
-            # You might need more specific config if the claim names don't match header names easily
-            # Example (syntax may vary slightly by Kong version):
-            # - X-User-ID:sub
-            # - X-User-Roles:roles
-    routes:
-      - name: driver-routes
-        paths:
-          - /api/v1/drivers
-        strip_path: false
-        # The JWT plugin applied to the service will protect this route
+  # - name: driver-service
+  #   # IMPORTANT: Make sure 'driver-service' is defined in your docker-compose.yml
+  #   # and running on port 3001 within the 'app-network'
+  #   url: http://driver-service:3001
+  #   plugins:
+  #     - name: jwt
+  #       config:
+  #         key_claim_name: iss       # Look for the 'iss' claim in the JWT
+  #         claims_to_verify:       # Verify standard claims
+  #           - exp                 # Check token expiry
+  #         run_on_preflight: true
+  #         # Removed invalid 'claims_to_include'
+  #         # Kong will use these header names to pass corresponding claims upstream
+  #         # By default, Kong often maps claim 'sub' -> header 'X-User-ID' and
+  #         # claim 'roles' -> header 'X-User-Roles' if these headers are listed
+  #         # and the claims exist in the validated token.
+  #         # Check JWT plugin docs for exact default behavior if needed.
+  #         header_names:
+  #           - X-User-ID
+  #           - X-User-Roles
+  #           # You might need more specific config if the claim names don't match header names easily
+  #           # Example (syntax may vary slightly by Kong version):
+  #           # - X-User-ID:sub
+  #           # - X-User-Roles:roles
+  #   routes:
+  #     - name: driver-routes
+  #       paths:
+  #         - /api/v1/drivers
+  #       strip_path: false
+  #       # The JWT plugin applied to the service will protect this route
 
 # --- Add other microservices similarly ---

@@ -1,21 +1,16 @@
-import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { z } from 'zod';
-
-dotenv.config();
 
 // Define schema for environment variables for validation
 const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-    MONGO_URI: z.string().url(),
+    MONGODB_URI: z.string().url(),
     ACCESS_TOKEN_PRIVATE_KEY_PATH: z.string(),
     ACCESS_TOKEN_PUBLIC_KEY_PATH: z.string(),
     ACCESS_TOKEN_LIFE: z.string().default('15m'),
     ACCESS_TOKEN_KID: z.string(),
-    REFRESH_TOKEN_SECRET: z.string(),
-    REFRESH_TOKEN_LIFE: z.string().default('7d'),
     JWT_ISSUER: z.string().url(),
     KAFKA_BROKERS: z.string(),
     KAFKA_CLIENT_ID: z.string().default('auth-service-producer'),
@@ -54,15 +49,13 @@ const config = {
     env: env.NODE_ENV,
     port: env.PORT,
     mongo: {
-        uri: env.MONGO_URI,
+        uri: env.MONGODB_URI,
     },
     jwt: {
         accessTokenPrivateKey: accessTokenPrivateKey,
         accessTokenPublicKey: accessTokenPublicKey,
         accessTokenLife: env.ACCESS_TOKEN_LIFE,
         accessTokenKid: env.ACCESS_TOKEN_KID,
-        refreshTokenSecret: env.REFRESH_TOKEN_SECRET,
-        refreshTokenLife: env.REFRESH_TOKEN_LIFE,
         issuer: env.JWT_ISSUER,
         algorithms: ['RS256'] as const, // Explicitly set algorithm for access token
     },

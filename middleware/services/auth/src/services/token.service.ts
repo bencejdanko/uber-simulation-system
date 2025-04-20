@@ -33,32 +33,3 @@ export const generateAccessToken = (user: UserTokenData): string => {
     // Use the private key string read from the file
     return jwt.sign(payload, config.jwt.accessTokenPrivateKey, options);
 };
-
-export const generateRefreshToken = (user: UserTokenData): string => {
-    const payload: RefreshTokenPayload = {
-        sub: user.userId,
-        // jti: uuidv4(), // Optional: Generate unique ID if needed for revocation
-    };
-    const options: SignOptions = {
-        expiresIn: parseInt(config.jwt.accessTokenLife, 10),
-        // Algorithm depends on whether REFRESH_TOKEN_SECRET is a symmetric secret or an asymmetric private key
-        // algorithm: 'HS256' // If symmetric secret
-    };
-    return jwt.sign(payload, config.jwt.refreshTokenSecret, options);
-};
-
-export const verifyRefreshToken = (token: string): Promise<RefreshTokenPayload> => {
-    return new Promise((resolve, reject) => {
-        const options: VerifyOptions = {
-             issuer: config.jwt.issuer, // Optionally verify issuer if set during signing
-            // algorithms: ['HS256'], // Specify if needed
-        };
-        jwt.verify(token, config.jwt.refreshTokenSecret, options, (err, decoded) => {
-            if (err) {
-                return reject(err);
-            }
-            // Type assertion after successful verification
-            resolve(decoded as RefreshTokenPayload);
-        });
-    });
-};

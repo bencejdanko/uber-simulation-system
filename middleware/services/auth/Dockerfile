@@ -13,7 +13,8 @@ RUN npm install -g pnpm && pnpm install
 COPY . .
 
 # Copy the .env file
-COPY .env ./
+# (Removed since we now configure this from the docker-compose file)
+# COPY .env ./
 
 # Expose the application port
 EXPOSE 3000

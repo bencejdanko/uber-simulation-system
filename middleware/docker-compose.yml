@@ -15,8 +15,8 @@ services:
         # Might be needed if Kong has trouble resolving internal service names initially
         # KONG_DNS_ORDER: LAST,SRV,A,CNAME
       ports:
-        - "8000:8000" # Map host port 80 to Kong's proxy port 8000
-        - "8001:8001" # Optional: Expose Admin API
+        - "${GATEWAY_PORT}:8000" # Map host port 80 to Kong's proxy port 8000
+        - "${GATEWAY_ADMIN_PORT}:8001" # Optional: Expose Admin API
       volumes:
         - ./kong/kong.yaml:/etc/kong/kong.yaml:ro
       networks:
@@ -43,9 +43,9 @@ services:
   # --- Apache Kafka Broker ---
   kafka:
     image: bitnami/kafka:3.5
-    ports:
+    # ports:
       # Port for clients OUTSIDE the Docker network (maps to EXTERNAL listener's container port 9094)
-      - "9094:9094"
+      # - "${KAFKA_PORT}:9094"
       # Port 9092 is used INTERNALLY by containers and doesn't need to be exposed to the host.
       # We explicitly bind to it inside the container using KAFKA_CFG_LISTENERS.
     environment:
@@ -96,33 +96,64 @@ services:
     networks:
       - app-network
 
-    # --- Auth Service ---
+  # --- Auth Service ---
   auth-service:
     build:
       context: ./services/auth # Path relative to docker-compose.yml
       dockerfile: Dockerfile
-
     # No need to expose the auth service port unless you want to access it directly
     # ports:
     #   - "3000:3000" # Map container port 3000 to host port 3000
     environment:
-      # IMPORTANT: Connect to Kafka using the INTERNAL listener and service name
-      - KAFKA_BROKERS=kafka:9092
+      # Server configuration
+      - PORT=3000
+      
+      # MongoDB configuration
+      - MONGODB_URI=${MONGODB_URI}
+      
+      # JWT configuration
+      - ACCESS_TOKEN_PRIVATE_KEY_PATH=/usr/src/app/private.pem
+      - ACCESS_TOKEN_PUBLIC_KEY_PATH=/usr/src/app/public.pem
+      - ACCESS_TOKEN_LIFE=15m
+      - ACCESS_TOKEN_KID=auth-service-key-1
       - JWT_ISSUER=https://my-auth-service.com
-
-      # Add any other environment variables your auth service needs
-      # e.g., DATABASE_URL, JWT_SECRET, etc.
-      # Make sure these are configured correctly for running inside Docker
+      
+      # Kafka configuration
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_CLIENT_ID=auth-service-producer
+      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      
+      # Hashing configuration
+      - BCRYPT_SALT_ROUNDS=10
+    
+    volumes:
+      # Mount the key files
+      - ./keys/private.pem:/usr/src/app/private.pem:ro
+      - ./keys/public.pem:/usr/src/app/public.pem:ro
+    
     depends_on:
-      - kafka # Ensure Kafka starts before the auth service
+      - kafka
+      # - mongo # Added dependency on MongoDB
     networks:
       - app-network
-    # If your auth service needs the .env file, you might mount it or pass vars via environment:
-    # volumes:
-    #   - ./services/auth/.env:/usr/src/app/.env # Option 1: Mount .env (careful with secrets)
-    # env_file:
-    #   - ./services/auth/.env # Option 2: Load vars from .env file
 
+  # --- MongoDB Service (Added) ---
+  # mongo:
+  #   image: mongo:6.0
+  #   container_name: mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - app-network
+  #   # Optional: Add health check
+  #   healthcheck:
+  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 20s
 
 # --- Add other services below (ensure they are on app-network) ---
 # Example: Your API Gateway
@@ -140,6 +171,8 @@ volumes:
     driver: local
   kafka_data:
     driver: local
+  # mongodb_data:
+  #   driver: local
 
 networks:
   app-network:
