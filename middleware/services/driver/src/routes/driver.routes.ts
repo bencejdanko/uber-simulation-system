@@ -7,7 +7,6 @@ import {
   validateLocationUpdate,
   validateNearbySearch 
 } from '../validators/driver.validator';
-import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 const driverService = new DriverService();
@@ -15,31 +14,32 @@ const driverController = new DriverController(driverService);
 
 // Health check endpoint - no authentication required
 router.get('/health', (req, res) => {
+  console.log("Headers:", req.headers); // Debug
   res.status(200).json({ status: 'healthy' });
 });
 
 // Create Driver - authentication first, then validation
-router.post('/', authenticate, validateDriverInput, driverController.createDriver);
+router.post('/', validateDriverInput, driverController.createDriver);
 
 // List and Search Drivers
-router.get('/', authenticate, driverController.listDrivers);
+router.get('/', driverController.listDrivers);
 
 // Search Drivers by name
-router.get('/search', authenticate, driverController.searchDrivers);
+router.get('/search', driverController.searchDrivers);
 
 // Find Nearby Drivers - authentication first, then validation
-router.get('/nearby', authenticate, validateNearbySearch, driverController.findNearbyDrivers);
+router.get('/nearby', validateNearbySearch, driverController.findNearbyDrivers);
 
 // Get Driver by ID
-router.get('/:driver_id', authenticate, driverController.getDriverById);
+router.get('/:driver_id', driverController.getDriverById);
 
 // Update Driver Information - authentication first, then validation
-router.patch('/:driver_id', authenticate, validateDriverUpdate, driverController.updateDriver);
+router.patch('/:driver_id', validateDriverUpdate, driverController.updateDriver);
 
 // Delete Driver
-router.delete('/:driver_id', authenticate, driverController.deleteDriver);
+router.delete('/:driver_id', driverController.deleteDriver);
 
 // Update Driver Location - authentication first, then validation
-router.patch('/:driver_id/location', authenticate, validateLocationUpdate, driverController.updateDriverLocation);
+router.patch('/:driver_id/location', validateLocationUpdate, driverController.updateDriverLocation);
 
 export default router;

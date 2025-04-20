@@ -4,7 +4,7 @@
 # This script assumes the driver service is already running via 'pnpm start'
 
 # Configuration
-BASE_URL="http://localhost:3000"  # Adjust this to match your service's port
+BASE_URL="http://localhost:3001"  # Adjust this to match your service's port
 DRIVER_ID="123-45-6789"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
