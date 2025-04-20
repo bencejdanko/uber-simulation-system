@@ -43,7 +43,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/drivers', driverRoutes);
+app.use('/api/v1/drivers', driverRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -24,7 +24,10 @@ export const generateAccessToken = (user: UserTokenData): string => {
         iss: config.jwt.issuer,
     };
     const options: SignOptions = {
-        expiresIn: parseInt(config.jwt.accessTokenLife, 10),
+
+        // ignore ts error, this should accept a string
+        // @ts-ignore
+        expiresIn: config.jwt.accessTokenLife,
         
         // expiresIn: config.jwt.accessTokenLife,
         algorithm: 'RS256', // Must match config.jwt.algorithms

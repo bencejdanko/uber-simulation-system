@@ -4,7 +4,8 @@
   "description": "Driver service for managing driver profiles and operations.",
   "main": "src/app.ts",
   "scripts": {
-    "start": "ts-node -r tsconfig-paths/register src/server.ts",
+    "serve": "ts-node src/server.ts",
+    "dev": "dotenv -e .env -- ts-node src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -25,6 +26,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^16.11.7",
     "@types/supertest": "^2.0.16",
+    "dotenv-cli": "^8.0.0",
     "jest": "^27.0.6",
     "ts-jest": "^27.1.5",
     "ts-node": "^10.4.0",

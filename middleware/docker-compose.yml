@@ -137,6 +137,25 @@ services:
     networks:
       - app-network
 
+  driver-service:
+    build:
+      context: ./services/driver # Path relative to docker-compose.yml
+      dockerfile: Dockerfile
+    # No need to expose the driver service port unless you want to access it directly
+    # ports:
+    #   - "3001:3001" # Map container port 3001 to host port 3001
+    environment:
+      - PORT=3001
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_CLIENT_ID=driver-service-consumer
+      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      - MONGODB_URI=${MONGODB_URI}
+      
+    depends_on:
+      - kafka
+    networks:
+      - app-network
+
   # --- MongoDB Service (Added) ---
   # mongo:
   #   image: mongo:6.0
@@ -154,17 +173,6 @@ services:
   #     timeout: 5s
   #     retries: 3
   #     start_period: 20s
-
-# --- Add other services below (ensure they are on app-network) ---
-# Example: Your API Gateway
-# api-gateway:
-#   image: your-gateway-image
-#   environment:
-#     - KAFKA_BOOTSTRAP_SERVERS=kafka:9092 # Connects via INTERNAL listener
-#   networks:
-#     - app-network
-#   depends_on:
-#     - kafka
 
 volumes:
   zookeeper_data:

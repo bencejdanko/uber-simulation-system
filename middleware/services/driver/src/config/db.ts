@@ -1,10 +1,5 @@
 // filepath: /home/bence/uber-simulation-system/middleware/config/db.ts
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables from one level up
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const connectDB = async (): Promise<void> => {
   try {
