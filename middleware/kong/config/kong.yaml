@@ -62,20 +62,6 @@ services:
           claims_to_verify:       # Verify standard claims
             - exp                 # Check token expiry
           run_on_preflight: true
-          # Removed invalid 'claims_to_include'
-          # Kong will use these header names to pass corresponding claims upstream
-          # By default, Kong often maps claim 'sub' -> header 'X-User-ID' and
-          # claim 'roles' -> header 'X-User-Roles' if these headers are listed
-          # and the claims exist in the validated token.
-      
-      # Request Transformer Plugin: Add JWT Claims to Headers
-      
-      - name: request-transformer
-        config:
-          add:
-            headers:
-              - "X-User-ID: ${sub}" 
-              - "X-User-Roles: ${roles}"
     
     routes:
       - name: driver-routes
