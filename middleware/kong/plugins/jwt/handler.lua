@@ -11,11 +11,14 @@ local error = error
 local ipairs = ipairs
 local pairs = pairs
 local tostring = tostring
+local table_concat = table.concat -- Cache table.concat
+local table_insert = table.insert -- Cache table.insert
+local string_gsub = string.gsub -- Cache string.gsub
 local re_gmatch = ngx.re.gmatch
 
 
 local JwtHandler = {
-  VERSION = "3.10.0",
+  VERSION = "3.10.0", -- NOTE: Keep version aligned if needed, but code is modified
   PRIORITY = 1450,
 }
 
@@ -58,23 +61,39 @@ local function retrieve_tokens(conf)
     local token_header = request_headers[v]
     if token_header then
       if type(token_header) == "table" then
-        token_header = token_header[1]
-      end
-      local iterator, iter_err = re_gmatch(token_header, "\\s*[Bb]earer\\s+(.+)", "jo")
-      if not iterator then
-        kong.log.err(iter_err)
-        break
-      end
-
-      local m, err = iterator()
-      if err then
-        kong.log.err(err)
-        break
-      end
-
-      if m and #m > 0 then
-        if m[1] ~= "" then
-          token_set[m[1]] = true
+        -- Handle potential multiple headers with the same name
+        for _, header_val in ipairs(token_header) do
+            local iterator, iter_err = re_gmatch(header_val, "\\s*[Bb]earer\\s+(.+)", "jo")
+            if not iterator then
+              kong.log.err("Regex error matching Bearer token: ", iter_err)
+              -- Continue to next header value if possible
+            else
+              local m, err = iterator()
+              if err then
+                kong.log.err("Error executing regex iterator for Bearer token: ", err)
+                -- Continue to next header value if possible
+              elseif m and #m > 0 then
+                if m[1] ~= "" then
+                  token_set[m[1]] = true
+                end
+              end
+            end
+        end
+      else -- Single header value
+        local iterator, iter_err = re_gmatch(token_header, "\\s*[Bb]earer\\s+(.+)", "jo")
+        if not iterator then
+          kong.log.err("Regex error matching Bearer token: ", iter_err)
+          -- Break might be too strong if other header names are configured
+        else
+          local m, err = iterator()
+          if err then
+            kong.log.err("Error executing regex iterator for Bearer token: ", err)
+            -- Break might be too strong
+          elseif m and #m > 0 then
+            if m[1] ~= "" then
+              token_set[m[1]] = true
+            end
+          end
         end
       end
     end
@@ -109,9 +128,9 @@ end
 
 
 -- ***** MODIFICATION START *****
--- Added 'claims' parameter to the function signature
+-- Modified 'set_consumer' to serialize array claims as JSON strings
 local function set_consumer(consumer, credential, token, claims)
--- ***** MODIFICATION END *****
+-- ***** MODIFICATION CONTINUES BELOW *****
 
   kong.client.authenticate(consumer, credential)
 
@@ -148,21 +167,74 @@ local function set_consumer(consumer, credential, token, claims)
     set_header(constants.HEADERS.ANONYMOUS, true)
   end
 
-  -- ***** MODIFICATION START *****
+  -- ***** MODIFICATION CORE LOGIC *****
+  -- Helper function (inline for simplicity) to escape JSON strings
+  local function escape_json_string(str)
+      local escaped = string_gsub(str, "\\", "\\\\") -- Escape backslashes first
+      escaped = string_gsub(escaped, "\"", "\\\"") -- Escape double quotes
+      -- Basic escaping for common control characters (optional but good practice)
+      -- escaped = string_gsub(escaped, "\n", "\\n")
+      -- escaped = string_gsub(escaped, "\r", "\\r")
+      -- escaped = string_gsub(escaped, "\t", "\\t")
+      -- escaped = string_gsub(escaped, "\f", "\\f")
+      -- escaped = string_gsub(escaped, "\b", "\\b")
+      return escaped
+  end
+
   -- Add JWT claims to upstream headers
   if claims then
     kong.log.debug("Adding JWT claims to upstream headers")
     for key, value in pairs(claims) do
+      local header_name = "X-Jwt-Claim-" .. key
+      local header_value = nil
       local value_type = type(value)
-      -- Only propagate simple types (string, number, boolean)
-      -- Header values must be strings, so convert numbers/booleans
+
       if value_type == "string" or value_type == "number" or value_type == "boolean" then
-        -- Prefix header to avoid collisions and indicate source
-        local header_name = "X-Jwt-Claim-" .. key
-        kong.log.debug("Setting header ", header_name, " with value ", tostring(value))
-        set_header(header_name, tostring(value))
+        -- Handle simple types directly (remain unchanged)
+        header_value = tostring(value)
+
+      elseif value_type == "table" then
+        -- Attempt to serialize simple arrays as JSON strings.
+        -- Uses ipairs, so only handles sequential arrays starting at index 1.
+        -- Does NOT handle nested tables or dictionary-like tables.
+        local parts = {}
+        local success = true
+        for i, element in ipairs(value) do
+            local element_type = type(element)
+            local formatted_element
+
+            if element_type == "string" then
+                formatted_element = '"' .. escape_json_string(element) .. '"'
+            elseif element_type == "number" then
+                formatted_element = tostring(element) -- JSON numbers are direct strings
+            elseif element_type == "boolean" then
+                formatted_element = tostring(element) -- Lua tostring(true) is "true"
+            else
+                -- Found a non-simple type within the array. Cannot serialize reliably.
+                kong.log.warn("Skipping JWT claim '", key, "' for header propagation. Found non-serializable element of type '", element_type, "' at index ", i, " in table.")
+                success = false
+                break -- Stop processing this table
+            end
+            table_insert(parts, formatted_element)
+        end
+
+        if success then
+             -- Construct JSON array string: "[elem1,elem2,...]"
+             header_value = "[" .. table_concat(parts, ",") .. "]"
+        else
+            -- Ensure header_value remains nil if serialization failed
+            header_value = nil
+        end
+
       else
-        kong.log.warn("Skipping JWT claim '", key, "' for header propagation as its type is '", value_type, "'")
+        -- Handle other potential types if needed, or just warn
+        kong.log.warn("Skipping JWT claim '", key, "' for header propagation as its type is '", value_type, "' (not string, number, boolean, or serializable array)")
+      end
+
+      -- Set the header only if a serializable value was determined
+      if header_value ~= nil then
+         kong.log.debug("Setting header ", header_name, " with value: '", header_value, "'")
+         set_header(header_name, header_value)
       end
     end
   end
@@ -170,6 +242,7 @@ local function set_consumer(consumer, credential, token, claims)
 
   kong.ctx.shared.authenticated_jwt_token = token -- TODO: wrap in a PDK function?
 end
+
 
 local function unauthorized(message, www_auth_content, errors)
   return { status = 401, message = message, headers = { ["WWW-Authenticate"] = www_auth_content }, errors = errors }
@@ -179,7 +252,8 @@ end
 local function do_authentication(conf)
   local token, err = retrieve_tokens(conf)
   if err then
-    return error(err)
+    kong.log.err("Error retrieving tokens: ", err)
+    return false, unauthorized("Error retrieving token", conf.realm and fmt('Bearer realm="%s"', conf.realm) or 'Bearer')
   end
 
   local www_authenticate_base = conf.realm and fmt('Bearer realm="%s"', conf.realm) or 'Bearer'
@@ -191,7 +265,8 @@ local function do_authentication(conf)
     elseif token_type == "table" then
       return false, unauthorized("Multiple tokens provided", www_authenticate_with_error)
     else
-      return false, unauthorized("Unrecognizable token", www_authenticate_with_error)
+      kong.log.warn("Unrecognizable token type received: ", token_type)
+      return false, unauthorized("Unrecognizable token format", www_authenticate_with_error)
     end
   end
 
@@ -206,9 +281,9 @@ local function do_authentication(conf)
 
   local jwt_secret_key = claims[conf.key_claim_name] or header[conf.key_claim_name]
   if not jwt_secret_key then
-    return false, unauthorized("No mandatory '" .. conf.key_claim_name .. "' in claims", www_authenticate_with_error)
+    return false, unauthorized("No mandatory '" .. conf.key_claim_name .. "' claim found in token payload or header", www_authenticate_with_error)
   elseif jwt_secret_key == "" then
-    return false, unauthorized("Invalid '" .. conf.key_claim_name .. "' in claims", www_authenticate_with_error)
+    return false, unauthorized("Invalid (empty) '" .. conf.key_claim_name .. "' claim in token", www_authenticate_with_error)
   end
 
   -- Retrieve the secret
@@ -216,39 +291,46 @@ local function do_authentication(conf)
   local jwt_secret, err      = kong.cache:get(jwt_secret_cache_key, nil,
                                               load_credential, jwt_secret_key)
   if err then
-    return error(err)
+    kong.log.err("Error loading JWT secret for key '", jwt_secret_key, "': ", err)
+    return false, { status = 500, message = "Error retrieving credential information" }
   end
 
   if not jwt_secret then
-    return false, unauthorized("No credentials found for given '" .. conf.key_claim_name .. "'", www_authenticate_with_error)
+    return false, unauthorized(fmt("No credential found for key claim value '%s'", jwt_secret_key), www_authenticate_with_error)
   end
 
   local algorithm = jwt_secret.algorithm or "HS256"
 
   -- Verify "alg"
   if jwt.header.alg ~= algorithm then
-    return false, unauthorized("Invalid algorithm", www_authenticate_with_error)
+    return false, unauthorized(fmt("Invalid algorithm specified in token. Expected '%s', got '%s'", algorithm, jwt.header.alg or "nil"), www_authenticate_with_error)
   end
 
   local is_symmetric_algorithm = algorithm ~= nil and algorithm:sub(1, 2) == "HS"
   local jwt_secret_value
 
   if is_symmetric_algorithm and conf.secret_is_base64 then
-    jwt_secret_value = jwt:base64_decode(jwt_secret.secret)
+    local ok
+    ok, jwt_secret_value = pcall(jwt.base64_decode, jwt_secret.secret) -- Use pcall for safety
+    if not ok then
+       kong.log.err("Failed to base64 decode secret for key: ", jwt_secret_key)
+       return false, unauthorized("Invalid credential configuration (secret decoding failed)", www_authenticate_with_error)
+    end
   elseif is_symmetric_algorithm then
     jwt_secret_value = jwt_secret.secret
   else
-    -- rsa_public_key is either nil or a valid plain text pem file, it can't be base64 decoded.
-    -- see #13710
+    -- Asymmetric (RS*/ES*)
     jwt_secret_value = jwt_secret.rsa_public_key
   end
 
   if not jwt_secret_value then
-    return false, unauthorized("Invalid key/secret", www_authenticate_with_error)
+    return false, unauthorized("Credential configuration is missing required key/secret value", www_authenticate_with_error)
   end
 
   -- Now verify the JWT signature
-  if not jwt:verify_signature(jwt_secret_value) then
+  local sig_ok, sig_err = jwt:verify_signature(jwt_secret_value)
+  if not sig_ok then
+    kong.log.warn("JWT signature verification failed for key '", jwt_secret_key, "'. Error: ", tostring(sig_err))
     return false, unauthorized("Invalid signature", www_authenticate_with_error)
   end
 
@@ -258,7 +340,7 @@ local function do_authentication(conf)
     return false, unauthorized(nil, www_authenticate_with_error, errors)
   end
 
-  -- Verify the JWT registered claims
+  -- Verify the JWT maximum expiration claim
   if conf.maximum_expiration ~= nil and conf.maximum_expiration > 0 then
     local ok, errors = jwt:check_maximum_expiration(conf.maximum_expiration)
     if not ok then
@@ -272,36 +354,34 @@ local function do_authentication(conf)
                                             kong.client.load_consumer,
                                             jwt_secret.consumer.id, true)
   if err then
-    return error(err)
+    kong.log.err("Error loading consumer '", jwt_secret.consumer.id, "' for JWT credential '", jwt_secret_key, "': ", err)
+    return false, { status = 500, message = "Error retrieving consumer information" }
   end
 
-  -- However this should not happen
+  -- However this should not happen if DB integrity is maintained
   if not consumer then
+    kong.log.err("Consumer ID '", jwt_secret.consumer.id, "' associated with JWT credential '", jwt_secret_key, "' not found.")
     return false, {
-      status = 401,
-      message = fmt("Could not find consumer for '%s=%s'", conf.key_claim_name, jwt_secret_key)
+      status = 500, -- Internal server error because data is inconsistent
+      message = fmt("Could not find consumer associated with credential key '%s'", jwt_secret_key)
     }
   end
 
-  -- ***** MODIFICATION START *****
   -- Pass the decoded 'claims' table to set_consumer
   set_consumer(consumer, jwt_secret, token, claims)
-  -- ***** MODIFICATION END *****
 
   return true
 end
 
 
--- ***** MODIFICATION START *****
--- Modified to pass nil for claims when setting anonymous consumer
--- (as there's no JWT in this case)
 local function set_anonymous_consumer(anonymous)
   local consumer_cache_key = kong.db.consumers:cache_key(anonymous)
   local consumer, err = kong.cache:get(consumer_cache_key, nil,
                                         kong.client.load_consumer,
                                         anonymous, true)
   if err then
-    return error(err)
+    kong.log.err("Error loading anonymous consumer '", anonymous, "': ", err)
+    return kong.response.error(500, "Error retrieving anonymous consumer information")
   end
 
   if not consumer then
@@ -311,17 +391,13 @@ local function set_anonymous_consumer(anonymous)
   end
 
   -- Pass nil for credential, token, and claims for anonymous consumer
-  set_consumer(consumer, nil, nil, nil)
+  set_consumer(consumer, nil, nil, nil) -- Passing nil for claims here is correct
 end
--- ***** MODIFICATION END *****
 
 
 --- When conf.anonymous is enabled we are in "logical OR" authentication flow.
---- Meaning - either anonymous consumer is enabled or there are multiple auth plugins
---- and we need to passthrough on failed authentication.
 local function logical_OR_authentication(conf)
   if kong.client.get_credential() then
-    -- we're already authenticated and in "logical OR" between auth methods -- early exit
     return
   end
 
@@ -332,18 +408,15 @@ local function logical_OR_authentication(conf)
 end
 
 --- When conf.anonymous is not set we are in "logical AND" authentication flow.
---- Meaning - if this authentication fails the request should not be authorized
---- even though other auth plugins might have successfully authorized user.
 local function logical_AND_authentication(conf)
-  local ok, err = do_authentication(conf)
+  local ok, err_resp = do_authentication(conf)
   if not ok then
-    return kong.response.exit(err.status, err.errors or { message = err.message }, err.headers)
+    return kong.response.exit(err_resp.status, err_resp.errors or { message = err_resp.message }, err_resp.headers)
   end
 end
 
 
 function JwtHandler:access(conf)
-  -- check if preflight request and whether it should be authenticated
   if not conf.run_on_preflight and kong.request.get_method() == "OPTIONS" then
     return
   end
