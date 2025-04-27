@@ -39,3 +39,8 @@ docker-compose down
 docker-compose down -v # delete data stored in volumes
 docker-compose down -v --remove-orphans # delete old containers, clean slate
 ```
+
+---
+
+# DEVELOPERS
+
