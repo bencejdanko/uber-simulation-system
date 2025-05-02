@@ -28,14 +28,7 @@ export const LoginSchema = z.object({
     }),
 });
 
-export const RefreshSchema = z.object({
-    body: z.object({
-        refreshToken: z.string(),
-    }),
-});
-
 // Define types inferred from schemas for controller usage
 export type RegisterCustomerInput = z.infer<typeof RegisterCustomerSchema>['body'];
 export type RegisterDriverInput = z.infer<typeof RegisterDriverSchema>['body'];
 export type LoginInput = z.infer<typeof LoginSchema>['body'];
-export type RefreshInput = z.infer<typeof RefreshSchema>['body'];
