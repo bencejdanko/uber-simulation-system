@@ -13,6 +13,8 @@ import CustomerBillingList from './components/CustomerBillingList/CustomerBillin
 import CustomerRequestRide from './components/CustomerRequestRide/CustomerRequestRide';
 import CustomerRideHistory from './components/CustomerRideHistory/CustomerRideHistory';
 import Wallet from './components/Wallet/Wallet';
+import LoginAdmin from './components/LoginAdmin/LoginAdmin';
+import AdminDashboard from './components/AdminDashboard/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
           <Route path="/customer/request-ride" element={<CustomerRequestRide />} />
           <Route path="/customer/ride-history" element={<CustomerRideHistory />} />
           <Route path="/customer/wallet" element={<Wallet />} />
+          <Route path="/login-admin" element={<LoginAdmin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Routes>
       </div>
     </BrowserRouter>
