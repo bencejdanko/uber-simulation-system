@@ -29,8 +29,6 @@ services:
       volumes:
         # Mount the configuration file ONLY
         - ./kong/config/kong.yaml:/etc/kong/kong.yaml:ro
-      networks:
-        - app-network
       healthcheck:
         test: ["CMD", "kong", "health"]
         interval: 10s
@@ -68,8 +66,6 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk # Ensure this is unique if running multiple clusters
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false" # Explicitly disable, let broker-init handle it
-    networks:
-      - app-network
     healthcheck:
       # CORRECTED: Use full path to the script and port 9092
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null || exit 1"]
@@ -91,8 +87,6 @@ services:
     # command: is not needed when entrypoint is the script
     environment:
       KAFKA_CREATE_TOPICS: "user-registered:1:1"
-    networks:
-      - app-network
     # Kompose label to indicate this is a one-off init container
     restart: "no"
 
@@ -119,7 +113,7 @@ services:
       - JWT_ISSUER=https://my-auth-service.com
       
       # Kafka configuration
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=auth-service-producer
       - KAFKA_USER_REGISTERED_TOPIC=user.registered
       
@@ -132,10 +126,10 @@ services:
       - ./keys/public.pem:/usr/src/app/public.pem:ro
     
     depends_on:
-      - kafka
-      # - mongo # Added dependency on MongoDB
-    networks:
-      - app-network
+      mongo:
+        condition: service_healthy
+      broker-init: # Depend on the init container completing successfully
+        condition: service_completed_successfully
 
   driver-service:
     build:
@@ -146,42 +140,31 @@ services:
     #   - "3001:3001" # Map container port 3001 to host port 3001
     environment:
       - PORT=3001
-      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=driver-service-consumer
       - KAFKA_USER_REGISTERED_TOPIC=user.registered
       - MONGODB_URI=${MONGODB_URI}
       
     depends_on:
-      - kafka
-    networks:
-      - app-network
+      mongo:
+        condition: service_healthy
+      broker-init: # Depend on the init container completing successfully
+        condition: service_completed_successfully
 
-  # --- MongoDB Service (Added) ---
-  # mongo:
-  #   image: mongo:6.0
-  #   container_name: mongodb
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - mongodb_data:/data/db
-  #   networks:
-  #     - app-network
-  #   # Optional: Add health check
-  #   healthcheck:
-  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 3
-  #     start_period: 20s
+  mongo:
+    image: mongo:6.0
+    container_name: uber-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
-  zookeeper_data:
+  mongodb_data:
     driver: local
-  kafka_data:
-    driver: local
-  # mongodb_data:
-  #   driver: local
-
-networks:
-  app-network:
-    driver: bridge
