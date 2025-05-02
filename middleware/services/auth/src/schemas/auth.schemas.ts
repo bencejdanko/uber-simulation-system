@@ -4,11 +4,9 @@ export const RegisterCustomerSchema = z.object({
     body: z.object({
         email: z.string().email(),
         password: z.string().min(8), // Add complexity rules if needed
-        // Include other required fields from API spec (firstName, lastName etc.)
         firstName: z.string().min(1),
         lastName: z.string().min(1),
         phoneNumber: z.string().optional(), // Example: make optional
-        // SSN should NOT typically be part of registration payload unless strictly necessary & handled securely
     }),
 });
 
@@ -16,11 +14,9 @@ export const RegisterDriverSchema = z.object({
     body: z.object({
         email: z.string().email(),
         password: z.string().min(8), // Add complexity rules if needed
-        // Include other required fields from API spec (firstName, lastName etc.)
         firstName: z.string().min(1),
         lastName: z.string().min(1),
         phoneNumber: z.string().optional(), // Example: make optional
-        // SSN should NOT typically be part of registration payload unless strictly necessary & handled securely
     }),
 });
 

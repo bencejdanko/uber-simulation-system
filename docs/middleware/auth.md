@@ -21,7 +21,6 @@ Used in the request body for `POST /register/customer`.
 
 ```json
 {
-  "loginId": "string (e.g., email format or unique username)", // Required, must be unique. **RECOMMENDATION: Avoid SSN.**
   "firstName": "string", // Required for initial profile creation trigger
   "lastName": "string", // Required for initial profile creation trigger
   "email": "string (email format)", // Required, must be unique (often same as loginId)
@@ -31,7 +30,6 @@ Used in the request body for `POST /register/customer`.
   // "address": { ... } // See Customer Service Docs
 }
 ```
-*(**Note:** Renamed `userId` to `loginId` to strongly discourage SSN usage. `email` might be a suitable `loginId`.)*
 
 ### Registration Request (Driver)
 
@@ -39,7 +37,6 @@ Used in the request body for `POST /register/driver`.
 
 ```json
 {
-  "loginId": "string (e.g., email format or unique username)", // Required, must be unique. **RECOMMENDATION: Avoid SSN.**
   "firstName": "string", // Required for initial profile creation trigger
   "lastName": "string", // Required for initial profile creation trigger
   "email": "string (email format)", // Required, must be unique (often same as loginId)
@@ -50,7 +47,6 @@ Used in the request body for `POST /register/driver`.
   // "carDetails": { ... } // See Driver Service Docs - Likely Required
 }
 ```
-*(**Note:** Renamed `userId` to `loginId`.)*
 
 ### Login Request
 
@@ -62,7 +58,6 @@ Used in the request body for `POST /login`.
   "password": "string" // Required
 }
 ```
-*(**Note:** Renamed `userId` to `loginId`.)*
 
 ### Token Response Object (Simplified)
 
@@ -75,7 +70,6 @@ Standard response format upon successful login or registration.
   "expiresIn": "integer (seconds until access token expires)" // e.g., 28800 (8 hours)
 }
 ```
-*(**Note:** Removed `refreshToken`. `expiresIn` now refers to the session duration.)*
 
 ### Error Response Object
 
