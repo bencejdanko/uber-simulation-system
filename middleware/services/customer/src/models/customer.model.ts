@@ -26,6 +26,7 @@ const customerSchema = new Schema<ICustomer>(
       type: String,
       required: true,
       unique: true,
+      match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     },
     email: {
       type: String,

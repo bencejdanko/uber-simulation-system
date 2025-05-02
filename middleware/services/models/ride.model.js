@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const RideSchema = new mongoose.Schema({
-  _id: { type: String, required: true },
-  customerId: { type: String, required: true },
-  driverId: { type: String, required: true },
+  _id: { type: String, match: /^\d{3}-\d{2}-\d{4}$/, required: true },
+  customerId: { type: String, match: /^\d{3}-\d{2}-\d{4}$/, required: true },
+  driverId: { type: String, match: /^\d{3}-\d{2}-\d{4}$/, required: true },
   pickupLocation: {
     type: {
       type: String,

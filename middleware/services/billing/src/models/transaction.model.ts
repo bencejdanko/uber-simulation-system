@@ -33,21 +33,25 @@ const transactionSchema = new Schema<ITransaction>(
       type: String,
       required: true,
       unique: true,
+      match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     },
     rideId: {
       type: String,
       required: true,
       index: true,
+      match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     },
     customerId: {
       type: String,
       required: true,
       index: true,
+      match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     },
     driverId: {
       type: String,
       required: true,
       index: true,
+      match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     },
     amount: {
       type: Number,
