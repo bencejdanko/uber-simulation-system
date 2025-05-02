@@ -4,7 +4,7 @@
 KONG_PROXY_PORT=8000 # Port mapped in docker-compose for Kong's proxy
 BASE_URL="http://localhost:$KONG_PROXY_PORT/api/v1/auth" # Target Kong now
 # Use the LOGIN_ID and PASSWORD from a successful registration
-LOGIN_ID="driver-1745090322@example.com" # Replace with actual registered loginId
+LOGIN_ID="example@example.com" # Replace with actual registered loginId
 PASSWORD="StrongPassword123!" # Replace with actual password
 
 # Request
