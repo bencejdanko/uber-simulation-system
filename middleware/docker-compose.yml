@@ -38,73 +38,63 @@ services:
         retries: 5
         start_period: 15s # Give time for config load, especially first time
 
-  # --- Apache Zookeeper ---
-  zookeeper:
-    image: bitnami/zookeeper:3.8
+  broker:
+    # --- BROKER CONFIGURATION UNCHANGED AS REQUESTED ---
+    image: apache/kafka:latest
+    hostname: broker
+    container_name: uber-broker
     ports:
-      - "2181:2181"
+      - "9092:9092" # Exposes PLAINTEXT_HOST listener
+      # The internal ports 29092 and 29093 don't strictly need to be exposed
+      # to the host machine unless you have external tools *on the host*
+      # that need to connect directly to these internal listeners.
+      # Keeping them for explicitness based on original file.
+      - "29092:29092"
+      - "29093:29093"
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    volumes:
-      - zookeeper_data:/bitnami/zookeeper
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk # Ensure this is unique if running multiple clusters
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false" # Explicitly disable, let broker-init handle it
     networks:
       - app-network
+    healthcheck:
+      # CORRECTED: Use full path to the script and port 9092
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 15s       # Keep slightly increased timeout
+      retries: 10
+      start_period: 60s  # Keep increased start period
 
-  # --- Apache Kafka Broker ---
-  kafka:
-    image: bitnami/kafka:3.5
-    # ports:
-      # Port for clients OUTSIDE the Docker network (maps to EXTERNAL listener's container port 9094)
-      # - "${KAFKA_PORT}:9094"
-      # Port 9092 is used INTERNALLY by containers and doesn't need to be exposed to the host.
-      # We explicitly bind to it inside the container using KAFKA_CFG_LISTENERS.
-    environment:
-      # --- Zookeeper Connection ---
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-
-      # --- Listener Configuration (CRITICAL for Connectivity) ---
-      # 1. Define Listener Names and Security Protocols
-      #    Maps listener names (INTERNAL, EXTERNAL) to security protocols (PLAINTEXT).
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-
-      # 2. Define Listeners the Broker Should *Bind* To
-      #    Tells Kafka to listen on specific ports using the names defined above.
-      #    INTERNAL listener binds to port 9092 on all container interfaces (accessible within Docker network).
-      #    EXTERNAL listener binds to port 9094 on all container interfaces (accessible via the mapped port 9094 on the host).
-      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,EXTERNAL://:9094
-      # Note: Using :<port> or 0.0.0.0:<port> makes Kafka listen on all available network interfaces within the container.
-
-      # 3. Define Advertised Listeners for Clients
-      #    Tells clients *how* to connect to the broker, depending on where the client is.
-      #    Clients inside the Docker network use the INTERNAL listener via the service name 'kafka' and port 9092.
-      #    Clients outside the Docker network (on the host) use the EXTERNAL listener via 'localhost' and the mapped port 9094.
-      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:9094
-
-      # 4. Define Internal Communication Listener
-      #    Which listener Kafka uses for its own internal communication (inter-broker, controller).
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
-
-      # --- Topic Settings ---
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
-      - KAFKA_CFG_NUM_PARTITIONS=3 # Default partitions for auto-created topics
-
-      # --- Automatic Topic Creation (Bitnami Feature) ---
-      # Format: "TopicName1:Partitions:ReplicationFactor,TopicName2:Partitions:ReplicationFactor"
-      - KAFKA_CREATE_TOPICS="user.registered:1:1,another.topic:3:1,yet.another.topic:1:1" # Add your topics here
-
-      # --- Other Settings ---
-      - ALLOW_PLAINTEXT_LISTENER=yes # Required by Bitnami for PLAINTEXT listeners
-      - KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS=100 # Faster dev restarts
-
-    volumes:
-      - kafka_data:/bitnami/kafka
+  broker-init:
+    image: apache/kafka:latest
+    container_name: uber-broker-init
     depends_on:
-      - zookeeper
+      broker:
+        condition: service_healthy # Wait for broker's healthcheck to pass
+    volumes:
+      - ./broker-init.sh:/opt/kafka/broker-init.sh:ro
+    # Set the entrypoint to execute the mounted script
+    entrypoint: ["/bin/sh", "/opt/kafka/broker-init.sh"]
+    # command: is not needed when entrypoint is the script
+    environment:
+      KAFKA_CREATE_TOPICS: "user-registered:1:1"
     networks:
       - app-network
+    # Kompose label to indicate this is a one-off init container
+    restart: "no"
 
   # --- Auth Service ---
   auth-service:
