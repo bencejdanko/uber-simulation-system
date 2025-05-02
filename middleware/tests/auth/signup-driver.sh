@@ -11,13 +11,14 @@ location="candyland" # Replace with actual registered loginId
 
 # Request
 echo "Attempting login via Kong..."
-curl -X POST "$BASE_URL/register/restaurant" \
+curl -X POST "$BASE_URL/register/driver" \
      -H "Content-Type: application/json" \
      -d '{
-            "name": "'"$name"'",
+            "firstName": "'"$firstName"'",
+            "lastName": "'"$lastName"'",
             "email": "'"$email"'",
             "password": "'"$password"'",
-            "location": "'"$location"'"
+            "phoneNumber": "'"$phoneNumber"'"
          }'
 
 # Expected Outcome:

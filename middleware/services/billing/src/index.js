@@ -50,8 +50,8 @@ redisClient.on('error', (err) => {
 
 // Initialize Kafka
 const kafka = new Kafka({
-  clientId: 'billing-service',
-  brokers: [process.env.KAFKA_BROKER || 'localhost:9092']
+  clientId: process.env.KAFKA_CLIENT_ID || 'billing-service',
+  brokers: process.env.KAFKA_BROKERS.split(',') || 'localhost:9092'
 });
 
 const consumer = kafka.consumer({ groupId: 'billing-group' });
@@ -62,8 +62,8 @@ const connectKafka = async () => {
     await consumer.connect();
     console.log('✅ Kafka connected');
     
-    await consumer.subscribe({ topic: 'ride-completed', fromBeginning: false });
-    console.log('✅ Subscribed to ride-completed topic');
+    await consumer.subscribe({ topic: process.env.KAFKA_RIDE_COMPLETED_TOPIC, fromBeginning: false });
+    console.log(`✅ Subscribed to ${KAFKA_RIDE_COMPLETED_TOPIC} topic`);
     
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {

@@ -21,5 +21,5 @@ dump/
 
 coverage
 
-private.pem
-public.pem
+#private.pem
+#public.pem
