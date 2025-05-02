@@ -128,9 +128,33 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       broker-init: # Depend on the init container completing successfully
         condition: service_completed_successfully
 
+  # --- Billing Service ---
+  billing-service:
+    build:
+      context: ./services/billing # Path relative to docker-compose.yml
+      dockerfile: Dockerfile
+    # No need to expose the billing service port unless you want to access it directly
+    # ports:
+    #   - "3002:3002" # Map container port 3002 to host port 3002
+    environment:
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      broker-init: # Depend on the init container completing successfully
+        condition: service_completed_successfully
+
+  # --- Driver Service ---
   driver-service:
     build:
       context: ./services/driver # Path relative to docker-compose.yml
@@ -148,8 +172,24 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       broker-init: # Depend on the init container completing successfully
         condition: service_completed_successfully
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mongo:
     image: mongo:6.0
@@ -167,4 +207,6 @@ services:
 
 volumes:
   mongodb_data:
+    driver: local
+  redis_data:
     driver: local
