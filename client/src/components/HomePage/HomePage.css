@@ -39,3 +39,54 @@
 .home-button:hover {
   background-color: #0056b3;
 }
+
+.home-container.sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+  text-align: left;
+  padding: 0;
+}
+
+.sidebar {
+  width: 220px;
+  background: #222;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 40px 0 0 0;
+  min-height: 100vh;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+}
+
+.sidebar-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.sidebar-button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  margin: 10px 20px;
+  padding: 12px 0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar-button:hover {
+  background: #0056b3;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #f8f9fa;
+}

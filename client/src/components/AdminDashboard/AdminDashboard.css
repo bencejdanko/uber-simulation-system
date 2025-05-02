@@ -1,0 +1,58 @@
+.admin-dashboard-container {
+  font-family: Arial, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-dashboard-header {
+  background: #222;
+  color: #fff;
+  width: 100%;
+  padding: 2rem 0 1rem 0;
+  text-align: center;
+}
+
+.admin-dashboard-logo {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.admin-dashboard-title {
+  font-size: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.admin-dashboard-content {
+  margin-top: 2rem;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  min-width: 320px;
+  text-align: center;
+}
+
+.admin-dashboard-buttons {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.admin-dashboard-button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-dashboard-button:hover {
+  background: #0056b3;
+}
