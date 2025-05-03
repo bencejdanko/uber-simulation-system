@@ -1,14 +1,11 @@
 import { Schema, model, Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 
 // Define the structure of a User Credential document
 export interface IAuth extends Document {
-    userId: string; // Primary internal ID
+    userId: string; // Primary internal ID, now expected in SSN format
     email: string;
     hashedPassword: string;
     userType: 'CUSTOMER' | 'DRIVER' | 'ADMIN'; // Use string literal types
-    // ssn?: string; // Optional, encrypted SSN if required
-    // activeRefreshTokenId?: string; // Optional for stateful refresh tokens
     createdAt: Date;
     updatedAt: Date;
 }
@@ -16,7 +13,7 @@ export interface IAuth extends Document {
 const AuthSchema = new Schema<IAuth>({
     userId: {
         type: String,
-        default: uuidv4,
+        match: /^\d{3}-\d{2}-\d{4}$/, // Add SSN format validation
         unique: true,
         required: true,
         index: true,

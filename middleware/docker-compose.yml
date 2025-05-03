@@ -104,7 +104,7 @@ services:
       - MONGODB_URI=${MONGODB_URI}
       - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=admin-service-consumer
-      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      - KAFKA_USER_REGISTERED_TOPIC=user-registered
       
     depends_on:
       mongo:
@@ -140,7 +140,7 @@ services:
       # Kafka configuration
       - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=auth-service-producer
-      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      - KAFKA_USER_REGISTERED_TOPIC=userregistered
       
       # Hashing configuration
       - BCRYPT_SALT_ROUNDS=10
