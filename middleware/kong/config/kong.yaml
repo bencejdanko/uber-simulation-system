@@ -50,6 +50,55 @@ services:
         strip_path: false
         # This route should NOT have JWT validation
 
+  - name: admin-service
+    url: http://admin-service:3000
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: iss       # Look for the 'iss' claim in the JWT
+          claims_to_verify:       # Verify standard claims
+            - exp                 # Check token expiry
+          run_on_preflight: true
+    routes:
+      - name: admin-routes
+        paths:
+          - /api/v1/admin
+        strip_path: false
+        # This route should NOT have JWT validation
+  
+  - name: billing-service
+    url: http://billing-service:3000
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: iss       # Look for the 'iss' claim in the JWT
+          claims_to_verify:       # Verify standard claims
+            - exp                 # Check token expiry
+          run_on_preflight: true
+    routes:
+      - name: billing-routes
+        paths:
+          - /api/v1/bills
+          - /api/v1/pricing
+        strip_path: false
+        # This route should NOT have JWT validation
+  
+  - name: customer-service
+    url: http://customer-service:3000
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: iss       # Look for the 'iss' claim in the JWT
+          claims_to_verify:       # Verify standard claims
+            - exp                 # Check token expiry
+          run_on_preflight: true
+    routes:
+      - name: customer-routes
+        paths:
+          - /api/v1/customers
+        strip_path: false
+        # This route should NOT have JWT validation
+
   # --- Example: Driver Service Definition (Protected) ---
   - name: driver-service
     # IMPORTANT: Make sure 'driver-service' is defined in your docker-compose.yml
@@ -70,4 +119,19 @@ services:
         strip_path: false
         # The JWT plugin applied to the service will protect this route
 
-# --- Add other microservices similarly ---
+  - name: rides-service
+    url: http://rides-service:3000
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: iss       # Look for the 'iss' claim in the JWT
+          claims_to_verify:       # Verify standard claims
+            - exp                 # Check token expiry
+          run_on_preflight: true
+    
+    routes:
+      - name: rides-routes
+        paths:
+          - /api/v1/rides
+        strip_path: false
+        # The JWT plugin applied to the service will protect this route

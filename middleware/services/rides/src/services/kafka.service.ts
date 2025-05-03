@@ -11,7 +11,7 @@ export class KafkaService {
   private constructor() {
     this.kafka = new Kafka({
       clientId: 'rides-service',
-      brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+      brokers: config.kafka.brokers,
       ssl: process.env.KAFKA_SSL === 'true',
       sasl: process.env.KAFKA_USERNAME && process.env.KAFKA_PASSWORD ? {
         mechanism: 'plain',

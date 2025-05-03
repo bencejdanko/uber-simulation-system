@@ -31,7 +31,7 @@ const swaggerSpec = swaggerJSDoc({
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
-app.use('/customers', customerRoutes);
+app.use('/api/v1/customers', customerRoutes);
 
 // Health check
 app.get('/', (_req, res) => res.send('Customer Service is running 🚀'));

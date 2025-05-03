@@ -90,8 +90,33 @@ services:
     # Kompose label to indicate this is a one-off init container
     restart: "no"
 
+  # --- Admin Service ---
+  admin-service:
+    container_name: uber-admin
+    build:
+      context: ./services/admin # Path relative to docker-compose.yml
+      dockerfile: Dockerfile
+    # No need to expose the admin service port unless you want to access it directly
+    # ports:
+    #   - "3003:3003" # Map container port 3003 to host port 3003
+    environment:
+      - PORT=3000
+      - MONGODB_URI=${MONGODB_URI}
+      - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
+      - KAFKA_CLIENT_ID=admin-service-consumer
+      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      broker-init: # Depend on the init container completing successfully
+        condition: service_completed_successfully
+
   # --- Auth Service ---
   auth-service:
+    container_name: uber-auth
     build:
       context: ./services/auth # Path relative to docker-compose.yml
       dockerfile: Dockerfile
@@ -135,6 +160,7 @@ services:
 
   # --- Billing Service ---
   billing-service:
+    container_name: uber-billing
     build:
       context: ./services/billing # Path relative to docker-compose.yml
       dockerfile: Dockerfile
@@ -158,20 +184,21 @@ services:
       broker-init: # Depend on the init container completing successfully
         condition: service_completed_successfully
 
-  # --- Admin Service ---
-  admin-service:
+  # --- Customer Service ---
+  customer-service:
+    container_name: uber-customer
     build:
-      context: ./services/admin # Path relative to docker-compose.yml
+      context: ./services/customer # Path relative to docker-compose.yml
       dockerfile: Dockerfile
-    # No need to expose the admin service port unless you want to access it directly
+    # No need to expose the driver service port unless you want to access it directly
     # ports:
-    #   - "3003:3003" # Map container port 3003 to host port 3003
+    #   - "3001:3001" # Map container port 3001 to host port 3001
     environment:
       - PORT=3000
+      #- KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
+      #- KAFKA_CLIENT_ID=driver-service-consumer
+      #- KAFKA_USER_REGISTERED_TOPIC=user.registered
       - MONGODB_URI=${MONGODB_URI}
-      - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
-      - KAFKA_CLIENT_ID=admin-service-consumer
-      - KAFKA_USER_REGISTERED_TOPIC=user.registered
       
     depends_on:
       mongo:
@@ -183,6 +210,7 @@ services:
 
   # --- Driver Service ---
   driver-service:
+    container_name: uber-driver
     build:
       context: ./services/driver # Path relative to docker-compose.yml
       dockerfile: Dockerfile
@@ -204,9 +232,35 @@ services:
       broker-init: # Depend on the init container completing successfully
         condition: service_completed_successfully
 
+  # --- Ride Service ---
+  rides-service:
+    container_name: uber-rides
+    build:
+      context: ./services/rides # Path relative to docker-compose.yml
+      dockerfile: Dockerfile
+    # No need to expose the ride service port unless you want to access it directly
+    # ports:
+    #   - "3004:3004" # Map container port 3004 to host port 3004
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=${MONGODB_URI}
+      - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
+      - KAFKA_CLIENT_ID=uber-rides-service
+      - KAFKA_RIDE_REQUEST_TOPIC=ride_requests
+      
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      broker-init: # Depend on the init container completing successfully
+        condition: service_completed_successfully
+
+
   redis:
     image: redis:7.2-alpine
-    container_name: redis
+    container_name: uber-redis
     ports:
       - "6379:6379"
     volumes:

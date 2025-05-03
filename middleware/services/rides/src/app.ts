@@ -59,7 +59,7 @@ const connectToServices = async () => {
 };
 
 // Routes
-app.use('/api/rides', rideRoutes);
+app.use('/api/v1/rides', rideRoutes);
 
 // Error handling
 app.use(errorHandler);
