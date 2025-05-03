@@ -1,25 +1,12 @@
 import { Request, Response } from 'express';
 import { DriverService } from '../services/driver.service';
-import { DriverInput, DriverUpdate, DriverLocationUpdate } from '../types/driver.types';
+import { DriverUpdate, DriverLocationUpdate } from '../types/driver.types';
 
 class DriverController {
     private driverService: DriverService;
 
     constructor(driverService: DriverService) {
         this.driverService = driverService;
-    }
-
-    createDriver = async (req: Request, res: Response): Promise<any> => {
-        try {
-            const driverData = req.body as DriverInput;
-            const newDriver = await this.driverService.createDriver(driverData);
-            res.status(201).location(`/drivers/${newDriver._id}`).json(newDriver);
-        } catch (error: any) {
-            res.status(error.status || 500).json({
-                error: error.code || 'internal_server_error',
-                message: error.message || 'An unexpected error occurred.'
-            });
-        }
     }
 
     getDriverById = async (req: Request, res: Response): Promise<any> => {
