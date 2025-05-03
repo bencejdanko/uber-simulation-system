@@ -6,7 +6,7 @@ BASE_URL="http://localhost:$KONG_PROXY_PORT/api/v1/auth" # Target Kong now
 # Use the LOGIN_ID and PASSWORD from a successful registration
 firstName="example" # Replace with actual registered loginId
 lastName="example" # Replace with actual registered loginId
-email="example5@example.com" # Replace with actual registered loginId
+email="example9@example.com" # Replace with actual registered loginId
 password="StrongPassword123!" # Replace with actual password
 phoneNumber="408-872-2416" # Replace with actual registered loginId
 

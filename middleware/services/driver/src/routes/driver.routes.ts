@@ -2,7 +2,6 @@ import { Router } from 'express';
 import DriverController from '../controllers/driver.controller';
 import { DriverService } from '../services/driver.service';
 import { 
-  validateDriverInput, 
   validateDriverUpdate, 
   validateLocationUpdate,
   validateNearbySearch 
@@ -11,15 +10,6 @@ import {
 const router = Router();
 const driverService = new DriverService();
 const driverController = new DriverController(driverService);
-
-// Health check endpoint - no authentication required
-router.get('/health', (req, res) => {
-  console.log("Headers:", req.headers); // Debug
-  res.status(200).json({ status: 'healthy' });
-});
-
-// Create Driver - authentication first, then validation
-router.post('/', validateDriverInput, driverController.createDriver);
 
 // List and Search Drivers
 router.get('/', driverController.listDrivers);
