@@ -244,6 +244,10 @@ register_driver() {
 # Returns the HTTP status code via 'echo' to stdout
 # Echos the path to the temporary response file to stdout *before* returning
 # The caller is responsible for reading stdout to get the file path and for removing the file
+# Function to make an authenticated API call
+# Returns the HTTP status code via 'echo' to stdout
+# Echos the path to the temporary response file to stdout *before* returning
+# The caller is responsible for reading stdout to get the file path and for removing the file
 authenticated_request() {
     local method="$1"
     local url="$2"
@@ -255,13 +259,15 @@ authenticated_request() {
     # Use Authorization header directly as per billing instructions
     local curl_opts=(-s -X "$method" "$url" -H "Authorization: Bearer $token")
 
-    echo -e "${C_DIM}Request: $method $url${C_RESET}"
+    # Redirect DEBUG output to stderr
+    echo -e "${C_DIM}Request: $method $url${C_RESET}" >&2
     if [[ "$method" == "POST" || "$method" == "PATCH" || "$method" == "PUT" ]]; then
         curl_opts+=(-H "Content-Type: application/json")
         # Only add -d if data is not empty
         if [[ -n "$data" ]]; then
             curl_opts+=(-d "$data")
-             echo -e "${C_DIM}Data: $(echo "$data" | jq -c .)${C_RESET}" # Print compact JSON
+             # Redirect DEBUG output to stderr
+             echo -e "${C_DIM}Data: $(echo "$data" | jq -c .)${C_RESET}" >&2
         fi
     fi
 
@@ -274,15 +280,17 @@ authenticated_request() {
         status_color="${C_YELLOW}"
     fi
 
-    echo -e "${C_DIM}Response Status:${C_RESET} ${status_color}${status_code}${C_RESET}"
-    echo -e "${C_DIM}Response Body:${C_RESET}"
-    jq '.' "$response_file" || cat "$response_file" # Pretty print if JSON, else cat
-    echo ""
+    # Redirect DEBUG output to stderr
+    echo -e "${C_DIM}Response Status:${C_RESET} ${status_color}${status_code}${C_RESET}" >&2
+    echo -e "${C_DIM}Response Body:${C_RESET}" >&2
+    # Redirect DEBUG output to stderr
+    (jq '.' "$response_file" || cat "$response_file") >&2
+    echo "" >&2 # Also redirect the blank line
 
-    # Echo the response file path to stdout for the caller
+    # Echo the response file path to stdout for the caller (INTENDED CAPTURE)
     echo "$response_file"
 
-    # Return the status code to stdout
+    # Return the status code to stdout (INTENDED CAPTURE)
     echo "$status_code"
 }
 
