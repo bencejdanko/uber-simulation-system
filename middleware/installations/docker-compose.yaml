@@ -1,0 +1,75 @@
+# docker-compose.yml
+# Lightweight infrastructure setup for Kafka, Zookeeper, Redis, and MongoDB
+
+version: '3.8' # Specify docker-compose version
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.8 # Using a specific version is often better than latest
+    ports:
+      - "2181:2181" # Expose Zookeeper default port
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper # Use a named volume for Zookeeper data
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes # Allow Kafka to connect easily without complex ACLs (for dev)
+
+  kafka:
+    image: bitnami/kafka:3.5 # Using a specific version is often better than latest
+    ports:
+      - "9092:9092" # Expose Kafka default port for clients
+    volumes:
+      - kafka_data:/bitnami/kafka # Use a named volume for Kafka data/logs
+    environment:
+      # --- Zookeeper Configuration ---
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181 # Connect to Zookeeper using the service name
+
+      # --- Listener Configuration ---
+      # Listener for internal Docker network communication (optional but good practice)
+      # - KAFKA_CFG_LISTENERS=INTERNAL://:9093,EXTERNAL://:9092
+      # Listener for clients outside Docker (e.g., your host machine)
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092 # Listen on port 9092 within the container
+
+      # --- Advertised Listener Configuration (CRUCIAL) ---
+      # How clients outside Docker network should connect to Kafka
+      # Use localhost if accessing from your host machine where docker-compose runs
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      # If only accessed from other containers on the same docker network, use:
+      # - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+
+      # --- Other Basic Settings ---
+      - ALLOW_PLAINTEXT_LISTENER=yes # Allow non-SSL connections (for dev)
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true # Automatically create topics (convenient for dev)
+      - KAFKA_BROKER_ID=1 # Simple broker ID for single-node setup
+    depends_on:
+      - zookeeper # Ensure Zookeeper starts before Kafka
+
+  redis:
+    image: redis:7 # Use a specific major version (e.g., 7) or redis:latest
+    ports:
+      - "6379:6379" # Expose Redis default port
+    volumes:
+      - ./redis-data:/data # Mount a local directory for Redis persistence (AOF/RDB files)
+    # Optional: Add command for specific persistence settings if needed
+    # command: redis-server --save 60 1 --loglevel warning
+
+  mongodb:
+    image: mongo:6 # Use a specific major version (e.g., 6) or mongo:latest
+    ports:
+      - "27017:27017" # Expose MongoDB default port
+    volumes:
+      - ./mongo-data:/data/db # Mount a local directory for MongoDB data files
+    environment:
+      # Define root user credentials (change 'secret' in a real environment!)
+      - MONGO_INITDB_ROOT_USERNAME=mongoadmin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+
+# Define named volumes used by Zookeeper and Kafka
+volumes:
+  zookeeper_data:
+    driver: local # Explicitly state driver (often default)
+  kafka_data:
+    driver: local
+
+# Note: redis-data and mongo-data are using host mounts specified directly
+# in the service definition. Ensure the ./redis-data and ./mongo-data
+# directories exist locally or Docker will create them (potentially owned by root).

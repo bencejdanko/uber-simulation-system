@@ -1,0 +1,2 @@
+- DB Schema and Middlware design for DB team
+- Architecture plan for services
