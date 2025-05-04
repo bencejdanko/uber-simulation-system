@@ -21,5 +21,7 @@ dump/
 
 coverage
 
+dist
+
 #private.pem
 #public.pem
