@@ -1,14 +1,18 @@
 const Bill = require('../models/bill.model');
 const pricingService = require('./pricing.service');
-const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid');
 const { SSNGenerator } = require('../utils/ssn-generator');
 
-// Initialize Redis client for caching
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379
-});
+// Mock Redis client for testing purposes
+const redisClient = {
+  get: async () => null,
+  set: async () => 'OK',
+  del: async () => 1,
+  exists: async () => 0,
+  expire: async () => 1
+};
+
+console.log('Using mock Redis client in bill service');
 
 /**
  * Generate a unique billing ID in SSN format
