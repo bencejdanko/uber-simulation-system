@@ -168,7 +168,7 @@ services:
     # ports:
     #   - "3002:3002" # Map container port 3002 to host port 3002
     environment:
-      - PORT=3000
+      - BILLING_SERVICE_PORT=3000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - MONGODB_URI=${MONGODB_URI}

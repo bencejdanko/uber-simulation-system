@@ -63,7 +63,7 @@ const connectKafka = async () => {
     console.log('✅ Kafka connected');
     
     await consumer.subscribe({ topic: process.env.KAFKA_RIDE_COMPLETED_TOPIC, fromBeginning: false });
-    console.log(`✅ Subscribed to ${KAFKA_RIDE_COMPLETED_TOPIC} topic`);
+    console.log(`✅ Subscribed to ${process.env.KAFKA_RIDE_COMPLETED_TOPIC} topic`);
     
     await consumer.run({
       eachMessage: async ({ topic, partition, message }) => {
@@ -85,7 +85,7 @@ app.use('/api/v1/bills', billRoutes);
 app.use('/api/v1/pricing', pricingRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('api/v1/bills/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'billing-service' });
 });
 
