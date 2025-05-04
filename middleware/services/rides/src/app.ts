@@ -58,6 +58,11 @@ const connectToServices = async () => {
   }
 };
 
+// Root health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy' });
+});
+
 // Routes
 app.use('/api/v1/rides', rideRoutes);
 

@@ -133,5 +133,6 @@ services:
       - name: rides-routes
         paths:
           - /api/v1/rides
+          - /api/v1/rides/nearby-drivers
         strip_path: false
         # The JWT plugin applied to the service will protect this route

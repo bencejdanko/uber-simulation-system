@@ -17,6 +17,14 @@ router.post(
   rideController.createRide
 );
 
+// Find nearby drivers
+router.get(
+  '/nearby-drivers',
+  verifyToken,
+  userRateLimiter(5),
+  rideController.findNearbyDrivers
+);
+
 // Get ride by ID
 router.get(
   '/:id',
@@ -41,14 +49,6 @@ router.post(
   verifyToken,
   userRateLimiter(20),
   rideController.cancelRide
-);
-
-// Find nearby drivers
-router.get(
-  '/nearby-drivers',
-  verifyToken,
-  userRateLimiter(5),
-  rideController.findNearbyDrivers
 );
 
 export const rideRoutes = router; 
