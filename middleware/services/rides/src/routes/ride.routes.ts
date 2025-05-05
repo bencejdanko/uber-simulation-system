@@ -10,10 +10,15 @@ const router = Router();
 // Create a new ride
 router.post(
   '/',
+  (req, res, next) => { console.log('✅ hit 1: entering verifyToken'); next(); },
   verifyToken,
+  (req, res, next) => { console.log('✅ hit 2: entering checkRole'); next(); },
   checkRole(['CUSTOMER']),
+  (req, res, next) => { console.log('✅ hit 3: entering rateLimiter'); next(); },
   userRateLimiter(10),
+  (req, res, next) => { console.log('✅ hit 4: entering validateRequest'); next(); },
   validateRequest(createRideSchema),
+  (req, res, next) => { console.log('✅ hit 5: about to call controller'); next(); },
   rideController.createRide
 );
 

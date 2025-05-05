@@ -15,7 +15,7 @@ interface Config {
 
 export const config: Config = {
   port: process.env.PORT ? parseInt(process.env.PORT) : 3000,
-  mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/uber-rides',
+  mongodbUri: process.env.MONGODB_URI || 'mongodb://mongo:27017/uber_simulation',
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
   kafka: {
     brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
