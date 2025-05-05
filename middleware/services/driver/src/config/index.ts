@@ -5,10 +5,12 @@ const config = {
   },
   kafka: {
     brokers: process.env.KAFKA_BROKERS || 'localhost:9092',
-    topic: process.env.KAFKA_TOPIC || 'driver-events',
+    location_updates_topic: process.env.KAFKA_LOCATION_UPDATES_TOPIC || 'driver_location_updates',
+    enabled: process.env.KAFKA_ENABLED !== 'false',
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
+    cacheEnabled: process.env.DRIVER_SERVICE_CACHE_ENABLED !== 'false',
   },
 
   logLevel: process.env.LOG_LEVEL || 'info',

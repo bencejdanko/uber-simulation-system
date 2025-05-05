@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # DO NOT use 'set -e' here; we want to attempt all topics and report overall status.
 

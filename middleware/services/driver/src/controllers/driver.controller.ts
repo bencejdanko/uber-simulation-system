@@ -95,9 +95,6 @@ class DriverController {
                 longitude, 
                 timestamp: timestamp || new Date().toISOString()
             } as DriverLocationUpdate);
-            if (!updatedDriver) {
-                return res.status(404).json({ error: 'not_found', message: 'Driver not found' });
-            }
             res.status(200).json(updatedDriver);
         } catch (error: any) {
             res.status(error.status || 500).json({
