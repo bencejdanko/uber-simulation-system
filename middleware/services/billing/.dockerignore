@@ -1,0 +1,37 @@
+# Node.js dependencies
+node_modules
+npm-debug.log
+
+# Environment variables
+.env
+.env.*
+
+# Git files
+.git
+.gitignore
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Test files
+tests/
+coverage/
+
+# Documentation
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+*.log
+*.tmp
+
+# Build artifacts
+dist/
+build/
+
+# Data directories that might be mounted
+data/
