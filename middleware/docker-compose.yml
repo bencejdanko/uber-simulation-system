@@ -221,9 +221,11 @@ services:
       - PORT=3001
       - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=driver-service-consumer
-      - KAFKA_USER_REGISTERED_TOPIC=user.registered
+      - KAFKA_LOCATION_UPDATES_TOPIC=driver_location_updates
       - MONGODB_URI=${MONGODB_URI}
       - REDIS_URL=redis://redis:6379
+      - DRIVER_SERVICE_CACHE_ENABLED=true
+      - KAFKA_ENABLED=true
       
     depends_on:
       mongo:

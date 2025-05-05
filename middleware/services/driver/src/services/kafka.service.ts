@@ -1,4 +1,5 @@
 import { Kafka, Producer, Consumer } from 'kafkajs';
+import logger from '../config/logger'; // Import logger
 
 class KafkaService {
     private kafka: Kafka;
@@ -16,13 +17,32 @@ class KafkaService {
     }
 
     async connect() {
-        await this.producer.connect();
-        await this.consumer.connect();
+        try {
+            logger.info('Connecting Kafka producer...');
+            await this.producer.connect();
+            logger.info('✅ Kafka producer connected.');
+
+            logger.info('Connecting Kafka consumer...');
+            await this.consumer.connect();
+            logger.info('✅ Kafka consumer connected.');
+        } catch (error) {
+            logger.error('❌ Failed to connect Kafka producer or consumer:', error);
+            throw error; // Re-throw error to prevent server starting if Kafka fails
+        }
     }
 
     async disconnect() {
-        await this.producer.disconnect();
-        await this.consumer.disconnect();
+        try {
+            logger.info('Disconnecting Kafka producer...');
+            await this.producer.disconnect();
+            logger.info('Kafka producer disconnected.');
+
+            logger.info('Disconnecting Kafka consumer...');
+            await this.consumer.disconnect();
+            logger.info('Kafka consumer disconnected.');
+        } catch (error) {
+            logger.error('Failed to disconnect Kafka producer or consumer:', error);
+        }
     }
 
     async sendMessage(topic: string, message: any) {
