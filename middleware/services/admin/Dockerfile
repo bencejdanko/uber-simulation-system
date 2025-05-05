@@ -1,23 +1,20 @@
-FROM node:22-alpine
+# Use the official Node.js image
+FROM node:16-alpine
 
-# Set the working directory
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy the rest of the application
 COPY . .
 
-# Copy the .env file
-# (Removed since we now configure this from the docker-compose file)
-# COPY .env ./
-
-# Expose the application port
+# Expose port 3000 (or the port your app listens on)
 EXPOSE 3000
 
-# Command to run the application
-CMD ["npm", "run", "start"]
+# Run the application
+CMD ["npm", "start"]
