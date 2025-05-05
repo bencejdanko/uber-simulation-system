@@ -1,8 +1,22 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+// Function to get the token from storage (e.g., localStorage)
+const getToken = () => localStorage.getItem('driverToken');
+
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: '/api', // This prepends '/api' to all endpoint URLs
+    // Prepare headers to include the token if it exists
+    prepareHeaders: (headers, { getState }) => {
+      const token = getToken(); // Or get from Redux state: getState().auth.token
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
+  tagTypes: ['Customer', 'Driver', 'Ride', 'Bill', 'Auth'], // Added 'Auth' tag type
   endpoints: (builder) => ({
     // Customer Endpoints
     getCustomerById: builder.query({ query: (id) => `/customers/${id}` }),
@@ -37,6 +51,25 @@ export const apiSlice = createApi({
     getBillsByDriver: builder.query({ query: (driver_id) => `/bills?driver_id=${driver_id}` }),
     listBills: builder.query({ query: (params) => ({ url: '/bills', params }) }),
     deleteBill: builder.mutation({ query: (id) => ({ url: `/bills/${id}`, method: 'DELETE' }) }),
+
+    // Driver Auth Endpoints
+    loginDriver: builder.mutation({
+      query: (credentials) => ({
+        url: '/v1/auth/login',
+        method: 'POST',
+        body: credentials, 
+      }),
+    }),
+    // Add registerDriver mutation
+    registerDriver: builder.mutation({
+      query: (driverData) => ({
+      
+        url: '/v1/auth/register/driver',
+        method: 'POST',
+        body: driverData, 
+      }),
+    }),
+    // logoutDriver: builder.mutation({...}),
   }),
 });
 
@@ -71,4 +104,8 @@ export const {
   useGetBillsByDriverQuery,
   useListBillsQuery,
   useDeleteBillMutation,
+  // Driver Auth Hooks
+  useLoginDriverMutation,
+  useRegisterDriverMutation, // <-- Export the new hook
+  // Export other auth hooks if added
 } = apiSlice;
