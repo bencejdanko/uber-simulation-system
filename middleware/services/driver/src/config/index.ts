@@ -7,6 +7,9 @@ const config = {
     brokers: process.env.KAFKA_BROKERS || 'localhost:9092',
     topic: process.env.KAFKA_TOPIC || 'driver-events',
   },
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+  },
 
   logLevel: process.env.LOG_LEVEL || 'info',
 };

@@ -75,14 +75,14 @@ services:
       start_period: 60s  # Keep increased start period
 
   broker-init:
-    image: apache/kafka:latest
+    build: # Add build instruction
+      context: . # Build context is the current directory (middleware/)
+      dockerfile: broker-init.Dockerfile # Specify the Dockerfile name
     container_name: uber-broker-init
     depends_on:
       broker:
         condition: service_healthy # Wait for broker's healthcheck to pass
-    volumes:
-      - ./broker-init.sh:/opt/kafka/broker-init.sh:ro
-    # Set the entrypoint to execute the mounted script
+    # Set the entrypoint to execute the script now located inside the image
     entrypoint: ["/bin/sh", "/opt/kafka/broker-init.sh"]
     # command: is not needed when entrypoint is the script
     environment:
@@ -223,6 +223,7 @@ services:
       - KAFKA_CLIENT_ID=driver-service-consumer
       - KAFKA_USER_REGISTERED_TOPIC=user.registered
       - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://redis:6379
       
     depends_on:
       mongo:

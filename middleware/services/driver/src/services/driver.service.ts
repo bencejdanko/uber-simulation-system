@@ -1,5 +1,9 @@
 import DriverModel, { IDriver } from "../models/driver.model";
 import { DriverInput, DriverUpdate, DriverLocationUpdate } from '../types/driver.types';
+import { getRedisClient } from '../config/redis'; // Import Redis client getter
+import logger from '../config/logger'; // Import logger
+
+const CACHE_TTL_SECONDS = 60; // Cache results for 60 seconds
 
 export class DriverService {
     /**
@@ -48,7 +52,7 @@ export class DriverService {
     }
 
     /**
-     * Update a driver's information
+     * Update a driver's information and invalidate cache
      */
     public async updateDriver(driverId: string, driverUpdate: DriverUpdate): Promise<IDriver | null> {
         const updateData: Partial<IDriver> = {};
@@ -89,15 +93,20 @@ export class DriverService {
         updateData.updatedAt = new Date();
         
         // Use findByIdAndUpdate to update the document
-        return await DriverModel.findByIdAndUpdate(
+        const updatedDriver = await DriverModel.findByIdAndUpdate(
             driverId,
             { $set: updateData },
             { new: true, runValidators: true }
         );
+
+        if (updatedDriver) {
+            await this.invalidateListCache(); // Invalidate cache on successful update
+        }
+        return updatedDriver;
     }
 
     /**
-     * Update a driver's location
+     * Update a driver's location and invalidate cache
      */
     public async updateDriverLocation(driverId: string, locationUpdate: DriverLocationUpdate): Promise<IDriver | null> {
         // Update using GeoJSON format which MongoDB expects
@@ -110,20 +119,29 @@ export class DriverService {
             updatedAt: new Date()
         };
         
-        return await DriverModel.findByIdAndUpdate(
+        const updatedDriver = await DriverModel.findByIdAndUpdate(
             driverId,
             { $set: updateData },
             { new: true, runValidators: true }
         );
+
+        if (updatedDriver) {
+            await this.invalidateListCache(); // Invalidate cache on successful update
+        }
+        return updatedDriver;
     }
 
     /**
-     * Delete a driver
+     * Delete a driver and invalidate cache
      */
     public async deleteDriver(driverId: string): Promise<boolean> {
         try {
             const result = await DriverModel.findByIdAndDelete(driverId);
-            return result !== null;
+            const deleted = result !== null;
+            if (deleted) {
+                await this.invalidateListCache(); // Invalidate cache on successful delete
+            }
+            return deleted;
         } catch (error) {
             // Handle CastError (invalid ID format)
             if ((error as any).name === 'CastError') {
@@ -134,15 +152,61 @@ export class DriverService {
     }
 
     /**
-     * List all drivers with optional pagination
+     * List drivers with optional filtering and pagination, using cache.
      */
-    public async listDrivers(limit: number = 50, skip: number = 0): Promise<IDriver[]> {
+    public async listDrivers(limit: number = 50, skip: number = 0, filters: { [key: string]: any } = {}): Promise<IDriver[]> {
+        const redisClient = getRedisClient();
+        // Create a stable cache key based on filters, limit, and skip
+        const filterKey = Object.entries(filters).sort().map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(':');
+        const cacheKey = `drivers:list:${filterKey}:limit=${limit}:skip=${skip}`;
+
         try {
-            return await DriverModel.find().limit(limit).skip(skip);
+            // 1. Check cache first
+            const cachedResult = await redisClient.get(cacheKey);
+            if (cachedResult) {
+                logger.info(`Cache hit for key: ${cacheKey}`);
+                return JSON.parse(cachedResult);
+            }
+
+            logger.info(`Cache miss for key: ${cacheKey}. Querying database.`);
+            // 2. If cache miss, query database
+            const query = DriverModel.find(filters).limit(limit).skip(skip);
+            const drivers = await query.exec();
+
+            // 3. Store result in cache
+            // Use SETEX for atomic set-with-expiry
+            await redisClient.setEx(cacheKey, CACHE_TTL_SECONDS, JSON.stringify(drivers));
+            logger.info(`Stored results in cache for key: ${cacheKey}`);
+
+            return drivers;
         } catch (error) {
-            // Return empty array on error rather than having the entire request fail
-            console.error("Error listing drivers:", error);
-            return [];
+            logger.error(`Error in listDrivers (cache key: ${cacheKey}):`, error);
+            // Fallback: If cache fails, try querying DB directly (optional, depends on desired resilience)
+            try {
+                logger.warn(`Cache operation failed for ${cacheKey}. Attempting direct DB query.`);
+                const query = DriverModel.find(filters).limit(limit).skip(skip);
+                return await query.exec();
+            } catch (dbError) {
+                logger.error(`Direct DB query also failed for listDrivers (filters: ${JSON.stringify(filters)}):`, dbError);
+                return []; // Return empty array on error
+            }
+        }
+    }
+
+    /**
+     * Invalidate cache related to driver lists when a driver is updated or deleted.
+     * This is a simple approach; more granular invalidation might be needed.
+     */
+    private async invalidateListCache(): Promise<void> {
+        try {
+            const redisClient = getRedisClient();
+            const keys = await redisClient.keys('drivers:list:*'); // Find all list cache keys
+            if (keys.length > 0) {
+                await redisClient.del(keys);
+                logger.info(`Invalidated ${keys.length} list cache keys.`);
+            }
+        } catch (error) {
+            logger.error('Failed to invalidate list cache:', error);
         }
     }
     

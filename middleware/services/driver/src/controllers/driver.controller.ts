@@ -60,11 +60,23 @@ class DriverController {
 
     listDrivers = async (req: Request, res: Response): Promise<any> => {
         try {
-            // Parse pagination parameters from query string with defaults
+            // Parse pagination parameters
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
             const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : 0;
-            
-            const drivers = await this.driverService.listDrivers(limit, skip);
+
+            // Extract filter parameters
+            const filters: { [key: string]: any } = {};
+            if (req.query.city) filters['address.city'] = req.query.city as string;
+            if (req.query.state) filters['address.state'] = req.query.state as string;
+            if (req.query.car_make) filters['carDetails.make'] = req.query.car_make as string;
+            if (req.query.min_rating) {
+                const rating = parseFloat(req.query.min_rating as string);
+                if (!isNaN(rating)) {
+                    filters.rating = { $gte: rating };
+                }
+            }
+
+            const drivers = await this.driverService.listDrivers(limit, skip, filters);
             res.status(200).json(drivers);
         } catch (error: any) {
             res.status(error.status || 500).json({
