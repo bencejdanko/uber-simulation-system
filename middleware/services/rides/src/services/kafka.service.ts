@@ -67,7 +67,7 @@ export class KafkaService {
 
     try {
       await this.producer.send({
-        topic: 'ride.requested',
+        topic: config.kafka.ridesRequestedTopic,
         messages: [{
           key: ride._id.toString(),
           value: JSON.stringify({
@@ -218,4 +218,4 @@ export class KafkaService {
       throw error;
     }
   }
-} 
+}

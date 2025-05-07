@@ -334,15 +334,16 @@ for (( cust_idx=1; cust_idx<=NUM_CUSTOMERS_TO_REGISTER; cust_idx++ )); do
 
         RIDE_REQUEST_DATA=$(cat <<EOF
 {
-  "customerId": "$CUSTOMER_ID",
   "pickupLocation": {
     "latitude": $pickup_lat,
     "longitude": $pickup_lon
   },
-  "destinationLocation": {
+  "dropoffLocation": {
     "latitude": $dest_lat,
     "longitude": $dest_lon
-  }
+  },
+  "vehicleType": "STANDARD",
+  "paymentMethod": "CREDIT_CARD"
 }
 EOF
 )
