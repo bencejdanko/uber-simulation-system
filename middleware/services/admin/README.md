@@ -1,2 +1,1 @@
-npm install <br>
-npm start
+test: npm test
