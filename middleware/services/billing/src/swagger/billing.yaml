@@ -1,0 +1,683 @@
+openapi: 3.0.0
+info:
+  title: Billing Service API
+  version: 1.0.0
+  description: API documentation for the Billing Service
+
+paths:
+  /api/v1/bills:
+    post:
+      summary: Create a new bill
+      tags:
+        - Billing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillCreate'
+      responses:
+        '201':
+          description: Bill created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+                description: URL of the created bill
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Bill already exists for this ride
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Search bills
+      tags:
+        - Billing
+      parameters:
+        - name: customer_id
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{3}-\d{2}-\d{4}$'
+          description: Customer ID in SSN format
+        - name: driver_id
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{3}-\d{2}-\d{4}$'
+          description: Driver ID in SSN format
+        - name: ride_id
+          in: query
+          schema:
+            type: string
+            pattern: '^\d{3}-\d{2}-\d{4}$'
+          description: Ride ID in SSN format
+        - name: payment_status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, PAID, FAILED, VOID]
+          description: Payment status
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date for filtering (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date for filtering (YYYY-MM-DD)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+          description: Number of records to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of records to skip
+      responses:
+        '200':
+          description: List of bills
+          headers:
+            X-Total-Count:
+              schema:
+                type: integer
+            X-Limit:
+              schema:
+                type: integer
+            X-Offset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bill'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/bills/{billing_id}:
+    parameters:
+      - name: billing_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^\d{3}-\d{2}-\d{4}$'
+        description: Billing ID in SSN format
+    get:
+      summary: Get a bill by ID
+      tags:
+        - Billing
+      responses:
+        '200':
+          description: Bill details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '400':
+          description: Invalid billing ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bill not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a bill
+      tags:
+        - Billing
+      responses:
+        '204':
+          description: Bill deleted successfully
+        '400':
+          description: Invalid billing ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bill not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      summary: Update bill payment status
+      tags:
+        - Billing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentStatusUpdate'
+      responses:
+        '200':
+          description: Payment status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bill'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bill not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/bills/revenue/stats:
+    get:
+      summary: Get revenue statistics
+      tags:
+        - Billing
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Start date (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: End date (YYYY-MM-DD)
+        - name: group_by
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: day
+          description: Grouping interval for statistics
+      responses:
+        '200':
+          description: Revenue statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueStats'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/pricing/predicted-fare:
+    post:
+      summary: Calculate predicted fare
+      tags:
+        - Pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictedFareRequest'
+      responses:
+        '200':
+          description: Predicted fare details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareDetails'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/pricing/actual-fare:
+    post:
+      summary: Calculate actual fare
+      tags:
+        - Pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualFareRequest'
+      responses:
+        '200':
+          description: Actual fare details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FareDetails'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/pricing/surge-multiplier:
+    get:
+      summary: Get surge multiplier for a location
+      tags:
+        - Pricing
+      parameters:
+        - name: latitude
+          in: query
+          required: true
+          schema:
+            type: number
+            format: float
+            minimum: -90
+            maximum: 90
+          description: Location latitude
+        - name: longitude
+          in: query
+          required: true
+          schema:
+            type: number
+            format: float
+            minimum: -180
+            maximum: 180
+          description: Location longitude
+        - name: timestamp
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Timestamp for surge calculation (ISO 8601)
+      responses:
+        '200':
+          description: Surge multiplier
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  surgeMultiplier:
+                    type: number
+                    minimum: 1
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/pricing/distance:
+    post:
+      summary: Calculate distance between two points
+      tags:
+        - Pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistanceRequest'
+      responses:
+        '200':
+          description: Distance calculation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  distance:
+                    type: number
+                    minimum: 0
+                  unit:
+                    type: string
+                    enum: [miles]
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/pricing/travel-time:
+    post:
+      summary: Estimate travel time between two points
+      tags:
+        - Pricing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TravelTimeRequest'
+      responses:
+        '200':
+          description: Travel time estimate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  travelTime:
+                    type: number
+                    minimum: 0
+                  unit:
+                    type: string
+                    enum: [minutes]
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Location:
+      type: object
+      required:
+        - latitude
+        - longitude
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+
+    BillCreate:
+      type: object
+      required:
+        - rideId
+        - customerId
+        - driverId
+        - date
+        - pickupTime
+        - dropoffTime
+        - distanceCovered
+        - sourceLocation
+        - destinationLocation
+        - predictedAmount
+        - actualAmount
+      properties:
+        rideId:
+          type: string
+          pattern: '^\d{3}-\d{2}-\d{4}$'
+        customerId:
+          type: string
+          pattern: '^\d{3}-\d{2}-\d{4}$'
+        driverId:
+          type: string
+          pattern: '^\d{3}-\d{2}-\d{4}$'
+        date:
+          type: string
+          format: date
+        pickupTime:
+          type: string
+          format: date-time
+        dropoffTime:
+          type: string
+          format: date-time
+        distanceCovered:
+          type: number
+          minimum: 0
+        sourceLocation:
+          $ref: '#/components/schemas/Location'
+        destinationLocation:
+          $ref: '#/components/schemas/Location'
+        predictedAmount:
+          type: number
+          minimum: 0
+        actualAmount:
+          type: number
+          minimum: 0
+
+    Bill:
+      allOf:
+        - $ref: '#/components/schemas/BillCreate'
+        - type: object
+          properties:
+            billingId:
+              type: string
+              pattern: '^\d{3}-\d{2}-\d{4}$'
+            paymentStatus:
+              type: string
+              enum: [PENDING, PAID, FAILED, VOID]
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    PaymentStatusUpdate:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED, VOID]
+        paymentDetails:
+          type: object
+          description: Additional payment details
+
+    RevenueStats:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        averageRevenue:
+          type: number
+        totalRides:
+          type: integer
+        stats:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+              revenue:
+                type: number
+              rides:
+                type: integer
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    PredictedFareRequest:
+      type: object
+      required:
+        - pickup
+        - dropoff
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+        dropoff:
+          $ref: '#/components/schemas/Location'
+        requestTime:
+          type: string
+          format: date-time
+          description: Request time for fare calculation (ISO 8601)
+
+    ActualFareRequest:
+      type: object
+      required:
+        - pickupLocation
+        - dropoffLocation
+        - pickupTimestamp
+        - dropoffTimestamp
+      properties:
+        pickupLocation:
+          $ref: '#/components/schemas/Location'
+        dropoffLocation:
+          $ref: '#/components/schemas/Location'
+        pickupTimestamp:
+          type: string
+          format: date-time
+          description: Pickup time (ISO 8601)
+        dropoffTimestamp:
+          type: string
+          format: date-time
+          description: Dropoff time (ISO 8601)
+        distance:
+          type: number
+          minimum: 0
+          description: Optional distance in miles
+
+    DistanceRequest:
+      type: object
+      required:
+        - pickup
+        - dropoff
+      properties:
+        pickup:
+          $ref: '#/components/schemas/Location'
+        dropoff:
+          $ref: '#/components/schemas/Location'
+
+    TravelTimeRequest:
+      type: object
+      required:
+        - distance
+      properties:
+        distance:
+          type: number
+          minimum: 0
+          description: Distance in miles
+        timeOfDay:
+          type: string
+          enum: [morning, afternoon, evening, night]
+          description: Time of day for more accurate estimation
+
+    FareDetails:
+      type: object
+      properties:
+        baseFare:
+          type: number
+          minimum: 0
+        distanceFare:
+          type: number
+          minimum: 0
+        timeFare:
+          type: number
+          minimum: 0
+        surgeMultiplier:
+          type: number
+          minimum: 1
+        totalFare:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          default: USD 
