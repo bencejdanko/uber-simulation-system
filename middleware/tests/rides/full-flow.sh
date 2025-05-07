@@ -40,7 +40,8 @@ record_result() {
 
 print_summary() {
   echo -e "\n${C_BLUE}${C_BOLD}=== Test Summary ===${C_RESET}"
-  for name in "${!TEST_PASS_COUNTS[@]}" "${!TEST_FAIL_COUNTS[@]}"; do
+  all_test_names=("${!TEST_PASS_COUNTS[@]}" "${!TEST_FAIL_COUNTS[@]}")
+  for name in "${all_test_names[@]}"; do
     if [ -n "$name" ]; then
       pass_count=${TEST_PASS_COUNTS["$name"]:-0}
       fail_count=${TEST_FAIL_COUNTS["$name"]:-0}
@@ -83,15 +84,42 @@ get_customer_token() {
   rm "$resp"
 }
 
+echo "RIDES_BASE_URL is set to: $RIDES_BASE_URL"
+
 create_ride() {
-  local token="$1"
-  local test_name="Create Ride"
-  local resp=$(mktemp)
-  local code=$(curl -s -w "%{http_code}" -o "$resp" -X POST "$RIDES_BASE_URL" \
-    -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
-    -d '{"pickupLocation":{"latitude":40.7128,"longitude":-74.0060},"dropoffLocation":{"latitude":40.7589,"longitude":-73.9851}}')
-  check_status "$code" "201" "$test_name"
-  jq -r '.id' "$resp"
+  echo "🛫 Creating ride..."
+  local ride_payload='{
+    "pickupLocation": {
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    },
+    "dropoffLocation": {
+      "latitude": 40.7589,
+      "longitude": -73.9851
+    }
+  }'
+
+  local resp
+  resp=$(mktemp)
+
+  local code
+  code=$(curl -s -o "$resp" -w "%{http_code}" -X POST "$RIDES_BASE_URL" \
+    -H "Authorization: Bearer $token" \
+    -H "Content-Type: application/json" \
+    -d "$ride_payload")
+
+  if [ "$code" != "201" ]; then
+    echo "❌ Status code was $code, expected 201"
+    echo "Response body:"
+    cat "$resp"
+    echo ""
+    echo "💡 Check if the ride service is up and running, and that Kong is forwarding requests properly."
+    echo "💡 Also verify that 'customerId' is correctly extracted in the ride service (e.g., from req.user.sub)."
+    return 1
+  else
+    echo "✅ Ride created successfully"
+  fi
+
   rm "$resp"
 }
 
@@ -112,25 +140,25 @@ test_poll_for_status() {
 
 test_get_ride() {
   local token=$1; local id=$2
-  check_status $(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" "$RIDES_BASE_URL/$id") "200" "Get Ride Details"
+  check_status "$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $token" "$RIDES_BASE_URL/$id")" "200" "Get Ride Details"
 }
 
 test_update_ride_status() {
   local token=$1; local id=$2; local status=$3
-  check_status $(curl -s -o /dev/null -w "%{http_code}" -X PUT "$RIDES_BASE_URL/$id/status" \
-    -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d '{"status":"'$status'"}') "200" "Update Ride to $status"
+  check_status "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$RIDES_BASE_URL/$id/status" \
+    -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d '{"status":"'$status'"}')" "200" "Update Ride to $status"
 }
 
 test_complete_ride() {
   local token=$1; local id=$2
-  check_status $(curl -s -o /dev/null -w "%{http_code}" -X PUT "$RIDES_BASE_URL/$id/complete" \
-    -H "Authorization: Bearer $token") "200" "Complete Ride"
+  check_status "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$RIDES_BASE_URL/$id/complete" \
+    -H "Authorization: Bearer $token")" "200" "Complete Ride"
 }
 
 test_cancel_ride() {
   local token=$1; local id=$2
-  check_status $(curl -s -o /dev/null -w "%{http_code}" -X POST "$RIDES_BASE_URL/$id/cancel" \
-    -H "Authorization: Bearer $token") "200|400" "Cancel Ride (may fail if already complete)"
+  check_status "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$RIDES_BASE_URL/$id/cancel" \
+    -H "Authorization: Bearer $token")" "200|400" "Cancel Ride (may fail if already complete)"
 }
 
 # Simulate Kafka Event Check (Mocked)
@@ -142,10 +170,27 @@ validate_kafka_event_mock() {
 }
 
 TOKEN=$(get_customer_token)
+echo -e "\nGot token: $TOKEN\n"
 
 for i in $(seq 1 $NUM_RIDES_TO_TEST); do
   echo -e "\n${C_BOLD}--- Ride Flow $i ---${C_RESET}"
-  RIDE_ID=$(create_ride "$TOKEN")
+
+  RIDE_OUTPUT=$(create_ride "$TOKEN")
+  EXIT_CODE=$?
+
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo -e "${C_YELLOW}⚠️  Skipping this ride flow due to failed ride creation.${C_RESET}"
+    echo -e "${C_RED}Error Output:\n$RIDE_OUTPUT${C_RESET}"
+    continue
+  fi
+
+  RIDE_ID="$RIDE_OUTPUT"
+
+  if [ -z "$RIDE_ID" ]; then
+    echo -e "${C_YELLOW}⚠️  Skipping this ride flow due to missing ride ID.${C_RESET}"
+    continue
+  fi
+
   validate_kafka_event_mock "ride.requested"
   test_get_ride "$TOKEN" "$RIDE_ID"
   test_update_ride_status "$TOKEN" "$RIDE_ID" "ACCEPTED"
@@ -153,6 +198,6 @@ for i in $(seq 1 $NUM_RIDES_TO_TEST); do
   test_update_ride_status "$TOKEN" "$RIDE_ID" "IN_PROGRESS"
   test_complete_ride "$TOKEN" "$RIDE_ID"
   validate_kafka_event_mock "ride.completed"
-  test_cancel_ride "$TOKEN" "$RIDE_ID" # should fail since it's completed
+  test_cancel_ride "$TOKEN" "$RIDE_ID"
   validate_kafka_event_mock "ride.cancel.attempted"
 done

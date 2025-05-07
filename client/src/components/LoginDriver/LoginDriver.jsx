@@ -1,20 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './LoginDriver.css';
 import { useNavigate } from 'react-router-dom';
+import { useLoginDriverMutation } from '../../api/apiSlice';
 
 const LoginDriver = () => {
   const navigate = useNavigate();
+  const [loginDriver, { isLoading, error }] = useLoginDriverMutation();
 
-  const handleLogin = (e) => {
+  const [credentials, setCredentials] = useState({
+    email: '', 
+    password: '',
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const isAuthenticated = true; // Placeholder for authentication logic
+    try {
+      const { accessToken } = await loginDriver(credentials).unwrap();
+      console.log('Driver logged in successfully, token:', accessToken);
 
-    if (isAuthenticated) {
-      console.log('Driver logged in');
-      navigate('/driver/dashboard'); // Navigate to Driver Dashboard
-    } else {
-      console.log('Login failed');
+      localStorage.setItem('driverToken', accessToken);
+      // dispatch(setDriverLoggedIn(true));
+
+      navigate('/driver/dashboard');
+
+    } catch (err) {
+      console.error('Failed to login driver:', err);
+
     }
   };
 
@@ -22,9 +42,32 @@ const LoginDriver = () => {
     <div className="login-container">
       <h1 className="login-title">Driver Login</h1>
       <form className="login-form" onSubmit={handleLogin}>
-        <input type="text" placeholder="Driver ID" className="login-input" required />
-        <input type="password" placeholder="Password" className="login-input" required />
-        <button type="submit" className="login-button">Login</button>
+        <input
+          type="email" 
+          placeholder="Email"
+          name="email"
+          className="login-input"
+          value={credentials.email}
+          onChange={handleInputChange}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          name="password"
+          className="login-input"
+          value={credentials.password}
+          onChange={handleInputChange}
+          required
+        />
+        <button type="submit" className="login-button" disabled={isLoading}>
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
+        {error && (
+          <p className="error-message">
+            Error: {error.data?.message || error.error || 'Login failed. Please check credentials.'}
+          </p>
+        )}
       </form>
       <button className="home-button" onClick={() => navigate('/')}>
         Home

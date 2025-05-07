@@ -12,9 +12,12 @@ const rideService = RideService.getInstance();
 export const rideController = {
   async createRide(req: Request, res: Response, next: NextFunction) {
     try {
+      
       // if (!req.user) {
       //   throw new AppError('Authentication required', 401);
       // }
+      console.log('✅ createRide hit');
+      console.log('🔐 Decoded User:', req.user);
 
       const rideData = {
         ...req.body,
