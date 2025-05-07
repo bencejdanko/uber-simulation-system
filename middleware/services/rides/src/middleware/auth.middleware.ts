@@ -17,6 +17,34 @@ declare global {
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   try {
+    // First check if Kong has already done the JWT validation and passed user info in headers
+    const userId = req.headers['x-jwt-claim-sub'] as string;
+    const rolesHeader = req.headers['x-jwt-claim-roles'] as string;
+    
+    if (userId) {
+      // Parse roles if available
+      let roles: string[] = [];
+      if (rolesHeader) {
+        try {
+          // The header might be JSON formatted
+          roles = JSON.parse(rolesHeader);
+        } catch (e) {
+          // If not JSON, it might be a comma-separated string
+          roles = rolesHeader.split(',').map(role => role.trim());
+        }
+      }
+      
+      // Set user info from headers
+      req.user = {
+        userId,
+        roles
+      };
+      
+      console.log('✅ User authenticated from Kong headers:', req.user);
+      return next();
+    }
+    
+    // Fallback to regular JWT validation if Kong headers aren't present
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new AppError('No token provided', 401);
@@ -65,4 +93,4 @@ export const checkRideAccess = (req: Request, res: Response, next: NextFunction)
   }
 
   next();
-}; 
+};

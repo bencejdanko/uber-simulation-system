@@ -1,17 +1,22 @@
 import { Router } from 'express';
 import { rideController } from '../controllers/ride.controller';
-import {  checkRole } from '../middleware/auth.middleware';
+import { verifyToken, checkRole } from '../middleware/auth.middleware';
 import { userRateLimiter } from '../middleware/rateLimiter';
 import { validateRequest } from '../middleware/validateRequest';
 import { createRideSchema, updateRideStatusSchema } from '../schemas/ride.schema';
 
 const router = Router();
 
+// Apply token verification middleware to all routes
+router.use(verifyToken);
+
 // Create a new ride
 router.post(
   '/',
-  //checkRole(['CUSTOMER']),
-  //userRateLimiter(10),
+  (req, res, next) => {
+    console.log('🚗 Raw request body before validation:', JSON.stringify(req.body, null, 2));
+    next();
+  },
   validateRequest(createRideSchema),
   rideController.createRide
 );
@@ -19,14 +24,12 @@ router.post(
 // Find nearby drivers
 router.get(
   '/nearby-drivers',
-  //userRateLimiter(5),
   rideController.findNearbyDrivers
 );
 
 // Get ride by ID
 router.get(
   '/:id',
-  //userRateLimiter(30),
   rideController.getRide
 );
 
@@ -34,7 +37,6 @@ router.get(
 router.put(
   '/:id/status',
   checkRole(['DRIVER']),
-  //userRateLimiter(50),
   validateRequest(updateRideStatusSchema),
   rideController.acceptRide
 );
@@ -42,8 +44,7 @@ router.put(
 // Cancel ride
 router.post(
   '/:id/cancel',
-  //userRateLimiter(20),
   rideController.cancelRide
 );
 
-export const rideRoutes = router; 
+export const rideRoutes = router;

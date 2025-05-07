@@ -6,12 +6,12 @@ export interface IRide extends Document {
   driverId?: string;
   status: 'REQUESTED' | 'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
   pickupLocation: {
-    latitude: number;
-    longitude: number;
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
   };
   dropoffLocation: {
-    latitude: number;
-    longitude: number;
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
   };
   vehicleType: 'STANDARD' | 'PREMIUM' | 'LUXURY';
   paymentMethod: 'CASH' | 'CREDIT_CARD' | 'PAYPAL';
@@ -31,12 +31,26 @@ const RideSchema: Schema = new Schema({
     default: 'REQUESTED'
   },
   pickupLocation: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true }
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
   },
   dropoffLocation: {
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true }
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
   },
   vehicleType: {
     type: String,
@@ -64,4 +78,4 @@ RideSchema.index({ status: 1, driverId: 1 });
 // Create compound index for status and customerId
 RideSchema.index({ status: 1, customerId: 1 });
 
-export const Ride = mongoose.model<IRide>('Ride', RideSchema); 
+export const Ride = mongoose.model<IRide>('Ride', RideSchema);

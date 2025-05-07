@@ -9,6 +9,7 @@ export const config = {
   kafka: {
     brokers: process.env.KAFKA_BROKERS?.split(',') || ['localhost:9092'],
     clientId: process.env.KAFKA_CLIENT_ID || 'uber-rides-service',
+    ridesRequestedTopic: process.env.KAFKA_RIDE_REQUEST_TOPIC || 'ride_requests',  
   },
   logLevel: process.env.LOG_LEVEL || 'info',
   nodeEnv: process.env.NODE_ENV || 'development',

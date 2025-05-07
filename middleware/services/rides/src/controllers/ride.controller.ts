@@ -12,16 +12,17 @@ const rideService = RideService.getInstance();
 export const rideController = {
   async createRide(req: Request, res: Response, next: NextFunction) {
     try {
-      
-      // if (!req.user) {
-      //   throw new AppError('Authentication required', 401);
-      // }
       console.log('✅ createRide hit');
-      console.log('🔐 Decoded User:', req.user);
+      console.log('📄 Request body:', JSON.stringify(req.body, null, 2));
+
+      // Extract customerId from x-jwt-claim-sub header that Kong provides
+      const customerId = req.headers['x-jwt-claim-sub'] as string;
+    
+      console.log('🔐 CustomerId from JWT claim:', customerId);
 
       const rideData = {
         ...req.body,
-        // customerId: req.user.userId,
+        customerId,  // Use the ID from the JWT header
         status: 'REQUESTED'
       };
 
@@ -33,8 +34,8 @@ export const rideController = {
 
       // Find and notify nearby drivers using cached locations
       const nearbyDrivers = await rideService.findNearbyDrivers(
-        ride.pickupLocation.latitude,
-        ride.pickupLocation.longitude
+        ride.pickupLocation.coordinates[1], // latitude
+        ride.pickupLocation.coordinates[0], // longitude
       );
 
       for (const driverId of nearbyDrivers) {
@@ -43,6 +44,14 @@ export const rideController = {
 
       res.status(202).json(ride);
     } catch (error) {
+      console.error('❌ Error caught in createRide controller:', error);
+      if (error instanceof Error) {
+        console.error('❌ Error name:', error.name);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error stack:', error.stack);
+      } else {
+        console.error('❌ Caught a non-Error object:', error);
+      }
       next(error);
     }
   },
@@ -298,4 +307,4 @@ export const rideController = {
       next(error);
     }
   }
-}; 
+};

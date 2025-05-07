@@ -102,6 +102,7 @@ services:
     environment:
       - PORT=3000
       - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=redis://redis:6379
       - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=admin-service-consumer
       - KAFKA_USER_REGISTERED_TOPIC=user-registered

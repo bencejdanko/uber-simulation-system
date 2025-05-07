@@ -20,11 +20,66 @@ export class RideService {
 
   public async createRide(rideData: Partial<IRide>): Promise<IRide> {
     try {
-      const ride = new Ride(rideData);
+      console.log('Attempting to create new Ride object with data:', rideData);
+
+      const modelData: any = {
+        ...rideData, // Spread other properties
+      };
+
+      // Transform pickupLocation if it exists and is in {latitude, longitude} format
+      if (rideData.pickupLocation && 
+          typeof (rideData.pickupLocation as any).latitude === 'number' && 
+          typeof (rideData.pickupLocation as any).longitude === 'number') {
+        const ploc = rideData.pickupLocation as any;
+        modelData.pickupLocation = {
+          type: 'Point',
+          coordinates: [ploc.longitude, ploc.latitude] // GeoJSON is [longitude, latitude]
+        };
+      } else if (rideData.pickupLocation) {
+        // If not in lat/lon format, assume it's already GeoJSON or handle error
+        modelData.pickupLocation = rideData.pickupLocation;
+      }
+
+      // Transform dropoffLocation similarly
+      if (rideData.dropoffLocation && 
+          typeof (rideData.dropoffLocation as any).latitude === 'number' && 
+          typeof (rideData.dropoffLocation as any).longitude === 'number') {
+        const dloc = rideData.dropoffLocation as any;
+        modelData.dropoffLocation = {
+          type: 'Point',
+          coordinates: [dloc.longitude, dloc.latitude] // GeoJSON is [longitude, latitude]
+        };
+      } else if (rideData.dropoffLocation) {
+        modelData.dropoffLocation = rideData.dropoffLocation;
+      }
+
+      // Ensure status is set if not provided
+      if (!modelData.status) {
+          modelData.status = 'REQUESTED';
+      }
+
+      const ride = new Ride(modelData);
+      console.log('Ride object to be saved:', ride.toObject ? ride.toObject() : ride);
+
+      console.log('Attempting to save ride to database...');
       await ride.save();
+      console.log('Ride saved to database successfully.');
+
+      console.log('Attempting to cache ride in Redis...');
       await this.redisService.cacheRide(ride);
+      console.log('Ride cached in Redis successfully.');
+
       return ride;
     } catch (error) {
+      console.error('❌ Error in RideService.createRide:', error);
+      if (error instanceof Error) {
+        console.error('❌ RideService.createRide Error name:', error.name);
+        console.error('❌ RideService.createRide Error message:', error.message);
+        console.error('❌ RideService.createRide Error stack:', error.stack);
+      } else {
+        console.error('❌ RideService.createRide Caught a non-Error object:', error);
+      }
+      // Re-throw the original error or a new AppError if you want to handle it further up the chain
       throw new AppError('Failed to create ride', 500);
     }
   }
@@ -100,9 +155,38 @@ export class RideService {
 
   public async updateRide(rideId: string, updateData: Partial<IRide>): Promise<IRide | null> {
     try {
+      const updatePayload: any = { ...updateData };
+
+      // Transform pickupLocation if it exists and is in {latitude, longitude} format
+      if (updateData.pickupLocation && 
+          typeof (updateData.pickupLocation as any).latitude === 'number' && 
+          typeof (updateData.pickupLocation as any).longitude === 'number') {
+        const ploc = updateData.pickupLocation as any;
+        updatePayload.pickupLocation = {
+          type: 'Point',
+          coordinates: [ploc.longitude, ploc.latitude] // GeoJSON is [longitude, latitude]
+        };
+      } else if (updateData.pickupLocation) {
+        // If not in lat/lon format, assume it's already GeoJSON or handle error
+        updatePayload.pickupLocation = updateData.pickupLocation;
+      }
+
+      // Transform dropoffLocation similarly
+      if (updateData.dropoffLocation && 
+          typeof (updateData.dropoffLocation as any).latitude === 'number' && 
+          typeof (updateData.dropoffLocation as any).longitude === 'number') {
+        const dloc = updateData.dropoffLocation as any;
+        updatePayload.dropoffLocation = {
+          type: 'Point',
+          coordinates: [dloc.longitude, dloc.latitude] // GeoJSON is [longitude, latitude]
+        };
+      } else if (updateData.dropoffLocation) {
+        updatePayload.dropoffLocation = updateData.dropoffLocation;
+      }
+
       const ride = await Ride.findByIdAndUpdate(
         rideId,
-        { $set: updateData },
+        { $set: updatePayload },
         { new: true }
       );
 
@@ -172,4 +256,4 @@ export class RideService {
       throw new AppError('Failed to update driver availability', 500);
     }
   }
-} 
+}
