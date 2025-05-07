@@ -1,14 +1,7 @@
-PORT=5100
+PORT=3000
 MONGO_URI=mongodb://localhost:27017/admin
-JWT_SECRET=supersecretkey
-
-# Service URLs (update ports/hosts as needed)
-DRIVER_SERVICE_URL=http://localhost:5001/api/v1
-CUSTOMER_SERVICE_URL=http://localhost:5002/api/v1
-RIDES_SERVICE_URL=http://localhost:5003/api/v1
-BILLING_SERVICE_URL=http://localhost:5004/api/v1
-REPORTING_SERVICE_URL=http://localhost:5005/api/v1
-
-# Kafka configuration (if needed)
-KAFKA_BROKER=localhost:9092
-KAFKA_CLIENT_ID=admin-service
+JWT_SECRET=secret
+KAFKA_BROKER=localhost:9092  # Kafka broker address
+REDIS_HOST=localhost  # Use 'redis' as the hostname (service name in Docker)
+REDIS_PORT=6379   # Default Redis port
+REDIS_DB=0  # Default Redis database number
