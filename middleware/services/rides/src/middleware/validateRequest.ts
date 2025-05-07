@@ -15,6 +15,13 @@ export const validateRequest = (schema: AnySchema) => async (
     });
     return next();
   } catch (err: any) {
-    throw new AppError(err.message, 400);
+    // throw new AppError(err.message, 400);
+    return res.status(400).json({
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: err.errors[0],
+        details: err.errors,
+      },
+    });
   }
 }; 
