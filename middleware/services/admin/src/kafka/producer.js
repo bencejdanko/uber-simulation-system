@@ -2,8 +2,8 @@ const { Kafka } = require('kafkajs');
 
 // Kafka Setup
 const kafka = new Kafka({
-  clientId: 'admin-service',
-  brokers: [process.env.KAFKA_BROKER],
+  clientId: process.env.KAFKA_CLIENT_ID,
+  brokers: process.env.KAFKA_BROKERS.split(','),
 });
 
 const producer = kafka.producer();

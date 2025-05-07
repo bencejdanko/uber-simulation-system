@@ -25,7 +25,7 @@ app.use(express.json());
 app.use('/api/v1/admin/drivers', driverRoutes);
 app.use('/api/v1/admin/customers', customerRoutes);
 app.use('/api/v1/admin/bills', billRoutes);
-app.use('/api/v1/admin/statistics', statisticsRateLimiter, statisticsRoutes);
+app.use('/api/v1/admin/statistics', statisticsRoutes);
 app.use('/api/v1/admin/charts', chartRoutes);
 
 const PORT = process.env.PORT;

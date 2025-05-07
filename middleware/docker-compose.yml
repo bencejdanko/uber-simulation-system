@@ -86,7 +86,7 @@ services:
     entrypoint: ["/bin/sh", "/opt/kafka/broker-init.sh"]
     # command: is not needed when entrypoint is the script
     environment:
-      KAFKA_CREATE_TOPICS: "user-registered:1:1,ride-completed:1:1,signup_requests:1:1,driver_location_updates:1:1,ride_requests:1:1" # Topics to create
+      KAFKA_CREATE_TOPICS: "user-registered:1:1,ride-completed:1:1,signup_requests:1:1,driver_location_updates:1:1,ride_requests:1:1,driver.profile.created:1:1" # Topics to create
     # Kompose label to indicate this is a one-off init container
     restart: "no"
 
@@ -103,6 +103,9 @@ services:
       - PORT=3000
       - MONGODB_URI=${MONGODB_URI}
       - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
       - KAFKA_BROKERS=broker:29092,broker:29093,broker:9092
       - KAFKA_CLIENT_ID=admin-service-consumer
       - KAFKA_USER_REGISTERED_TOPIC=user-registered
