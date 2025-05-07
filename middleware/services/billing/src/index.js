@@ -4,6 +4,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Kafka } = require('kafkajs');
 const Redis = require('ioredis');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -19,6 +22,12 @@ const PORT = process.env.BILLING_SERVICE_PORT || 3003;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Load Swagger document
+const swaggerDocument = YAML.load(path.join(__dirname, 'swagger/billing.yaml'));
+
+// Swagger UI setup
+app.use('/api/v1/bills/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Connect to MongoDB
 const connectDB = async () => {
