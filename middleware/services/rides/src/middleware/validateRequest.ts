@@ -1,29 +1,49 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnySchema } from 'yup';
-import { AppError } from './errorHandler';
+import { ZodTypeAny, ZodError } from 'zod';
 
-export const validateRequest = (schema: AnySchema) => async (
+interface SchemaGroup {
+  body?: ZodTypeAny;
+  params?: ZodTypeAny;
+  query?: ZodTypeAny;
+}
+
+export const validateRequest = (schemas: SchemaGroup) => (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    console.log('🔍 Validating request with schema:', schema.describe());
-    console.log('📄 Request body for validation:', JSON.stringify(req.body, null, 2));
-    
-    // Instead of validating against {body, query, params}, just validate the body directly
-    await schema.validate(req.body);
-    
-    console.log('✅ Validation passed');
+    if (schemas.body) {
+      const result = schemas.body.parse(req.body);
+      req.body = result; // overwrite with parsed data
+    }
+    if (schemas.query) {
+      const result = schemas.query.parse(req.query);
+      req.query = result;
+    }
+    if (schemas.params) {
+      const result = schemas.params.parse(req.params);
+      req.params = result;
+    }
+
     return next();
-  } catch (err: any) {
-    console.error('❌ Validation failed:', err.errors);
-    // throw new AppError(err.message, 400);
-    return res.status(400).json({
+  } catch (err) {
+    if (err instanceof ZodError) {
+      console.error('❌ Zod validation error:', err.issues);
+      return res.status(400).json({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: err.issues[0]?.message || 'Invalid input',
+          details: err.issues,
+        },
+      });
+    }
+
+    // Unexpected error
+    return res.status(500).json({
       error: {
-        code: 'VALIDATION_ERROR',
-        message: err.errors[0],
-        details: err.errors,
+        code: 'SERVER_ERROR',
+        message: 'Internal server error during validation',
       },
     });
   }

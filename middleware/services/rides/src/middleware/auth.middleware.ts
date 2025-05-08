@@ -39,6 +39,8 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         userId,
         roles
       };
+
+      req.body.customerId = req.user.userId;
       
       console.log('✅ User authenticated from Kong headers:', req.user);
       return next();

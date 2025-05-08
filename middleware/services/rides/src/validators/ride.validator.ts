@@ -25,16 +25,18 @@ const locationSchema = Joi.object({
   longitude: Joi.number().required()
 });
 
+const coordinateSchema = z.object({
+  type: z.literal("Point"),
+  coordinates: z.tuple([
+    z.number().min(-180).max(180), // longitude
+    z.number().min(-90).max(90)    // latitude
+  ])
+});
+
 export const createRideSchema = z.object({
   body: z.object({
-    pickupLocation: z.object({
-      latitude: z.number().min(-90).max(90),
-      longitude: z.number().min(-180).max(180)
-    }),
-    dropoffLocation: z.object({
-      latitude: z.number().min(-90).max(90),
-      longitude: z.number().min(-180).max(180)
-    }),
+    pickupLocation: coordinateSchema,
+    dropoffLocation: coordinateSchema,
     vehicleType: z.enum(['STANDARD', 'PREMIUM', 'LUXURY']),
     paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'PAYPAL']),
     estimatedFare: z.number().positive().optional()
@@ -74,26 +76,26 @@ export const cancelRideSchema = z.object({
   })
 });
 
-export const rideValidator = {
-  createRide: {
-    body: {
-      passengerId: 'string',
-      pickupLocation: {
-        latitude: 'number',
-        longitude: 'number',
-      },
-      dropoffLocation: {
-        latitude: 'number',
-        longitude: 'number',
-      },
-    },
-  },
+// export const rideValidator = {
+//   createRide: {
+//     body: {
+//       passengerId: 'string',
+//       pickupLocation: {
+//         latitude: 'number',
+//         longitude: 'number',
+//       },
+//       dropoffLocation: {
+//         latitude: 'number',
+//         longitude: 'number',
+//       },
+//     },
+//   },
 
-  findNearbyDrivers: {
-    query: {
-      latitude: 'number',
-      longitude: 'number',
-      radius: 'number',
-    },
-  },
-}; 
+//   findNearbyDrivers: {
+//     query: {
+//       latitude: 'number',
+//       longitude: 'number',
+//       radius: 'number',
+//     },
+//   },
+// }; 
