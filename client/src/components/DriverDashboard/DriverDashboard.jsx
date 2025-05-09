@@ -52,7 +52,7 @@ const DriverDashboard = ({ userId }) => {
   // Function to handle logout
   const handleLogout = () => {
     // 1. Clear the stored token
-    localStorage.removeItem('driverToken');
+    localStorage.removeItem('accessToken');
     console.log('Driver token removed.');
 
     // 2. Optional: Dispatch action to clear Redux auth state

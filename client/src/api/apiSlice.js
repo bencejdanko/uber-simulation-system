@@ -67,16 +67,20 @@ export const apiSlice = createApi({
         body: credentials, 
       }),
     }),
-    // Add registerDriver mutation
     registerDriver: builder.mutation({
       query: (driverData) => ({
-      
         url: 'http://localhost:8000/api/v1/auth/register/driver',
         method: 'POST',
         body: driverData, 
       }),
     }),
-    // logoutDriver: builder.mutation({...}),
+    registerCustomer: builder.mutation({
+      query: (customerData) => ({
+        url: 'http://localhost:8000/api/v1/auth/register/customer',
+        method: 'POST',
+        body: customerData,
+      }),
+    }),
   }),
 });
 
@@ -116,6 +120,6 @@ export const {
   useDeleteBillMutation,
   // Driver Auth Hooks
   useLoginDriverMutation,
-  useRegisterDriverMutation, // <-- Export the new hook
-  // Export other auth hooks if added
+  useRegisterDriverMutation, 
+  useRegisterCustomerMutation, // <-- Export the new customer registration hook
 } = apiSlice;

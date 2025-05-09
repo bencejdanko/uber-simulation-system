@@ -22,7 +22,7 @@ const CustomerDashboard = ({ userId }) => {
   // Function to handle logout
   const handleLogout = () => {
     // 1. Clear the stored token
-    localStorage.removeItem('customerToken');
+    localStorage.removeItem('accessToken');
     console.log('Customer token removed.');
 
     // 2. Optional: Dispatch action to clear Redux auth state
