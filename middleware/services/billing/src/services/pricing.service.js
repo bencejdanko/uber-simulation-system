@@ -220,12 +220,12 @@ const hardCodedFareCalculator = async ({distance, duration}) => {
   const actualDistance = distance || 0;
   const rideDuration = duration || 0;
   // Use a default surge multiplier (e.g., 1.0) since we don't have pickup/time context
-  const surgeMultiplier = 1.0;
+  // const surgeMultiplier = 1.0; // removed from response
   const baseFare = BASE_FARE;
   const timeAmount = rideDuration * COST_PER_MINUTE;
   const distanceAmount = actualDistance * COST_PER_MILE;
   let subtotal = baseFare + timeAmount + distanceAmount;
-  subtotal *= surgeMultiplier;
+  // subtotal *= surgeMultiplier; // removed from response
   const total = subtotal + BOOKING_FEE;
   const finalFare = boundFare(Math.max(total, MIN_FARE), actualDistance);
   // Calculate taxes (assume 8% tax rate)
@@ -239,18 +239,14 @@ const hardCodedFareCalculator = async ({distance, duration}) => {
   return {
     fare: finalFare,
     breakdown: {
-      baseAmount: baseFare,
       timeAmount,
       distanceAmount,
       bookingFee: BOOKING_FEE,
-      surge: surgeMultiplier,
       actualDistance,
       actualTime: rideDuration,
       taxes,
       driverPayout,
       platformFee,
-      minFare: MIN_FARE,
-      maxFare: boundFare(Infinity, actualDistance),
       fallback: true
     }
   };
@@ -272,13 +268,23 @@ const calculatePredictedFare = async (pickup, dropoff, requestTime = new Date())
     };
     const predictedFare = await callModelPredictionService(features);
     const distance = calculateDistance(pickup, dropoff);
-    const boundedFare = boundFare(predictedFare, distance);
+    const rideDuration = estimateTravelTime(distance, 'afternoon');
+    const timeAmount = rideDuration * COST_PER_MINUTE;
+    const distanceAmount = distance * COST_PER_MILE;
+    const subtotal = BASE_FARE + timeAmount + distanceAmount;
+    const finalFare = boundFare(predictedFare, distance);
     return {
-      fare: boundedFare,
+      fare: finalFare,
       breakdown: {
-        modelPrediction: true,
-        minFare: MIN_FARE,
-        maxFare: boundFare(Infinity, distance)
+        timeAmount,
+        distanceAmount,
+        bookingFee: BOOKING_FEE,
+        predictedDistance: distance,
+        predictedTime: rideDuration,
+        taxes: finalFare * 0.08,
+        driverPayout: subtotal * 0.8,
+        platformFee: subtotal * 0.2,
+        modelPredictionUsed: true
       }
     };
   } catch (error) {
@@ -343,21 +349,17 @@ const calculateActualFare = async (rideData) => {
       timeAmount = rideDuration * COST_PER_MINUTE;
       distanceAmount = actualDistance * COST_PER_MILE;
       subtotal = baseFare + timeAmount + distanceAmount;
-      surgeMultiplier = 1.0; // Model already includes surge if any
+      // surgeMultiplier = 1.0; // removed from response
       finalFare = boundFare(fareFromModel, actualDistance);
       breakdown = {
-        baseAmount: baseFare,
         timeAmount: timeAmount,
         distanceAmount: distanceAmount,
         bookingFee: BOOKING_FEE,
-        surge: surgeMultiplier,
         actualDistance: actualDistance,
         actualTime: rideDuration,
         taxes: finalFare * 0.08,
         driverPayout: subtotal * 0.8,
         platformFee: subtotal * 0.2,
-        minFare: MIN_FARE,
-        maxFare: boundFare(Infinity, actualDistance),
         modelPredictionUsed: true
       };
     } else {
