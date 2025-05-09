@@ -180,6 +180,37 @@ export const rideController = {
     }
   },
 
+  async searchRides(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      const { status, latitude, longitude, radius, page, limit } = req.query;
+
+      const filters: { [key: string]: any } = {
+        status: status as string | undefined,
+        latitude: latitude ? Number(latitude) : undefined,
+        longitude: longitude ? Number(longitude) : undefined,
+        radius: radius ? Number(radius) : undefined,
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 10,
+      };
+
+      // Remove undefined filters to avoid issues with the service layer
+      Object.keys(filters).forEach(key => {
+        if (filters[key] === undefined) {
+          delete filters[key];
+        }
+      });
+
+      const { rides, total } = await rideService.searchRides(filters as any); // Cast to any for now, will be typed by RideService method
+      res.json({ rides, total });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async updateDriverLocation(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) {

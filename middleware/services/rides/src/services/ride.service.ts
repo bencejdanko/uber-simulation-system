@@ -221,6 +221,55 @@ export class RideService {
     }
   }
 
+  public async searchRides(filters: {
+    status?: string;
+    latitude?: number;
+    longitude?: number;
+    radius?: number; // in meters
+    customerId?: string;
+    driverId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ rides: IRide[]; total: number }> {
+    try {
+      const { status, latitude, longitude, radius = 5000, customerId, driverId, page = 1, limit = 10 } = filters;
+      const query: any = {};
+
+      if (status) query.status = status;
+      if (customerId) query.customerId = customerId;
+      if (driverId) query.driverId = driverId;
+
+      // Geospatial query if location parameters are provided
+      if (typeof latitude === 'number' && typeof longitude === 'number' && typeof radius === 'number') {
+        query.pickupLocation = {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [longitude, latitude], // MongoDB expects [longitude, latitude]
+            },
+            $maxDistance: radius, // in meters
+          },
+        };
+      }
+
+      const skip = (page - 1) * limit;
+
+      const [rides, total] = await Promise.all([
+        Ride.find(query)
+          .sort({ createdAt: -1 }) // Default sort, can be made configurable
+          .skip(skip)
+          .limit(limit)
+          .lean(), // Use .lean() for faster queries if full Mongoose documents aren't needed
+        Ride.countDocuments(query),
+      ]);
+
+      return { rides, total };
+    } catch (error) {
+      console.error('❌ Error in RideService.searchRides:', error);
+      throw new AppError('Failed to search rides', 500);
+    }
+  }
+
   public async findNearbyDrivers(
     latitude: number,
     longitude: number,

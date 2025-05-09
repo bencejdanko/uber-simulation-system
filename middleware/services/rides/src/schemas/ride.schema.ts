@@ -42,3 +42,16 @@ export const findNearbyDriversSchema = z.object({
     .optional()
     .default('5000'), // in meters
 });
+
+// GET /rides/search — Search for rides
+export const searchRidesSchema = z.object({
+  status: z.enum(['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
+  latitude: z.string().regex(/^-?\d+(\.\d+)?$/).transform(Number).optional(),
+  longitude: z.string().regex(/^-?\d+(\.\d+)?$/).transform(Number).optional(),
+  radius: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .optional()
+    .default('5000'), // in meters
+});

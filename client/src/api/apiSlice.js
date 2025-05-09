@@ -33,6 +33,14 @@ export const apiSlice = createApi({
     deleteDriver: builder.mutation({ query: (id) => ({ url: `/drivers/${id}`, method: 'DELETE' }) }),
     updateDriverLocation: builder.mutation({ query: ({ id, ...data }) => ({ url: `/drivers/${id}/location`, method: 'PATCH', body: data }) }),
     getNearbyDrivers: builder.query({ query: (params) => ({ url: '/drivers/nearby', params }) }),
+    // New Driver Profile Update Endpoint
+    updateDriverProfile: builder.mutation({
+      query: ({ driverId, data }) => ({
+        url: `/drivers/${driverId}`,
+        method: 'PATCH',
+        body: data,
+      }),
+    }),
 
     // Rides Endpoints
     requestRide: builder.mutation({ query: (data) => ({ url: '/rides', method: 'POST', body: data }) }),
@@ -40,6 +48,7 @@ export const apiSlice = createApi({
     listRides: builder.query({ query: (params) => ({ url: '/rides', params }) }),
     getRidesByCustomer: builder.query({ query: (customer_id) => `/rides?customer_id=${customer_id}` }),
     getRidesByDriver: builder.query({ query: (driver_id) => `/rides?driver_id=${driver_id}` }),
+    searchRides: builder.query({ query: (params) => ({ url: '/rides/search', params }) }),
     cancelRide: builder.mutation({ query: (id) => ({ url: `/rides/${id}`, method: 'DELETE' }) }),
 
     // Billing Endpoints
@@ -88,6 +97,8 @@ export const {
   useDeleteDriverMutation,
   useUpdateDriverLocationMutation,
   useGetNearbyDriversQuery,
+  useUpdateDriverProfileMutation,  // <-- Add this line to export the new mutation hook
+  
   // Rides
   useRequestRideMutation,
   useGetRideByIdQuery,
@@ -95,6 +106,7 @@ export const {
   useGetRidesByCustomerQuery,
   useGetRidesByDriverQuery,
   useCancelRideMutation,
+  useSearchRidesQuery,
   // Billing
   useCreateBillMutation,
   useGetBillByIdQuery,

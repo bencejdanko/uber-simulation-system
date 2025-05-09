@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation } from '../../api/apiSlice';
+import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../api/apiSlice';
 import './DriverDashboard.css';
 
 const DriverDashboard = ({ userId }) => {
@@ -8,7 +8,8 @@ const DriverDashboard = ({ userId }) => {
 
   // Fetch driver data
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
-  const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
+  // const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
+  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "PENDING" });
   const [updateDriverLocation] = useUpdateDriverLocationMutation();
   const [updateDriverProfile, { isLoading: isUpdating, error: updateError }] = useUpdateDriverProfileMutation();
 
