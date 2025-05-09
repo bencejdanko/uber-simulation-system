@@ -5,7 +5,7 @@ import './DriverDashboard.css';
 // import { useDispatch } from 'react-redux';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
-import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverLocationMutation } from '../../api/apiSlice';
+import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../api/apiSlice';
 
 const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
@@ -13,7 +13,8 @@ const DriverDashboard = ({ userId }) => {
   // const dispatch = useDispatch();
 
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
-  const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
+  // const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
+  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "PENDING" });
   const [updateDriverLocation] = useUpdateDriverLocationMutation();
 
   const [location, setLocation] = useState(null);

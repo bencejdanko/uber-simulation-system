@@ -6,15 +6,14 @@ import {
   createRideSchema,
   updateRideStatusSchema,
   cancelRideSchema,
-  findNearbyDriversSchema
+  findNearbyDriversSchema,
+  searchRidesSchema
 } from '../schemas/ride.schema';
 
 const router = Router();
 
 // 🔐 Apply token verification middleware to all routes
 router.use(verifyToken);
-
-
 
 // 🚗 Create a new ride
 router.post(
@@ -32,6 +31,13 @@ router.get(
   '/nearby-drivers',
   validateRequest({ query: findNearbyDriversSchema }),
   rideController.findNearbyDrivers
+);
+
+// 🔍 Search for rides (with query validation)
+router.get(
+  '/search',
+  validateRequest({ query: searchRidesSchema }),
+  rideController.searchRides
 );
 
 // 📦 Get ride by ID

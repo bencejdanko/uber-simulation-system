@@ -24,7 +24,16 @@ export const registerCustomer = async (req: Request<{}, {}, RegisterCustomerInpu
         // 1. Check if user exists
         const existingUser = await AuthModel.findOne({ email });
         if (existingUser) {
+
+            // check if roles doesn't contain 'CUSTOMER'
+            if (existingUser.userType === 'CUSTOMER') {
+                res.status(409).json({ error: { code: 'USER_ALREADY_EXISTS', message: 'Email already in use.' } });
+                return;
+            }
+            // If user exists but is not a customer, we can proceed to register them as a customer
+            
             res.status(409).json({ error: { code: 'USER_ALREADY_EXISTS', message: 'Email already in use.' } });
+
             return;
         }
 
