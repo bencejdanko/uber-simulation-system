@@ -428,5 +428,16 @@ function JwtHandler:access(conf)
   end
 end
 
+-- Add this new function for the header_filter phase
+function JwtHandler:header_filter(conf)
+  kong.response.set_header("Access-Control-Allow-Origin", "*")
+  -- You might want to make the allowed origin configurable via conf
+  -- For example:
+  -- if conf.cors_origin then
+  --   kong.response.set_header("Access-Control-Allow-Origin", conf.cors_origin)
+  -- else
+  --   kong.response.set_header("Access-Control-Allow-Origin", "*") -- Default to all
+  -- end
+end
 
 return JwtHandler

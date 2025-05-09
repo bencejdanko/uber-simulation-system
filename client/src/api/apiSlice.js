@@ -6,7 +6,7 @@ const getToken = () => localStorage.getItem('driverToken');
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api', // This prepends '/api' to all endpoint URLs
+    baseUrl: 'http://localhost:8000/api/v1', // This prepends '/api' to all endpoint URLs
     // Prepare headers to include the token if it exists
     prepareHeaders: (headers, { getState }) => {
       const token = getToken(); // Or get from Redux state: getState().auth.token
@@ -55,7 +55,7 @@ export const apiSlice = createApi({
     // Driver Auth Endpoints
     loginDriver: builder.mutation({
       query: (credentials) => ({
-        url: '/v1/auth/login',
+        url: 'http://localhost:8000/api/v1/auth/login',
         method: 'POST',
         body: credentials, 
       }),
@@ -64,7 +64,7 @@ export const apiSlice = createApi({
     registerDriver: builder.mutation({
       query: (driverData) => ({
       
-        url: '/v1/auth/register/driver',
+        url: 'http://localhost:8000/api/v1/auth/register/driver',
         method: 'POST',
         body: driverData, 
       }),

@@ -14,6 +14,8 @@ const router = Router();
 // 🔐 Apply token verification middleware to all routes
 router.use(verifyToken);
 
+
+
 // 🚗 Create a new ride
 router.post(
   '/',
