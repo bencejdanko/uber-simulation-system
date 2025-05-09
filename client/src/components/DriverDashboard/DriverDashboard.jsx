@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverDashboard.css';
 // Optional: If you have a Redux slice for auth state (beyond RTK Query)
 // import { useDispatch } from 'react-redux';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
-import { useGetDriverByIdQuery, useGetRidesByDriverQuery } from '../../api/apiSlice';
+import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverLocationMutation } from '../../api/apiSlice';
 
 const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
@@ -14,11 +14,36 @@ const DriverDashboard = ({ userId }) => {
 
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
   const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
+  const [updateDriverLocation] = useUpdateDriverLocationMutation();
+
+  const [location, setLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
   useEffect(() => {
-    console.log("UserID:", userId)
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          setLocation(coords);
+          console.log("Device location:", coords);
 
-  })
+          // Optional: Send to backend
+          updateDriverLocation({ id: userId, ...coords });
+        },
+        (error) => {
+          console.error("Geolocation error:", error.message);
+          setLocationError(error.message);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setLocationError("Geolocation not supported by this browser.");
+    }
+  }, [userId, updateDriverLocation]);
+  
   // Get the most recent ride (assumes first is latest)
   const latestRide = rides?.[0];
   const pickup = latestRide?.pickupLocation;
@@ -64,6 +89,15 @@ const DriverDashboard = ({ userId }) => {
           <p>Longitude: {pickup.longitude}</p>
         </div>
       )}
+
+      {location && (
+        <div className="device-location">
+          <h3>Your Current Device Location</h3>
+          <p>Latitude: {location.latitude}</p>
+          <p>Longitude: {location.longitude}</p>
+        </div>
+      )}
+      {locationError && <p style={{ color: 'red' }}>{locationError}</p>}
 
       <div className="navigation-buttons">
         <button className="nav-button" onClick={() => navigate('/')}>
