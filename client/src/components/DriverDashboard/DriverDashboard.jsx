@@ -176,8 +176,18 @@ const DriverDashboard = ({ userId }) => {
 
   // Handle logout functionality
   const handleLogout = () => {
-    localStorage.removeItem('driverToken');
-    navigate('/'); // Redirect to home or login
+    // 1. Clear the stored token
+    localStorage.removeItem('accessToken');
+    console.log('Driver token removed.');
+
+    // 2. Optional: Dispatch action to clear Redux auth state
+    // dispatch(setDriverLoggedOut());
+
+    // 3. Optional: Reset RTK Query state if needed (often clearing token is enough)
+    // dispatch(apiSlice.util.resetApiState()); // Be cautious, resets ALL API state
+
+    // 4. Redirect to login or home page
+    navigate('/'); // Or navigate('/')
   };
 
   return (

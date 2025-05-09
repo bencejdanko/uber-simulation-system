@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegisterCustomer.css';
+import { useRegisterCustomerMutation } from '../../api/apiSlice';
 
 const RegisterCustomer = () => {
   const navigate = useNavigate();
+  const [registerCustomer, { isLoading, error: mutationError, isSuccess }] = useRegisterCustomerMutation();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,7 +21,6 @@ const RegisterCustomer = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -67,7 +69,7 @@ const RegisterCustomer = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formErrors = validateForm();
 
@@ -76,10 +78,30 @@ const RegisterCustomer = () => {
       return;
     }
 
-    setIsSubmitted(true);
+    setErrors({});
+
+    try {
+      const { confirmPassword, ...registrationData } = formData;
+      await registerCustomer(registrationData).unwrap();
+    } catch (err) {
+      console.error('Failed to register customer:', err);
+      if (err.data && err.data.errors) {
+        setErrors(err.data.errors);
+      } else if (err.data && err.data.message) {
+        setErrors({ form: err.data.message });
+      } else {
+        setErrors({ form: 'Registration failed. Please try again.' });
+      }
+    }
   };
 
-  if (isSubmitted) {
+  useEffect(() => {
+    if (isSuccess) {
+      // Optional: Add a delay before navigating or let the success message be shown
+    }
+  }, [isSuccess, navigate]);
+
+  if (isSuccess) {
     return (
       <div className="container">
         <div className="card text-center">
@@ -226,9 +248,15 @@ const RegisterCustomer = () => {
             {errors.agreeToTerms && <p className="error-message">{errors.agreeToTerms}</p>}
           </div>
 
-          <button type="submit" className="button">
-            Sign Up
+          <button type="submit" className="button" disabled={isLoading}>
+            {isLoading ? 'Signing Up...' : 'Sign Up'}
           </button>
+          {mutationError && (
+            <p className="error-message">
+              {mutationError.data?.message || mutationError.error || 'Registration failed. Please try again.'}
+            </p>
+          )}
+          {errors.form && <p className="error-message">{errors.form}</p>}
         </form>
       </div>
     </div>
