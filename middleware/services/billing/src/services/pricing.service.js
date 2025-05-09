@@ -15,6 +15,8 @@ const redisClient = new Redis({
   port: process.env.REDIS_PORT || 6379
 });
 
+const axios = require('axios');
+
 // Constants for pricing
 const BASE_FARE = 2.50;           // Base fare in USD
 const COST_PER_MINUTE = 0.35;     // Cost per minute in USD
@@ -178,77 +180,99 @@ const getSurgeMultiplier = async (location, requestTime) => {
 };
 
 /**
- * Calculate the predicted fare for a ride
- * @param {Object} pickup - Pickup coordinates {latitude, longitude}
- * @param {Object} dropoff - Dropoff coordinates {latitude, longitude}
- * @param {Date} requestTime - Time of the ride request
- * @returns {Promise<Object>} - Predicted fare details
+ * Call the model-prediction service to get a fare prediction
+ * @param {Object} features - Features for the model
+ * @returns {Promise<number>} - Predicted fare
  */
+const callModelPredictionService = async (features) => {
+  try {
+    const response = await axios.post(
+      process.env.MODEL_PREDICTION_URL || 'http://localhost:8050/predict',
+      features
+    );
+    return response.data.predicted_fare;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Bound a fare between MIN_FARE and a calculated max price based on distance and extreme surge
+ * @param {number} fare - The fare to bound
+ * @param {number} distance - The ride distance in miles
+ * @returns {number} - The bounded fare
+ */
+const boundFare = (fare, distance) => {
+  const maxSurge = SURGE_LEVELS.EXTREME;
+  const maxPrice = Math.max(
+    MIN_FARE,
+    (BASE_FARE + (distance * COST_PER_MILE) + (estimateTravelTime(distance, 'afternoon') * COST_PER_MINUTE)) * maxSurge + BOOKING_FEE
+  );
+  return Math.min(Math.max(fare, MIN_FARE), maxPrice);
+};
+
 const calculatePredictedFare = async (pickup, dropoff, requestTime = new Date()) => {
   try {
-    // Calculate the distance
+    const pickup_hour = requestTime.getHours();
+    const pickup_weekday = requestTime.getDay();
+    const passenger_count = 1;
+    const features = {
+      pickup_latitude: pickup.latitude,
+      pickup_longitude: pickup.longitude,
+      dropoff_latitude: dropoff.latitude,
+      dropoff_longitude: dropoff.longitude,
+      pickup_hour,
+      pickup_weekday,
+      passenger_count
+    };
+    const predictedFare = await callModelPredictionService(features);
     const distance = calculateDistance(pickup, dropoff);
-    
-    // Determine time of day category
-    const hour = requestTime.getHours();
-    let timeOfDay;
-    
-    if (hour >= 6 && hour < 10) {
+    const boundedFare = boundFare(predictedFare, distance);
+    return {
+      fare: boundedFare,
+      breakdown: {
+        modelPrediction: true,
+        minFare: MIN_FARE,
+        maxFare: boundFare(Infinity, distance)
+      }
+    };
+  } catch (error) {
+    console.error('Error calculating predicted fare via model-prediction:', error);
+    // Fallback: hard-coded fare calculation
+    const distance = calculateDistance(pickup, dropoff);
+    const pickup_hour = requestTime.getHours();
+    let timeOfDay = 'afternoon';
+    let surge = 1.0;
+    if (pickup_hour >= 7 && pickup_hour <= 9) {
       timeOfDay = 'morning';
-    } else if (hour >= 10 && hour < 16) {
-      timeOfDay = 'afternoon';
-    } else if (hour >= 16 && hour < 20) {
+      surge = SURGE_LEVELS.MEDIUM;
+    } else if (pickup_hour >= 16 && pickup_hour <= 19) {
       timeOfDay = 'evening';
-    } else {
+      surge = SURGE_LEVELS.HIGH;
+    } else if (pickup_hour >= 22 || pickup_hour <= 2) {
       timeOfDay = 'night';
+      surge = SURGE_LEVELS.LOW;
     }
-    
-    // Estimate travel time
-    const estimatedTime = estimateTravelTime(distance, timeOfDay);
-    
-    // Get surge multiplier
-    const surgeMultiplier = await getSurgeMultiplier(pickup, requestTime);
-    
-    // Calculate base fare
+    const travelTime = estimateTravelTime(distance, timeOfDay);
     const baseFare = BASE_FARE;
-    
-    // Calculate time component
-    const timeAmount = estimatedTime * COST_PER_MINUTE;
-    
-    // Calculate distance component
+    const timeAmount = travelTime * COST_PER_MINUTE;
     const distanceAmount = distance * COST_PER_MILE;
-    
-    // Calculate subtotal
     let subtotal = baseFare + timeAmount + distanceAmount;
-    
-    // Apply surge pricing
-    subtotal *= surgeMultiplier;
-    
-    // Add booking fee
+    subtotal *= surge;
     const total = subtotal + BOOKING_FEE;
-    
-    // Apply minimum fare if necessary
     const finalFare = Math.max(total, MIN_FARE);
-    
-    // Round to 2 decimal places
     const roundedFare = Math.round(finalFare * 100) / 100;
-    
-    // Return the fare breakdown
     return {
       fare: roundedFare,
       breakdown: {
         baseAmount: baseFare,
-        timeAmount: timeAmount,
-        distanceAmount: distanceAmount,
+        timeAmount,
+        distanceAmount,
         bookingFee: BOOKING_FEE,
-        surge: surgeMultiplier,
-        estimatedDistance: distance,
-        estimatedTime: estimatedTime
+        surge,
+        fallback: true
       }
     };
-  } catch (error) {
-    console.error('Error calculating predicted fare:', error);
-    throw new Error('Failed to calculate fare');
   }
 };
 
@@ -303,9 +327,12 @@ const calculateActualFare = async (rideData) => {
     // Round to 2 decimal places
     const roundedFare = Math.round(finalFare * 100) / 100;
     
+    // Bound the actual fare as well
+    const boundedFare = boundFare(roundedFare, actualDistance);
+    
     // Calculate taxes (assume 8% tax rate)
     const taxRate = 0.08;
-    const taxes = roundedFare * taxRate;
+    const taxes = boundedFare * taxRate;
     
     // Calculate driver payout (80% of fare excluding booking fee and taxes)
     const fareBeforeFees = subtotal;
@@ -316,7 +343,7 @@ const calculateActualFare = async (rideData) => {
     
     // Return the fare breakdown
     return {
-      fare: roundedFare,
+      fare: boundedFare,
       breakdown: {
         baseAmount: baseFare,
         timeAmount: timeAmount,
@@ -327,7 +354,9 @@ const calculateActualFare = async (rideData) => {
         actualTime: rideDuration,
         taxes: taxes,
         driverPayout: driverPayout,
-        platformFee: platformFee
+        platformFee: platformFee,
+        minFare: MIN_FARE,
+        maxFare: boundFare(Infinity, actualDistance)
       }
     };
   } catch (error) {
