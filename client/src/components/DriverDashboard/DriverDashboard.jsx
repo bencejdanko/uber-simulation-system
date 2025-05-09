@@ -6,6 +6,16 @@ import './DriverDashboard.css';
 const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
 
+// List of states for dropdown
+  const statesList = [
+    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
+    'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts',
+    'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+    'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island',
+    'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+    'Wisconsin', 'Wyoming'
+  ];
+
   // Fetch driver data
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
   const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
@@ -189,21 +199,160 @@ const DriverDashboard = ({ userId }) => {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              {/* Form fields for profile editing */}
               <div>
                 <label>First Name:</label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
               </div>
               <div>
                 <label>Last Name:</label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
               </div>
-              {/* More input fields for profile details */}
+              <div>
+                <label>Email:</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>Phone:</label>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <h3>Address</h3>
+              <div>
+                <label>Street:</label>
+                <input
+                  type="text"
+                  name="address.street"
+                  value={formData.address.street}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>City:</label>
+                <input
+                  type="text"
+                  name="address.city"
+                  value={formData.address.city}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>State:</label>
+                  <select
+                    name="address.state"
+                    value={formData.address.state}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select a state</option>
+                    {statesList.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+              </div>
+              <div>
+                <label>Zip Code:</label>
+                <input
+                  type="text"
+                  name="address.zipCode"
+                  value={formData.address.zipCode}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <h3>Car Details</h3>
+              <div>
+                <label>Make:</label>
+                <input
+                  type="text"
+                  name="carDetails.make"
+                  value={formData.carDetails.make}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>Model:</label>
+                <input
+                  type="text"
+                  name="carDetails.model"
+                  value={formData.carDetails.model}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>Year:</label>
+                <input
+                  type="number"
+                  name="carDetails.year"
+                  value={formData.carDetails.year}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>Color:</label>
+                <input
+                  type="text"
+                  name="carDetails.color"
+                  value={formData.carDetails.color}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>License Plate:</label>
+                <input
+                  type="text"
+                  name="carDetails.licensePlate"
+                  value={formData.carDetails.licensePlate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <h3>Introduction</h3>
+              <div>
+                <label>Image URL:</label>
+                <input
+                  type="text"
+                  name="introduction.imageUrl"
+                  value={formData.introduction.imageUrl || ''}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label>Video URL:</label>
+                <input
+                  type="text"
+                  name="introduction.videoUrl"
+                  value={formData.introduction.videoUrl || ''}
+                  onChange={handleChange}
+                />
+              </div>
+
               <button type="submit" disabled={isUpdating}>
                 {isUpdating ? 'Updating...' : 'Update Profile'}
               </button>
-              <button type="button" onClick={handleCancel} disabled={isUpdating}>Cancel</button>
-              {updateError && <p>Error updating profile: {updateError.message}</p>}
+              <button type="button" onClick={handleCancel} disabled={isUpdating}>
+                Cancel
+              </button>
             </form>
           )}
         </div>
