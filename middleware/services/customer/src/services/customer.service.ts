@@ -130,41 +130,9 @@ import { CustomerInput } from '../types/customer.types';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-export const createCustomer = async (data: CustomerInput) => {
-    const { customerId, firstName, lastName, email, password, phoneNumber, address, paymentDetails } = data;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const tokenizedId = uuidv4();
-    const last4Digits = paymentDetails.cardNumber.slice(-4);
-
-    const paymentCard = await PaymentCardModel.create({
-        customerId,
-        paymentType: paymentDetails.paymentType,
-        last4Digits,
-        cardType: paymentDetails.cardType,
-        expiryMonth: paymentDetails.expiryMonth,
-        expiryYear: paymentDetails.expiryYear,
-        tokenizedId
-    });
-
-    const customer = await CustomerModel.create({
-        externalCustomerId: customerId,
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword,
-        phone: phoneNumber,
-        address,
-        paymentCardId: paymentCard._id,
-        verified: false
-    });
-
-    const token = jwt.sign({ id: customer.externalCustomerId }, JWT_SECRET, { expiresIn: '1d' });
-    return { customer, verifyToken: token };
-};
-
 export const updateCustomer = (customerId: string, updates: any) => {
     return CustomerModel.findOneAndUpdate(
-        { externalCustomerId: customerId },
+        { _id: customerId },
         { ...updates, updatedAt: new Date() },
         { new: true }
     );
@@ -182,28 +150,10 @@ export const deletePaymentCard = (cardId: string) => {
     return PaymentCardModel.findByIdAndDelete(cardId);
 };
 
-export const loginCustomer = async (email: string, password: string) => {
-    const customer = await CustomerModel.findOne({ email }).select('+password');
-    if (!customer || !(await bcrypt.compare(password, customer.password))) {
-        return null;
-    }
-    const token = jwt.sign({ id: customer.externalCustomerId, role: customer.role }, JWT_SECRET, { expiresIn: '1d' });
-    return token;
-};
-
-export const verifyEmail = (customerId: string) => {
-    return CustomerModel.findOneAndUpdate({ externalCustomerId: customerId }, { verified: true });
-};
-
-export const generatePasswordResetToken = (customerId: string) => {
-    return jwt.sign({ id: customerId }, JWT_SECRET, { expiresIn: '15m' });
-};
-
-export const resetPassword = async (customerId: string, newPassword: string) => {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    return CustomerModel.findOneAndUpdate({ externalCustomerId: customerId }, { password: hashedPassword });
-};
-
 export const getCustomerByEmail = (email: string) => {
     return CustomerModel.findOne({ email });
 };
+
+export const getCustomerById = (customerId: string) => {
+    return CustomerModel.findById(customerId);
+}
