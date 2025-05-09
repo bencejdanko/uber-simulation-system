@@ -264,6 +264,18 @@ services:
       broker-init: # Depend on the init container completing successfully
         condition: service_completed_successfully
 
+  model-prediction:
+    container_name: uber-model-prediction
+    build:
+      context: ./services/model-prediction
+      dockerfile: Dockerfile
+    ports:
+      - "8050:8050"
+    environment:
+      - MODEL_PATH=/app/model.joblib
+    depends_on:
+      - mongo
+      - redis
 
   redis:
     image: redis:7.2-alpine
