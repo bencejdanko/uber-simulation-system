@@ -40,7 +40,7 @@ const LoginDriver = () => {
       const { accessToken } = await loginDriver(credentials).unwrap();
       console.log('Driver logged in successfully, token:', accessToken);
 
-      localStorage.setItem('driverToken', accessToken);
+      localStorage.setItem('accessToken', accessToken);
       // dispatch(setDriverLoggedIn(true));
 
       navigate('/driver/dashboard');

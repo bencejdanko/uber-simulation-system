@@ -17,6 +17,23 @@ import LoginAdmin from './components/LoginAdmin/LoginAdmin';
 import AdminDashboard from './components/AdminDashboard/AdminDashboard';
 import './App.css';
 
+
+import { getAccessToken } from './utils/getAccessToken';
+import { extractClaims } from './utils/extractClaims';
+const accessToken = getAccessToken();
+const userId = null; 
+let sub = null;      
+let roles = null;    
+
+if (accessToken) {
+  const extractedClaims = extractClaims(accessToken); // Call extractClaims and store the result.
+    if (extractedClaims) {
+    ({ sub, roles } = extractedClaims);
+  }
+}
+
+
+
 function App() {
   return (
     <BrowserRouter>
@@ -27,16 +44,16 @@ function App() {
           <Route path="/login-driver" element={<LoginDriver />} />
           <Route path="/register-customer" element={<RegisterCustomer />} />
           <Route path="/register-driver" element={<RegisterDriver />} />
-          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-          <Route path="/driver/dashboard" element={<DriverDashboard />} />
-          <Route path="/driver/earnings" element={<DriverEarnings />} />
-          <Route path="/driver/manage-rides" element={<DriverManageRides />} />
-          <Route path="/customer/billing-history" element={<CustomerBillingList />} />
-          <Route path="/customer/request-ride" element={<CustomerRequestRide />} />
-          <Route path="/customer/ride-history" element={<CustomerRideHistory />} />
-          <Route path="/customer/wallet" element={<Wallet />} />
+          <Route path="/customer/dashboard" element={<CustomerDashboard userId={sub} />} />
+          <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} />} />
+          <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
+          <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />
+          <Route path="/customer/billing-history" element={<CustomerBillingList userId={sub} />} />
+          <Route path="/customer/request-ride" element={<CustomerRequestRide userId={sub} />} />
+          <Route path="/customer/ride-history" element={<CustomerRideHistory userId={sub} />} />
+          <Route path="/customer/wallet" element={<Wallet userId={sub} />} />
           <Route path="/login-admin" element={<LoginAdmin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard userId={sub} />} />
         </Routes>
       </div>
     </BrowserRouter>

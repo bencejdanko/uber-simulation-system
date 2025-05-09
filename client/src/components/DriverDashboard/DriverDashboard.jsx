@@ -6,24 +6,17 @@ import './DriverDashboard.css';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
 import { useGetDriverByIdQuery } from '../../api/apiSlice';
-import { extractClaims } from '../../utils/extractClaims';
 
-const DriverDashboard = () => {
+const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
   // Optional: Get dispatch function if using a separate auth slice
   // const dispatch = useDispatch();
 
+  const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
+
   useEffect(() => {
-    const token = localStorage.getItem('driverToken');
+    console.log("UserID:", userId)
 
-    if (!token) {
-      navigate('/'); // Redirect to login if no token
-    }
-
-    // extract info from token
-    const { sub, roles } = extractClaims(token);
-    console.log('Driver ID:', sub);
-    console.log('Driver Roles:', roles);
   })
 
   // Function to handle logout
@@ -46,6 +39,17 @@ const DriverDashboard = () => {
     <div className="driver-dashboard-container">
       <h1>Welcome to the Driver Dashboard</h1>
       <p>This is the dashboard for drivers.</p>
+      {isLoading && <p>Loading driver data...</p>}
+      {error && <p>Error loading driver data: {error.message}</p>}
+      {driverData && (
+        <div className="driver-info">
+          <h2>Driver Information</h2>
+          <p>Name: {driverData.name}</p>
+          <p>Email: {driverData.email}</p>
+          <p>Phone: {driverData.phone}</p>
+          {/* Add more driver information as needed */}
+        </div>
+      )}
 
       <div className="navigation-buttons">
         <button className="nav-button" onClick={() => navigate('/')}>
