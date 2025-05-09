@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverDashboard.css';
 // Optional: If you have a Redux slice for auth state (beyond RTK Query)
 // import { useDispatch } from 'react-redux';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
-const DriverDashboard = () => {
+import { useGetDriverByIdQuery } from '../../api/apiSlice';
+
+const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
   // Optional: Get dispatch function if using a separate auth slice
   // const dispatch = useDispatch();
+
+  const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
+
+  useEffect(() => {
+    console.log("UserID:", userId)
+
+  })
 
   // Function to handle logout
   const handleLogout = () => {
@@ -30,6 +39,17 @@ const DriverDashboard = () => {
     <div className="driver-dashboard-container">
       <h1>Welcome to the Driver Dashboard</h1>
       <p>This is the dashboard for drivers.</p>
+      {isLoading && <p>Loading driver data...</p>}
+      {error && <p>Error loading driver data: {error.message}</p>}
+      {driverData && (
+        <div className="driver-info">
+          <h2>Driver Information</h2>
+          <p>Name: {driverData.name}</p>
+          <p>Email: {driverData.email}</p>
+          <p>Phone: {driverData.phone}</p>
+          {/* Add more driver information as needed */}
+        </div>
+      )}
 
       <div className="navigation-buttons">
         <button className="nav-button" onClick={() => navigate('/')}>

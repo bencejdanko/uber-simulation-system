@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './LoginDriver.css';
 import { useNavigate } from 'react-router-dom';
 import { useLoginDriverMutation } from '../../api/apiSlice';
@@ -11,6 +11,19 @@ const LoginDriver = () => {
     email: '', 
     password: '',
   });
+
+
+  const navigateIfLoggedIn = () => {
+    const token = localStorage.getItem('driverToken');
+    if (token) {
+      navigate('/driver/dashboard');
+    }
+  }
+
+  useEffect(() => {
+    navigateIfLoggedIn();
+  }, []);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,7 +40,7 @@ const LoginDriver = () => {
       const { accessToken } = await loginDriver(credentials).unwrap();
       console.log('Driver logged in successfully, token:', accessToken);
 
-      localStorage.setItem('driverToken', accessToken);
+      localStorage.setItem('accessToken', accessToken);
       // dispatch(setDriverLoggedIn(true));
 
       navigate('/driver/dashboard');
