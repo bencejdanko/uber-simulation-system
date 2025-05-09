@@ -1,7 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-// Function to get the token from storage (e.g., localStorage)
-const getToken = () => localStorage.getItem('driverToken');
+import { getAccessToken } from '../utils/getAccessToken';
 
 export const apiSlice = createApi({
   reducerPath: 'api',
@@ -9,7 +7,7 @@ export const apiSlice = createApi({
     baseUrl: 'http://localhost:8000/api/v1', // This prepends '/api' to all endpoint URLs
     // Prepare headers to include the token if it exists
     prepareHeaders: (headers, { getState }) => {
-      const token = getToken(); // Or get from Redux state: getState().auth.token
+      const token = getAccessToken(); // Use getAccessToken here
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
       }

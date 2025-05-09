@@ -430,14 +430,24 @@ end
 
 -- Add this new function for the header_filter phase
 function JwtHandler:header_filter(conf)
-  kong.response.set_header("Access-Control-Allow-Origin", "*")
-  -- You might want to make the allowed origin configurable via conf
-  -- For example:
-  -- if conf.cors_origin then
-  --   kong.response.set_header("Access-Control-Allow-Origin", conf.cors_origin)
-  -- else
-  --   kong.response.set_header("Access-Control-Allow-Origin", "*") -- Default to all
-  -- end
+  -- Always set the origin. For production, consider making this configurable
+  -- instead of using a wildcard.
+  kong.response.set_header("Access-Control-Allow-Origin", conf.cors_origin or "*")
+
+  if kong.request.get_method() == "OPTIONS" then
+    -- Handle Preflight (OPTIONS) requests
+    kong.response.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+    kong.response.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With") -- Add any other headers your client might send
+    kong.response.set_header("Access-Control-Max-Age", "3600") -- Optional: caches preflight response for 1 hour
+
+    -- For OPTIONS requests, we should send a 204 No Content response and exit.
+    -- This indicates the preflight request was successful.
+    return kong.response.exit(204)
+  end
+
+  -- For actual requests (non-OPTIONS), the Access-Control-Allow-Origin is already set.
+  -- Other CORS headers like Access-Control-Expose-Headers might be set here if needed,
+  -- depending on what headers your client-side JavaScript needs to access.
 end
 
 return JwtHandler
