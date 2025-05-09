@@ -5,7 +5,7 @@ import './DriverDashboard.css';
 // import { useDispatch } from 'react-redux';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
-import { useGetDriverByIdQuery } from '../../api/apiSlice';
+import { useGetDriverByIdQuery, useGetRidesByDriverQuery } from '../../api/apiSlice';
 
 const DriverDashboard = ({ userId }) => {
   const navigate = useNavigate();
@@ -13,11 +13,15 @@ const DriverDashboard = ({ userId }) => {
   // const dispatch = useDispatch();
 
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
+  const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
 
   useEffect(() => {
     console.log("UserID:", userId)
 
   })
+  // Get the most recent ride (assumes first is latest)
+  const latestRide = rides?.[0];
+  const pickup = latestRide?.pickupLocation;
 
   // Function to handle logout
   const handleLogout = () => {
@@ -48,6 +52,16 @@ const DriverDashboard = ({ userId }) => {
           <p>Email: {driverData.email}</p>
           <p>Phone: {driverData.phone}</p>
           {/* Add more driver information as needed */}
+        </div>
+      )}
+
+      {ridesLoading && <p>Loading ride data...</p>}
+      {ridesError && <p>Error loading ride data: {ridesError.message}</p>}
+      {pickup && (
+        <div className="customer-location">
+          <h3>Customer Pickup Location</h3>
+          <p>Latitude: {pickup.latitude}</p>
+          <p>Longitude: {pickup.longitude}</p>
         </div>
       )}
 

@@ -123,7 +123,7 @@ Standard format for error responses.
     *   `404 Not Found`: Driver not found. Response body contains `Error Response Object`.
     *   `500 Internal Server Error`: Unexpected server error.
 
-### 4. Review Customer Account
+### 4.  Customer Account
 
 *   **Description:** Retrieves detailed information about a specific customer account for administrative review.
 *   **Endpoint:** `GET /customers/{customer_id}`
