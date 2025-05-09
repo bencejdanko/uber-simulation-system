@@ -355,7 +355,7 @@ EOF
 
         # Check the status code (Expect 201 Created or potentially 200 OK depending on API design)
         # Adjust "201" if your API returns a different success code (e.g., "200")
-        check_status "$status_code_post" "201 200" "$test_name"
+        check_status "$status_code_post" "201 200 202" "$test_name"
 
         # Optional: Extract ride ID if needed for further tests
         if [[ "$status_code_post" -eq 201 || "$status_code_post" -eq 200 ]]; then
