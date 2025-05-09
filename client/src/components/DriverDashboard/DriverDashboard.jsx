@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverDashboard.css';
 // Optional: If you have a Redux slice for auth state (beyond RTK Query)
 // import { useDispatch } from 'react-redux';
 // import { setDriverLoggedOut } from '../auth/authSlice'; // Example action
 
+import { useGetDriverByIdQuery } from '../../api/apiSlice';
+import { extractClaims } from '../../utils/extractClaims';
+
 const DriverDashboard = () => {
   const navigate = useNavigate();
   // Optional: Get dispatch function if using a separate auth slice
   // const dispatch = useDispatch();
+
+  useEffect(() => {
+    const token = localStorage.getItem('driverToken');
+
+    if (!token) {
+      navigate('/'); // Redirect to login if no token
+    }
+
+    // extract info from token
+    const { sub, roles } = extractClaims(token);
+    console.log('Driver ID:', sub);
+    console.log('Driver Roles:', roles);
+  })
 
   // Function to handle logout
   const handleLogout = () => {
