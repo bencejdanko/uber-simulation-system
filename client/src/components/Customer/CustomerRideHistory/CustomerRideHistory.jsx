@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CustomerRideHistory.css';
+import useCustomerAuth from '../../../hooks/useCustomerAuth'; // Import the hook
 
 const CustomerRideHistory = () => {
   const navigate = useNavigate();
+const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
 
-  // Placeholder for authentication check
-  const isAuthenticated = true; // Replace with actual authentication logic later
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // Redirect to login page if not authenticated
-      navigate('/login-customer');
-    }
-  }, [isAuthenticated, navigate]);
+  // Placeholder for rides history - replace with actual API call using userId
+  // const { data: ridesHistory, isLoading, error: apiError } = useGetRideHistoryQuery(userId, {
+  //   skip: !userId || !authChecked,
+  // });
+  // const [cancelRide, { isLoading: isCancelling }] = useCancelRideMutation();
 
   const [ridesHistory, setRidesHistory] = useState([
     {
@@ -128,12 +126,6 @@ const CustomerRideHistory = () => {
         </button>
         <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
           Customer Dashboard
-        </button>
-        <button className="nav-button" onClick={() => navigate('/customer/request-ride')}>
-          Customer Ride Request
-        </button>
-        <button className="nav-button" onClick={() => navigate('/customer/billing-list')}>
-          Customer Billing
         </button>
       </div>
     </div>

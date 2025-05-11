@@ -5,9 +5,43 @@
 }
 
 .customer-profile-page h2 {
-  text-align: center;
-  margin-bottom: 30px;
+  text-align: center; /* Ensure h2 is centered */
+  margin-bottom: 30px; /* Keep or adjust margin */
   color: #333;
+  font-weight: 600;
+  /* flex-grow: 1; Remove if .profile-page-header is gone or h2 is not a flex item */
+}
+
+/* Remove or comment out .profile-page-header styles if no longer used */
+/*
+.profile-page-header {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  position: relative; 
+}
+
+.profile-page-header h2 {
+  margin-bottom: 0; 
+  text-align: left; 
+}
+*/
+
+.back-to-dashboard-button {
+  /* Uses action-button styles by default */
+  background-color: #17a2b8; /* Example: Info color, adjust as needed */
+  color: white;
+  /* padding: 8px 15px; /* Keep or adjust if different from other action-buttons */
+  /* font-size: 0.9em; /* Keep or adjust if different from other action-buttons */
+  text-decoration: none; /* Remove underline from Link */
+  /* Ensure it aligns well with other action-buttons if padding/font-size was different */
+  /* It will inherit padding and font-size from .action-button if not overridden here */
+}
+
+.back-to-dashboard-button:hover {
+  background-color: #138496;
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
 }
 
 .profile-details-card {
@@ -15,6 +49,7 @@
   padding: 25px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px; /* Add margin if needed to space from .profile-actions */
 }
 
 .profile-detail-item {
@@ -38,4 +73,82 @@
 .detail-value {
   color: #333;
   text-align: right;
+}
+
+.detail-value-input.input-error {
+  border-color: #dc3545; /* Red border for error */
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); /* Optional: glow effect */
+}
+
+.validation-error {
+  font-size: 0.875em;
+  color: #dc3545; /* Bootstrap danger color */
+  margin-top: 5px; /* Space above the error message */
+  /* Ensure it doesn't use the full error-message box style if not desired */
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  text-align: left; /* Align with the input field */
+}
+
+.profile-actions {
+  margin-top: 30px; /* This might be redundant if .profile-details-card has margin-bottom */
+  display: flex;
+  justify-content: center; 
+  gap: 15px; 
+}
+
+/* General action button styling (if not globally defined) */
+.action-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  /* display: inline-flex; /* Can help with vertical alignment if icons were involved */
+  /* align-items: center;  /* Can help with vertical alignment if icons were involved */
+  /* justify-content: center; /* Can help with horizontal alignment of text */
+  /* You could add an explicit height if absolutely necessary, e.g., height: 40px; 
+     but it's usually better to control with padding. */
+}
+
+.action-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  color: #666;
+}
+
+/* Specific button styles */
+.submit-button { /* Renamed from .save-button, .edit-button */
+  background-color: #007bff; /* Example: Blue for primary actions */
+  color: white;
+}
+
+.submit-button:hover:not(:disabled) { /* Renamed from .save-button:hover, .edit-button:hover */
+  background-color: #0056b3;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.cancel-button {
+  background-color: #6c757d; /* Example: Grey for secondary/cancel actions */
+  color: white;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #545b62;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.error-message {
+  color: #dc3545; /* Bootstrap danger color */
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
 }

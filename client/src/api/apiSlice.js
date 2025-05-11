@@ -13,15 +13,37 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Customer', 'Driver', 'Ride', 'Bill', 'Auth'],
+  tagTypes: ['Customer', 'Driver', 'Ride', 'Bill', 'Auth'], // Ensure 'Customer' tag type is listed
   endpoints: (builder) => ({
     // Customer Endpoints
-    getCustomerById: builder.query({ query: (id) => `/customers/${id}` }),
-    listCustomers: builder.query({ query: () => '/customers' }),
+    getCustomerById: builder.query({
+      query: (id) => `/customers/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Customer', id }], // Provide a specific tag for this customer
+    }),
+    listCustomers: builder.query({
+      query: () => '/customers',
+      providesTags: (result) =>
+        result
+          ? [...result.map(({ id }) => ({ type: 'Customer', id })), { type: 'Customer', id: 'LIST' }]
+          : [{ type: 'Customer', id: 'LIST' }],
+    }),
     searchCustomers: builder.query({ query: (params) => ({ url: '/customers/search', params }) }),
-    createCustomer: builder.mutation({ query: (data) => ({ url: '/customers', method: 'POST', body: data }) }),
-    updateCustomer: builder.mutation({ query: ({ id, ...data }) => ({ url: `/customers/${id}`, method: 'PATCH', body: data }) }),
-    deleteCustomer: builder.mutation({ query: (id) => ({ url: `/customers/${id}`, method: 'DELETE' }) }),
+    createCustomer: builder.mutation({
+      query: (data) => ({ url: '/customers', method: 'POST', body: data }),
+      invalidatesTags: [{ type: 'Customer', id: 'LIST' }], // Invalidate the list of customers
+    }),
+    updateCustomer: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/customers/${id}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Customer', id }], // Invalidate the specific customer's data
+    }),
+    deleteCustomer: builder.mutation({
+      query: (id) => ({ url: `/customers/${id}`, method: 'DELETE' }),
+      invalidatesTags: (result, error, id) => [{ type: 'Customer', id }, { type: 'Customer', id: 'LIST' }], // Invalidate specific customer and list
+    }),
 
     // Driver Endpoints
     getDriverById: builder.query({ query: (id) => `/drivers/${id}` }),

@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useCustomerAuth from '../../../hooks/useCustomerAuth';
 import './Wallet.css';
 
 const Wallet = () => {
   const navigate = useNavigate();
+  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
 
   const paymentMethods = [
     { id: 'visa', type: 'Visa', last4: '4242', expiryDate: '05/26', isDefault: true },
@@ -19,12 +21,21 @@ const Wallet = () => {
     console.log(`Delete payment method ${id}`);
   };
 
+  if (!authChecked) {
+    return <div className="wallet-loading"><p>Authenticating...</p></div>;
+  }
+
+  if (!userId && authChecked) {
+    return <div className="wallet-loading"><p>Session invalid. Redirecting to login...</p></div>;
+  }
+
   return (
     <div className="wallet-container">
       <header className="wallet-header">
         <div className="wallet-logo">Uber</div>
         <div className="wallet-title">Payment Methods</div>
       </header>
+      {authError && <p className="error-message">Authentication Error: {authError}</p>}
 
       <div className="wallet-section">
         <h2 className="section-title">Your Payment Methods</h2>
@@ -64,15 +75,6 @@ const Wallet = () => {
         </button>
         <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
           Customer Dashboard
-        </button>
-        <button className="nav-button" onClick={() => navigate('/customer/ride-history')}>
-          Customer Ride History
-        </button>
-        <button className="nav-button" onClick={() => navigate('/customer/request-ride')}>
-          Customer Ride Request
-        </button>
-        <button className="nav-button" onClick={() => navigate('/customer/billing-list')}>
-          Customer Billing
         </button>
       </div>
     </div>

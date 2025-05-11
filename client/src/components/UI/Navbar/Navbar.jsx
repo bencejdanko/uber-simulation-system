@@ -21,7 +21,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken'); // Or your specific token key
+    localStorage.removeItem('customerToken'); // Or your specific token key
     // Potentially dispatch logout action if using Redux/Context for global state
     // dispatch(apiSlice.util.resetApiState()); // If you want to clear RTK Query cache on logout
     navigate('/login-customer'); // Or a more generic login page like '/login'
@@ -57,7 +57,7 @@ const Navbar = () => {
             <div className="profile-dropdown-menu">
               <button onClick={() => handleDropdownNavigation('/customer/profile')}>My Profile</button> {/* Added Profile button */}
               <button onClick={() => handleDropdownNavigation('/customer/ride-history')}>History</button>
-              <button onClick={() => handleDropdownNavigation('/customer/billing-list')}>Billing</button>
+              <button onClick={() => handleDropdownNavigation('/customer/billing-history')}>Billing</button>
               <button onClick={() => handleDropdownNavigation('/customer/wallet')}>Wallet</button>
               <button onClick={handleLogout} className="logout-button-text">Logout</button>
             </div>
