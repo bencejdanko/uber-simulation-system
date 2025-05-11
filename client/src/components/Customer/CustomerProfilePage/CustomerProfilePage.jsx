@@ -122,7 +122,8 @@ const CustomerProfilePage = () => {
       return;
     }
     try {
-      await updateCustomer({ userId, ...formData }).unwrap();
+      // Pass the customer's ID as 'id' to match what apiSlice expects
+      await updateCustomer({ id: userId, ...formData }).unwrap(); 
       setIsEditing(false);
     } catch (err) {
       console.error('Failed to update profile:', err);

@@ -10,6 +10,9 @@ const router = Router();
 // router.post('/reset-password-request', CustomerController.requestPasswordReset);
 // router.post('/reset-password', CustomerController.resetPassword);
 
+// Add this line for GET /customers/:customerId
+router.get('/:customerId', CustomerController.getCustomer); 
+
 router.patch('/:customerId', CustomerController.updateCustomer);
 router.delete('/:customerId', CustomerController.deleteCustomer);
 
