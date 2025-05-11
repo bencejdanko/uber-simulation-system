@@ -14,7 +14,7 @@ const LoginDriver = () => {
 
 
   const navigateIfLoggedIn = () => {
-    const token = localStorage.getItem('driverToken');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       navigate('/driver/dashboard');
     }

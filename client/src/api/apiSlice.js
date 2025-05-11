@@ -89,7 +89,7 @@ export const apiSlice = createApi({
     }),
     loginDriver: builder.mutation({
       query: (credentials) => ({
-        url: '/auth/login/driver',
+        url: '/auth/login',
         method: 'POST',
         body: credentials,
       }),
