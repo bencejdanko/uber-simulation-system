@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRequestRideMutation } from '../../api/apiSlice';
+import LocationSelection from './LocationSelection';
 import './CustomerRequestRide.css';
+import './LocationSelection.css';
 
 const CustomerRequestRide = () => {
   const navigate = useNavigate();
+  const [requestRide] = useRequestRideMutation();
 
-  const [pickupLocation, setPickupLocation] = useState({ latitude: '', longitude: '' });
-  const [dropoffLocation, setDropoffLocation] = useState({ latitude: '', longitude: '' });
+  const [locations, setLocations] = useState({
+    pickup: null,
+    dropoff: null
+  });
   const [rideOptions] = useState([
     { type: 'UberX', priceRange: '$16–$20', eta: '5 min', capacity: '4 seats' },
     { type: 'Comfort', priceRange: '$18–$23', eta: '6 min', capacity: '4 seats' },
@@ -24,15 +30,19 @@ const CustomerRequestRide = () => {
   const [error, setError] = useState('');
   const [rideStatus, setRideStatus] = useState(''); // 'pending', 'requested', or 'cancelled'
 
-  const handleSubmit = (e) => {
+  const handleLocationSelect = (newLocations) => {
+    setLocations(newLocations);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate input
-    if (!pickupLocation.latitude || !pickupLocation.longitude) {
+    if (!locations.pickup?.address) {
       setError('Pickup location is required.');
       return;
     }
-    if (!dropoffLocation.latitude || !dropoffLocation.longitude) {
+    if (!locations.dropoff?.address) {
       setError('Drop-off location is required.');
       return;
     }
@@ -41,10 +51,23 @@ const CustomerRequestRide = () => {
       return;
     }
 
-    // Clear error and simulate ride request
+    // Clear error and request ride
     setError('');
-    console.log('Ride requested:', { pickupLocation, dropoffLocation, selectedRide, paymentMethod });
-    setRideStatus('pending');
+    try {
+      const rideData = {
+        pickup_address: locations.pickup.address,
+        dropoff_address: locations.dropoff.address,
+        ride_type: selectedRide,
+        payment_method: paymentMethod
+      };
+
+      const response = await requestRide(rideData).unwrap();
+      console.log('Ride requested successfully:', response);
+      setRideStatus('pending');
+    } catch (err) {
+      console.error('Failed to request ride:', err);
+      setError('Failed to request ride. Please try again.');
+    }
   };
 
   const handleCancel = () => {
@@ -74,47 +97,7 @@ const CustomerRequestRide = () => {
           <div className="cancelled-message">Your ride has been cancelled.</div>
         ) : (
           <form onSubmit={handleSubmit} className="ride-form">
-            <div className="form-group">
-              <label>Pickup Location</label>
-              <input
-                type="number"
-                placeholder="Latitude"
-                value={pickupLocation.latitude}
-                onChange={(e) =>
-                  setPickupLocation({ ...pickupLocation, latitude: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                placeholder="Longitude"
-                value={pickupLocation.longitude}
-                onChange={(e) =>
-                  setPickupLocation({ ...pickupLocation, longitude: e.target.value })
-                }
-              />
-              <button type="button" className="map-pin-button">Pin on Map</button>
-            </div>
-
-            <div className="form-group">
-              <label>Drop-off Location</label>
-              <input
-                type="number"
-                placeholder="Latitude"
-                value={dropoffLocation.latitude}
-                onChange={(e) =>
-                  setDropoffLocation({ ...dropoffLocation, latitude: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                placeholder="Longitude"
-                value={dropoffLocation.longitude}
-                onChange={(e) =>
-                  setDropoffLocation({ ...dropoffLocation, longitude: e.target.value })
-                }
-              />
-              <button type="button" className="map-pin-button">Pin on Map</button>
-            </div>
+            <LocationSelection onLocationSelect={handleLocationSelect} />
 
             <div className="form-group">
               <label>Ride Option</label>
