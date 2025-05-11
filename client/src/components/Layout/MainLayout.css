@@ -1,0 +1,12 @@
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-top: 60px; /* This is crucial: height of the fixed Navbar */
+  padding: 20px; /* Or whatever padding your pages need */
+  flex-grow: 1; /* Allows content to fill remaining space */
+  /* background-color: #f4f7f6; */ /* Optional background for the content area */
+}

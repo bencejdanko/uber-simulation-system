@@ -15,6 +15,7 @@ import CustomerRideHistory from './components/CustomerRideHistory/CustomerRideHi
 import Wallet from './components/Wallet/Wallet';
 import LoginAdmin from './components/LoginAdmin/LoginAdmin';
 import AdminDashboard from './components/AdminDashboard/AdminDashboard';
+import MainLayout from './components/Layout/MainLayout';
 import './App.css';
 
 
@@ -39,12 +40,15 @@ function App() {
     <BrowserRouter>
       <div className="App">
         <Routes>
+        <Route element={<MainLayout />}>
+          <Route path="/customer/dashboard" element={<CustomerDashboard userId={sub} />} />
+        </Route>
           <Route path="/" element={<HomePage />} />
           <Route path="/login-customer" element={<LoginCustomer />} />
           <Route path="/login-driver" element={<LoginDriver />} />
           <Route path="/register-customer" element={<RegisterCustomer />} />
           <Route path="/register-driver" element={<RegisterDriver />} />
-          <Route path="/customer/dashboard" element={<CustomerDashboard userId={sub} />} />
+          
           <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} />} />
           <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
           <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />

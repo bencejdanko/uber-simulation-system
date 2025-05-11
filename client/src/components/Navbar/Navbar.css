@@ -1,0 +1,125 @@
+.top-navbar {
+  background-color: #000;
+  color: white;
+  padding: 0 20px;
+  display: flex; /* Enables flexbox layout */
+  align-items: center; /* Vertically centers all direct children (navbar-brand, navbar-links, navbar-actions) */
+  justify-content: space-between; /* Pushes navbar-brand left, navbar-actions right, links in between */
+  height: 60px; /* Fixed height for vertical centering reference */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  font-size: 1.5em;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 15px;
+  flex-grow: 1;
+  margin-left:50px;
+  /*justify-content: center;
+  /* If navbar-links should take up space to push actions right, you might add:
+     
+      /* or flex-start, flex-end depending on desired alignment of links 
+  */
+}
+
+.navbar-button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.navbar-button:hover {
+  background-color: #444;
+}
+
+.navbar-actions {
+  display: flex; /* Enables flex for items within this container (e.g., wallet icon, profile icon) */
+  align-items: center; /* Vertically centers direct children (e.g., profile-icon-container) */
+  gap: 15px;
+}
+
+/* This container holds the profile button and its dropdown.
+   As a flex item of .navbar-actions, it will be vertically centered. */
+.profile-icon-container {
+  position: relative; /* For positioning the dropdown, does not affect its own alignment as a flex item */
+  display: flex; /* Ensures the button inside is also aligned if needed */
+  align-items: center; /* Vertically aligns the profile-icon-button within this container */
+  margin-bottom: 40px;
+  margin-right: 50px; /* Adds 10px of space to the right of the icon, effectively moving it slightly left. Adjust as needed. */
+}
+
+.profile-icon-button {
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px; /* Button is 40px, navbar is 60px. align-items: center on parents handles this. */
+  display: flex; /* For centering the icon character/SVG *inside* the button */
+  align-items: center; /* Centers icon character/SVG vertically inside button */
+  justify-content: center; /* Centers icon character/SVG horizontally inside button */
+  cursor: pointer;
+  font-size: 1.5em;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.profile-icon-button:hover {
+  background-color: #555;
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: 45px; 
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0;
+  z-index: 1001;
+}
+
+.profile-dropdown-menu button {
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.95em;
+  color: #333; /* Default text color for dropdown items */
+}
+
+.profile-dropdown-menu button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Style for the logout button text */
+.profile-dropdown-menu .logout-button-text {
+  color: rgb(214, 21, 21);
+}
+
+/* If you want the red color to also apply on hover for the logout button,
+   you might need to be more specific or add another rule: */
+.profile-dropdown-menu .logout-button-text:hover {
+  color: darkred; /* Example: darker red on hover */
+  background-color: #f5f5f5; /* Keep hover background consistent if desired */
+}

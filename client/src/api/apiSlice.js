@@ -4,17 +4,16 @@ import { getAccessToken } from '../utils/getAccessToken';
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:8000/api/v1', // This prepends '/api' to all endpoint URLs
-    // Prepare headers to include the token if it exists
+    baseUrl: 'http://localhost:8000/api/v1', // Base URL for all relative paths
     prepareHeaders: (headers, { getState }) => {
-      const token = getAccessToken(); // Use getAccessToken here
+      const token = getAccessToken();
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
       }
       return headers;
     },
   }),
-  tagTypes: ['Customer', 'Driver', 'Ride', 'Bill', 'Auth'], // Added 'Auth' tag type
+  tagTypes: ['Customer', 'Driver', 'Ride', 'Bill', 'Auth'],
   endpoints: (builder) => ({
     // Customer Endpoints
     getCustomerById: builder.query({ query: (id) => `/customers/${id}` }),
@@ -33,7 +32,6 @@ export const apiSlice = createApi({
     deleteDriver: builder.mutation({ query: (id) => ({ url: `/drivers/${id}`, method: 'DELETE' }) }),
     updateDriverLocation: builder.mutation({ query: ({ id, ...data }) => ({ url: `/drivers/${id}/location`, method: 'PATCH', body: data }) }),
     getNearbyDrivers: builder.query({ query: (params) => ({ url: '/drivers/nearby', params }) }),
-    // New Driver Profile Update Endpoint
     updateDriverProfile: builder.mutation({
       query: ({ driverId, data }) => ({
         url: `/drivers/${driverId}`,
@@ -59,24 +57,31 @@ export const apiSlice = createApi({
     listBills: builder.query({ query: (params) => ({ url: '/bills', params }) }),
     deleteBill: builder.mutation({ query: (id) => ({ url: `/bills/${id}`, method: 'DELETE' }) }),
 
-    // Driver Auth Endpoints
+    // Auth Endpoints (using relative paths now)
+    loginCustomer: builder.mutation({
+      query: (credentials) => ({
+        url: '/auth/login/customer',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
     loginDriver: builder.mutation({
       query: (credentials) => ({
-        url: 'http://localhost:8000/api/v1/auth/login',
+        url: '/auth/login/driver',
         method: 'POST',
-        body: credentials, 
+        body: credentials,
       }),
     }),
     registerDriver: builder.mutation({
       query: (driverData) => ({
-        url: 'http://localhost:8000/api/v1/auth/register/driver',
+        url: '/auth/register/driver',
         method: 'POST',
-        body: driverData, 
+        body: driverData,
       }),
     }),
     registerCustomer: builder.mutation({
       query: (customerData) => ({
-        url: 'http://localhost:8000/api/v1/auth/register/customer',
+        url: '/auth/register/customer',
         method: 'POST',
         body: customerData,
       }),
@@ -92,6 +97,9 @@ export const {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
+  useRegisterCustomerMutation,
+  useLoginCustomerMutation,
+
   // Driver
   useGetDriverByIdQuery,
   useListDriversQuery,
@@ -101,8 +109,8 @@ export const {
   useDeleteDriverMutation,
   useUpdateDriverLocationMutation,
   useGetNearbyDriversQuery,
-  useUpdateDriverProfileMutation,  // <-- Add this line to export the new mutation hook
-  
+  useUpdateDriverProfileMutation,
+
   // Rides
   useRequestRideMutation,
   useGetRideByIdQuery,
@@ -111,6 +119,7 @@ export const {
   useGetRidesByDriverQuery,
   useCancelRideMutation,
   useSearchRidesQuery,
+
   // Billing
   useCreateBillMutation,
   useGetBillByIdQuery,
@@ -118,8 +127,8 @@ export const {
   useGetBillsByDriverQuery,
   useListBillsQuery,
   useDeleteBillMutation,
-  // Driver Auth Hooks
+
+  // Auth Hooks
   useLoginDriverMutation,
-  useRegisterDriverMutation, 
-  useRegisterCustomerMutation, // <-- Export the new customer registration hook
+  useRegisterDriverMutation,
 } = apiSlice;
