@@ -137,7 +137,7 @@ services:
       # JWT configuration
       - ACCESS_TOKEN_PRIVATE_KEY_PATH=/usr/src/app/private.pem
       - ACCESS_TOKEN_PUBLIC_KEY_PATH=/usr/src/app/public.pem
-      - ACCESS_TOKEN_LIFE=15m
+      - ACCESS_TOKEN_LIFE=60m
       - ACCESS_TOKEN_KID=auth-service-key-1
       - JWT_ISSUER=https://my-auth-service.com
       

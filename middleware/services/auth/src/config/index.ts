@@ -9,7 +9,7 @@ const envSchema = z.object({
     MONGODB_URI: z.string().url(),
     ACCESS_TOKEN_PRIVATE_KEY_PATH: z.string(),
     ACCESS_TOKEN_PUBLIC_KEY_PATH: z.string(),
-    ACCESS_TOKEN_LIFE: z.string().default('15m'),
+    ACCESS_TOKEN_LIFE: z.string().default('60m'),
     ACCESS_TOKEN_KID: z.string(),
     JWT_ISSUER: z.string().url(),
     KAFKA_BROKERS: z.string(),
