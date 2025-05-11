@@ -94,7 +94,7 @@ app.use('/api/v1/bills', billRoutes);
 app.use('/api/v1/pricing', pricingRoutes);
 
 // Health check endpoint
-app.get('api/v1/bills/health', (req, res) => {
+app.get('/api/v1/bills/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'billing-service' });
 });
 

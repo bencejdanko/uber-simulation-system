@@ -288,7 +288,17 @@ const calculatePredictedFare = async (pickup, dropoff, requestTime = new Date())
       }
     };
   } catch (error) {
-    console.error('Error calculating predicted fare via model-prediction:', error);
+    // Check if the error is a connection refused error
+    if (error.code === 'ECONNREFUSED') {
+      const defaultModelServiceUrl = process.env.MODEL_PREDICTION_URL || 'http://localhost:8050/predict';
+      // Attempt to get the actual URL from the error object if available (Axios specific)
+      const attemptedUrl = (error.config && error.config.url) ? error.config.url : defaultModelServiceUrl;
+      console.warn(`Model prediction service at ${attemptedUrl} was unavailable (ECONNREFUSED). Using fallback calculation.`);
+    } else {
+      // For any other errors, log them as before
+      console.error('Error calculating predicted fare via model-prediction:', error);
+    }
+    
     // Fallback: use hardCodedFareCalculator
     return await hardCodedFareCalculator({
       pickup,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRequestRideMutation } from '../../../api/apiSlice';
+import { useRequestRideMutation, useGetEstimatedFareQuery } from '../../../api/apiSlice';
 import LocationSelection from './LocationSelection';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import useCustomerAuth from '../../../hooks/useCustomerAuth';
@@ -105,10 +105,30 @@ const CustomerRequestRide = () => {
   const [error, setError] = useState('');
   const [rideStatus, setRideStatus] = useState('');
   const [distance, setDistance] = useState(''); // State to store the calculated distance
+  const [estimatedFare, setEstimatedFare] = useState(null); // State for estimated fare
+  const [skipFareQuery, setSkipFareQuery] = useState(true); // State to control skipping of fare query
 
   const [map, setMap] = useState(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [mapZoom, setMapZoom] = useState(10);
+
+  // Prepare parameters for the fare query
+  const vehicleTypeForFare = getVehicleTypeForServer(selectedRide);
+  const {
+    data: fareData,
+    isLoading: isFareLoading,
+    error: fareError,
+    refetch: refetchFare // To manually refetch if needed
+  } = useGetEstimatedFareQuery(
+    {
+      pickupLat: locations.pickup?.lat,
+      pickupLng: locations.pickup?.lng,
+      dropoffLat: locations.dropoff?.lat,
+      dropoffLng: locations.dropoff?.lng,
+      vehicleType: vehicleTypeForFare,
+    },
+    { skip: skipFareQuery } // Skip initially and when parameters are not ready
+  );
 
   const onLoad = useCallback(function callback(mapInstance) {
     setMap(mapInstance);
@@ -158,6 +178,53 @@ const CustomerRequestRide = () => {
     }
   }, [locations, map, isLoaded]); // Added isLoaded here as map operations might depend on it
 
+  // Effect to control fare query skipping and update estimated fare
+  useEffect(() => {
+    if (
+      locations.pickup?.lat &&
+      locations.pickup?.lng &&
+      locations.dropoff?.lat &&
+      locations.dropoff?.lng &&
+      selectedRide &&
+      getVehicleTypeForServer(selectedRide) // Ensure vehicle type is valid for server
+    ) {
+      setSkipFareQuery(false); // Enable the query
+    } else {
+      setSkipFareQuery(true); // Disable the query
+      setEstimatedFare(null); // Reset fare if inputs are incomplete
+    }
+  }, [locations.pickup, locations.dropoff, selectedRide]);
+
+  useEffect(() => {
+    if (fareData) {
+      if (typeof fareData.estimatedFare === 'number') {
+        setEstimatedFare(fareData.estimatedFare);
+      } else {
+        // fareData is present, but estimatedFare is not a number (or missing)
+        setEstimatedFare(null); // Set to null to prevent .toFixed errors
+        if (fareData.hasOwnProperty('estimatedFare')) {
+          // If the key exists but value is not a number
+          console.warn(
+            `Estimated fare data received, but 'estimatedFare' is not a number:`,
+            fareData.estimatedFare
+          );
+        } else {
+          // If the key 'estimatedFare' is missing from fareData
+          console.warn(
+            "Estimated fare data received, but 'estimatedFare' field is missing."
+          );
+        }
+      }
+    } else if (!isFareLoading && !skipFareQuery && !fareError) {
+      // If no fareData, not loading, query was attempted, and no error reported by the hook,
+      // it implies a successful response with no data or an issue not caught as an error.
+      // Ensure estimatedFare is null.
+      setEstimatedFare(null);
+    }
+    // If skipFareQuery is true, another useEffect handles setting estimatedFare to null.
+    // If isFareLoading is true, we wait for data or error.
+    // If fareError is true, we expect fareError object to be populated and handled by UI.
+  }, [fareData, isFareLoading, skipFareQuery, fareError]); // Added fareError to dependencies
 
   const handleLocationSelect = (newLocationsUpdater) => {
     if (typeof newLocationsUpdater === 'function') {
@@ -290,6 +357,34 @@ const CustomerRequestRide = () => {
                 <p>Estimated Distance: <strong>{distance}</strong></p>
               </div>
             )}
+
+            {/* Display Estimated Fare */}
+            <div className="form-group fare-section">
+              <label className="form-label" htmlFor="fare-details">Estimated Fare</label> {/* Assuming form-label class exists or add styles, added htmlFor */}
+              {isFareLoading && <p className="fare-loading">Calculating fare...</p>}
+              {fareError && (
+                <div className="error-message fare-error-details" id="fare-details"> {/* Changed to div for potentially multi-line content */}
+                  <p>Error fetching fare: {fareError.data?.message || fareError.error || 'Could not retrieve fare.'}</p>
+                  {/* More detailed Zod-like error display */}
+                  {fareError.data?.errors && Array.isArray(fareError.data.errors) && fareError.data.errors.length > 0 && (
+                    <ul style={{ marginTop: '5px', fontSize: '0.9em', paddingLeft: '20px' }}>
+                      {fareError.data.errors.map((err, index) => (
+                        <li key={index}>{`${err.path?.join('.')} - ${err.message}`}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              {!isFareLoading && !fareError && estimatedFare !== null && (
+                <div className="fare-display" id="fare-details">
+                  <p>Estimated Fare: <strong>${estimatedFare.toFixed(2)}</strong></p>
+                </div>
+              )}
+              {/* Message for when fare is not available after an attempt */}
+              {!isFareLoading && !fareError && estimatedFare === null && !skipFareQuery && (
+                 <p className="fare-not-available" id="fare-details">Estimated fare is currently unavailable. Please ensure all ride details are complete and correct.</p>
+              )}
+            </div>
 
             <GoogleMap
               mapContainerStyle={containerStyle}

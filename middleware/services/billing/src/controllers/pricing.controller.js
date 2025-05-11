@@ -7,22 +7,37 @@ const pricingService = require('../services/pricing.service');
  */
 const calculatePredictedFare = async (req, res) => {
   try {
-    const { pickup, dropoff, requestTime } = req.body;
-    
-    // Validate request body
-    if (!pickup || !dropoff) {
+    // Read from req.query for GET request
+    const { 
+      pickupLatitude, pickupLongitude, 
+      dropoffLatitude, dropoffLongitude, 
+      requestTime, vehicleType // Added vehicleType here as it might be needed by the service
+    } = req.query;
+
+    // Validate required query parameters
+    if (!pickupLatitude || !pickupLongitude || !dropoffLatitude || !dropoffLongitude) {
       return res.status(400).json({
         error: 'missing_required_field',
-        message: 'Pickup and dropoff locations are required'
+        message: 'Pickup and dropoff latitude and longitude are required'
       });
     }
+
+    // Parse and structure pickup and dropoff locations
+    const pickup = {
+      latitude: parseFloat(pickupLatitude),
+      longitude: parseFloat(pickupLongitude)
+    };
+    const dropoff = {
+      latitude: parseFloat(dropoffLatitude),
+      longitude: parseFloat(dropoffLongitude)
+    };
     
-    // Validate location coordinates
-    if (!pickup.latitude || !pickup.longitude || 
-        !dropoff.latitude || !dropoff.longitude) {
+    // Validate location coordinates (numbers)
+    if (isNaN(pickup.latitude) || isNaN(pickup.longitude) || 
+        isNaN(dropoff.latitude) || isNaN(dropoff.longitude)) {
       return res.status(400).json({
         error: 'invalid_input',
-        message: 'Pickup and dropoff locations must include latitude and longitude'
+        message: 'Latitude and longitude must be valid numbers'
       });
     }
     
@@ -50,9 +65,10 @@ const calculatePredictedFare = async (req, res) => {
     
     // Calculate predicted fare
     const fareDetails = await pricingService.calculatePredictedFare(
-      pickup,
-      dropoff,
-      parsedRequestTime
+      pickup, // This is now the structured object
+      dropoff, // This is now the structured object
+      parsedRequestTime,
+      vehicleType // Pass vehicleType to the service if it uses it
     );
     
     // Return the fare details

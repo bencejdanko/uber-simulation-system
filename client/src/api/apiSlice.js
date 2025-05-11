@@ -79,6 +79,24 @@ export const apiSlice = createApi({
     listBills: builder.query({ query: (params) => ({ url: '/bills', params }) }),
     deleteBill: builder.mutation({ query: (id) => ({ url: `/bills/${id}`, method: 'DELETE' }) }),
 
+    // Pricing Endpoints
+    getPricing: builder.query({
+      query: (params) => ({ url: '/pricing/actual', params }),
+    }),
+    getEstimatedFare: builder.query({
+      query: ({ pickupLat, pickupLng, dropoffLat, dropoffLng, vehicleType, requestTime }) => ({
+        url: '/pricing/predict',
+        params: {
+          pickupLatitude: pickupLat,
+          pickupLongitude: pickupLng,
+          dropoffLatitude: dropoffLat,
+          dropoffLongitude: dropoffLng,
+          vehicleType,
+          ...(requestTime && { requestTime }), // Include requestTime if provided
+        },
+      }),
+    }),
+    
     // Auth Endpoints (using relative paths now)
     loginCustomer: builder.mutation({
       query: (credentials) => ({
@@ -149,6 +167,10 @@ export const {
   useGetBillsByDriverQuery,
   useListBillsQuery,
   useDeleteBillMutation,
+
+  // Pricing
+  useGetPricingQuery,
+  useGetEstimatedFareQuery,
 
   // Auth Hooks
   useLoginDriverMutation,

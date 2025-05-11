@@ -3,11 +3,11 @@ const router = express.Router();
 const pricingController = require('../controllers/pricing.controller');
 
 /**
- * @route   POST /api/v1/pricing/predict
+ * @route   GET /api/v1/pricing/predict
  * @desc    Calculate predicted fare
  * @access  Private
  */
-router.post('/predict', pricingController.calculatePredictedFare);
+router.get('/predict', pricingController.calculatePredictedFare);
 
 /**
  * @route   POST /api/v1/pricing/actual
