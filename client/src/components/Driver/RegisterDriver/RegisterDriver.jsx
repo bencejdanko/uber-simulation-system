@@ -83,7 +83,7 @@ const RegisterDriver = () => {
 
       // Assuming the token is in result.accessToken as per original code
       if (result && result.accessToken) {
-        localStorage.setItem('driverToken', result.accessToken);
+        localStorage.setItem('accessToken', result.accessToken);
         // navigate('/driver/dashboard'); // Navigation handled in useEffect
       } else {
         // Handle case where registration is successful but no token is returned as expected

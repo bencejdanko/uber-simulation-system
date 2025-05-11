@@ -5,7 +5,7 @@ import './Wallet.css';
 
 const Wallet = () => {
   const navigate = useNavigate();
-  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
 
   const paymentMethods = [
     { id: 'visa', type: 'Visa', last4: '4242', expiryDate: '05/26', isDefault: true },

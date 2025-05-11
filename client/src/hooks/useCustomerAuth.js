@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
-const useCustomerAuth = (tokenKey = 'customerToken', loginPath = '/login-customer') => {
+const useCustomerAuth = (tokenKey = 'accessToken', loginPath = '/login-customer') => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
   const [authChecked, setAuthChecked] = useState(false); // True when the check is complete

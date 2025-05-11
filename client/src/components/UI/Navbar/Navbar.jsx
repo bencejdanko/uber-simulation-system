@@ -21,7 +21,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('customerToken'); // Or your specific token key
+    localStorage.removeItem('accessToken'); // Or your specific token key
     // Potentially dispatch logout action if using Redux/Context for global state
     // dispatch(apiSlice.util.resetApiState()); // If you want to clear RTK Query cache on logout
     navigate('/login-customer'); // Or a more generic login page like '/login'

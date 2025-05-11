@@ -5,7 +5,7 @@ import useCustomerAuth from '../../../hooks/useCustomerAuth'; // Import the hook
 
 const CustomerRideHistory = () => {
   const navigate = useNavigate();
-const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
 
   // Placeholder for rides history - replace with actual API call using userId
   // const { data: ridesHistory, isLoading, error: apiError } = useGetRideHistoryQuery(userId, {

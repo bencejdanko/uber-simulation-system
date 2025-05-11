@@ -7,7 +7,7 @@ import useCustomerAuth from '../../../hooks/useCustomerAuth'; // Adjust path if 
 
 const CustomerDashboard = () => {
   // Use the custom hook for authentication logic
-  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
   
   // useNavigate for component-specific navigation (e.g., to request-ride)
   const navigate = useNavigate();

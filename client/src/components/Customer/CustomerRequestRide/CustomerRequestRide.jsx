@@ -74,7 +74,7 @@ const getPaymentMethodForServer = (frontendPaymentMethod) => {
 
 const CustomerRequestRide = () => {
   const navigate = useNavigate();
-  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
   const [requestRide, { isLoading: isRequestingRide, error: rideRequestError }] = useRequestRideMutation();
 
   // Call useJsApiLoader at the top level

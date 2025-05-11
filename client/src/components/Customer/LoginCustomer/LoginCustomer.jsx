@@ -17,7 +17,7 @@ const LoginCustomer = () => {
 
   // Optional: Redirect if already logged in (e.g., if token exists)
   useEffect(() => {
-    const token = localStorage.getItem('customerToken'); // Or your general token key
+    const token = localStorage.getItem('accessToken'); // Or your general token key
     if (token) {
       navigate('/customer/dashboard');
     }
@@ -44,7 +44,7 @@ const LoginCustomer = () => {
       // Handle successful login
       console.log('Customer logged in successfully, token:', accessToken);
       // Store the token (e.g., in localStorage)
-      localStorage.setItem('customerToken', accessToken); // Use a specific key for customer token
+      localStorage.setItem('accessToken', accessToken); // Use a specific key for customer token
       // Optionally dispatch global state update (e.g., Redux auth slice)
       // dispatch(setCustomerLoggedIn(true));
 

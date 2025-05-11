@@ -29,7 +29,7 @@ const validateZipCode = (zipCode) => {
 const CustomerProfilePage = () => {
   const navigate = useNavigate();
   // Use the custom hook for authentication logic
-  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
 
   const [zipCodeError, setZipCodeError] = useState('');
   const [updateCustomer, { isLoading: isUpdating, error: updateError }] = useUpdateCustomerMutation();

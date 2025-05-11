@@ -20,7 +20,7 @@ export const createRideSchema = z.object({
 
 // PUT /rides/:id/status — Update Ride Status
 export const updateRideStatusSchema = z.object({
-  status: z.enum(['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+  status: z.enum(['REQUESTED', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
 });
 
 // PUT /rides/:id/complete — Mark ride complete
@@ -45,7 +45,7 @@ export const findNearbyDriversSchema = z.object({
 
 // GET /rides/search — Search for rides
 export const searchRidesSchema = z.object({
-  status: z.enum(['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
+  status: z.enum(['REQUESTED', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
   latitude: z.string().regex(/^-?\d+(\.\d+)?$/).transform(Number).optional(),
   longitude: z.string().regex(/^-?\d+(\.\d+)?$/).transform(Number).optional(),
   radius: z

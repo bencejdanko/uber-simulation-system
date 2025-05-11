@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './components/UI/HomePage/HomePage';
 import LoginCustomer from './components/Customer/LoginCustomer/LoginCustomer';
@@ -19,32 +19,50 @@ import AdminDashboard from './components/Admin/AdminDashboard/AdminDashboard';
 import MainLayout from './components/UI/Layout/MainLayout';
 import './App.css';
 
-
 import { getAccessToken } from './utils/getAccessToken';
 import { extractClaims } from './utils/extractClaims';
-const accessToken = getAccessToken();
-const userId = null; 
-let sub = null;      
-let roles = null;    
-
-if (accessToken) {
-  const extractedClaims = extractClaims(accessToken); // Call extractClaims and store the result.
-    if (extractedClaims) {
-    ({ sub, roles } = extractedClaims);
-  }
-}
-
-
 
 function App() {
+  const [sub, setSub] = useState(null);
+  const [roles, setRoles] = useState(null);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token) {
+      const claims = extractClaims(token);
+      if (claims) {
+        setSub(claims.sub);
+        setRoles(claims.roles);
+      }
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          // Handle location error (e.g., user denied permission)
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      // Handle case where geolocation is not supported
+    }
+  }, []); // Empty dependency array ensures this runs once on mount
+
   return (
     <BrowserRouter>
       <div className="App">
         <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/customer/dashboard" element={<CustomerDashboard userId={sub} />} />
+          <Route path="/customer/dashboard" element={<CustomerDashboard userId={sub} latitude={latitude} longitude={longitude} />} />
           <Route path="/customer/profile" element={<CustomerProfilePage userId={sub} />} />
-          <Route path="/customer/request-ride" element={<CustomerRequestRide userId={sub} />} />
+          <Route path="/customer/request-ride" element={<CustomerRequestRide userId={sub} latitude={latitude} longitude={longitude} />} />
           <Route path="/customer/billing-history" element={<CustomerBillingList userId={sub} />} />
           <Route path="/customer/ride-history" element={<CustomerRideHistory userId={sub} />} />
           <Route path="/customer/wallet" element={<Wallet userId={sub} />} />
@@ -56,7 +74,7 @@ function App() {
           <Route path="/register-customer" element={<RegisterCustomer />} />
           <Route path="/register-driver" element={<RegisterDriver />} />
           
-          <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} />} />
+          <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} latitude={latitude} longitude={longitude} />} />
           <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
           <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />
           

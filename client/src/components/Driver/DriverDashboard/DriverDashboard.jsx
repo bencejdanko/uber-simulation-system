@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../../api/apiSlice';
 import './DriverDashboard.css';
 
-const DriverDashboard = ({ userId }) => {
+const DriverDashboard = ({ userId, latitude, longitude }) => {
   const navigate = useNavigate();
 
 // List of states for dropdown
@@ -19,7 +19,7 @@ const DriverDashboard = ({ userId }) => {
   // Fetch driver data
   const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
   // const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
-  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "PENDING" });
+  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "REQUESTED" });
   const [updateDriverLocation] = useUpdateDriverLocationMutation();
   const [updateDriverProfile, { isLoading: isUpdating, error: updateError }] = useUpdateDriverProfileMutation();
 
@@ -142,33 +142,6 @@ const DriverDashboard = ({ userId }) => {
     setIsEditing(false);
   };
 
-  // Handle geolocation to get the current location of the device
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const coords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          };
-          setLocation(coords);
-          setFormData((prevData) => ({
-            ...prevData,
-            currentLocation: coords
-          }));
-          // Optionally send location update to backend
-          updateDriverLocation({ id: userId, ...coords });
-        },
-        (error) => {
-          console.error("Geolocation error:", error.message);
-          setLocationError(error.message);
-        },
-        { enableHighAccuracy: true }
-      );
-    } else {
-      setLocationError("Geolocation not supported by this browser.");
-    }
-  }, [userId, updateDriverLocation]);
 
   // Get the most recent ride (assumes first is latest)
   const latestRide = rides?.[0];
@@ -194,9 +167,9 @@ const DriverDashboard = ({ userId }) => {
     <div className="driver-dashboard-container">
       <h1>Welcome to the Driver Dashboard</h1>
       <p>This is the dashboard for drivers.</p>
+
       {isLoading && <p>Loading driver data...</p>}
       {error && <p>Error loading driver data: {error.message}</p>}
-
       {/* Display driver basic info */}
       {driverData && (
         <div className="driver-info">

@@ -7,7 +7,7 @@ import './CustomerBillingList.css';
 
 const CustomerBillingList = () => {
   const navigate = useNavigate();
-  const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
 
   // Placeholder for billing history - replace with actual API call using userId
   // const { data: billingHistory, isLoading, error: apiError } = useGetBillingHistoryQuery(userId, {
