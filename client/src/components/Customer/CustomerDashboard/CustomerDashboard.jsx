@@ -1,61 +1,90 @@
-import React, { useEffect } from 'react'; // Removed useState, useRef as they were for navbar
+import React, { useEffect, useState } from 'react'; // Added useState
 import { useNavigate } from 'react-router-dom';
-import './CustomerDashboard.css'; // Styles for dashboard content only
-// Optional: If you have a Redux slice for auth state (beyond RTK Query)
-// import { useDispatch } from 'react-redux';
-// import { setCustomerLoggedOut } from '../auth/authSlice'; // Example action
-
+import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+import './CustomerDashboard.css';
 import { useGetCustomerByIdQuery } from '../../../api/apiSlice';
 
-const CustomerDashboard = ({ userId }) => {
+// Removed userId from props as we will derive it from the JWT
+const CustomerDashboard = () => {
   const navigate = useNavigate();
-  // const dispatch = useDispatch();
-
-  const { data: customerData, error: customerError, isLoading: customerLoading } = useGetCustomerByIdQuery(userId, {
-    skip: !userId,
-  });
-
-  // Navbar specific state and logic (isProfileDropdownOpen, dropdownRef, handleLogout, toggleProfileDropdown, handleDropdownNavigation)
-  // and the associated useEffect for handleClickOutside have been moved to Navbar.jsx
+  const [userId, setUserId] = useState(null); // State to hold the userId from JWT
+  const [authChecked, setAuthChecked] = useState(false); // State to track if auth check is complete
 
   useEffect(() => {
-    console.log("Customer UserID:", userId);
-    // You might still want an auth check here, or handle it in a ProtectedRoute component
-    if (!localStorage.getItem('accessToken')) {
-        // navigate('/login-customer'); // Or redirect via ProtectedRoute
+    const token = localStorage.getItem('customerToken'); // Assuming 'accessToken' is the key for your JWT
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        // The 'sub' (subject) claim usually holds the user ID
+        if (decodedToken && decodedToken.sub) {
+          setUserId(decodedToken.sub);
+          console.log("Customer UserID from JWT (sub):", decodedToken.sub);
+        } else {
+          console.error("JWT 'sub' claim not found in decoded token.");
+          localStorage.removeItem('customerToken'); // Clear invalid token
+          navigate('/login-customer'); // Redirect to login
+        }
+      } catch (error) {
+        console.error("Failed to decode JWT or token is invalid:", error);
+        localStorage.removeItem('customerToken'); // Clear corrupted/expired token
+        navigate('/login-customer'); // Redirect to login
+      }
+    } else {
+      console.log("No access token found, redirecting to login.");
+      navigate('/login-customer'); // Redirect to login if no token
     }
-    // The handleClickOutside logic for dropdown is now in Navbar.jsx
-  }, [userId, navigate]); // Removed dropdownRef from dependencies
+    setAuthChecked(true); // Mark authentication check as complete
+  }, [navigate]); // Effect runs on mount or if navigate changes
 
-  // handleLogout, toggleProfileDropdown, handleDropdownNavigation are now in Navbar.jsx
+  // Fetch customer data using the userId derived from the JWT
+  // Skip the query if userId is not yet available or if auth check isn't done
+  const { data: customerData, isLoading: customerLoading } = useGetCustomerByIdQuery(userId, {
+    skip: !userId || !authChecked,
+  });
+
+  if (!authChecked) {
+    return <p>Authenticating...</p>; // Show authenticating message until token check is done
+  }
+
+  // If authChecked is true and still no userId, it means redirection should have happened or is in progress
+  // This case is mostly handled by the navigate calls in useEffect, but as a fallback:
+  if (!userId && authChecked) {
+    // This state implies redirection should have occurred.
+    // You might not even see this if navigate works instantly.
+    return <p>Redirecting to login...</p>;
+  }
+
 
   return (
-    // The className "customer-dashboard-layout" might be better on a Layout component
-    // For now, we'll keep it, but the content div is more specific to this page
-    <div className="customer-dashboard-content-wrapper"> {/* Renamed for clarity, or use a Layout component */}
+    <div className="customer-dashboard-content-wrapper">
       <h1>Welcome to the Customer Dashboard</h1>
       
       {customerLoading && <p>Loading customer data...</p>}
-      {customerError && <p>Error loading customer data: {customerError.data?.message || customerError.error}</p>}
-      {customerData && (
+      
+      {userId && customerData && (
         <div className="customer-info">
           <h2>Customer Information</h2>
           <p>Name: {customerData.firstName} {customerData.lastName}</p>
           <p>Email: {customerData.email}</p>
           <p>Phone: {customerData.phoneNumber}</p>
+          {/* <p>User ID (from token): {userId}</p> */} {/* Optional: display derived userId */}
         </div>
       )}
 
-      <div className="request-ride-prompt-section">
-        <h2>Ready for your next journey?</h2>
-        <p>Whether it's a quick trip across town or a ride to the airport, we're here to get you there.</p>
-        <button 
-          className="action-button request-ride-button" 
-          onClick={() => navigate('/customer/request-ride')}
-        >
-          Request a Ride Now
-        </button>
-      </div>
+      {/* Show prompt only if user is identified and data is loaded or not in error */}
+      {userId && (customerData || (!customerLoading)) && (
+        <div className="request-ride-prompt-section">
+          <h2>Ready for your next journey?</h2>
+          <p>Whether it's a quick trip across town or a ride to the airport, we're here to get you there.</p>
+          <button 
+            className="action-button request-ride-button" 
+            onClick={() => navigate('/customer/request-ride')}
+            disabled={customerLoading} // Disable if loading or error
+          >
+            Request a Ride Now
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -60,7 +60,7 @@ export const apiSlice = createApi({
     // Auth Endpoints (using relative paths now)
     loginCustomer: builder.mutation({
       query: (credentials) => ({
-        url: '/auth/login/customer',
+        url: '/auth/login',
         method: 'POST',
         body: credentials,
       }),
