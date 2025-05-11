@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRequestRideMutation } from '../../../api/apiSlice';
 import LocationSelection from './LocationSelection';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
-import useCustomerAuth from '../../../hooks/useCustomerAuth'; 
+import useCustomerAuth from '../../../hooks/useCustomerAuth';
 import './CustomerRequestRide.css';
 import './LocationSelection.css';
 
@@ -42,6 +42,35 @@ const KM_TO_MILES = 0.621371;
 // Define libraries array outside the component
 const LIBRARIES = ['places'];
 const GOOGLE_MAP_SCRIPT_ID = 'uber-google-maps-script'; // Define a static ID
+
+// Helper function to map frontend ride types to backend vehicle types
+const getVehicleTypeForServer = (frontendRideType) => {
+  switch (frontendRideType) {
+    case 'UberX':
+      return 'STANDARD';
+    case 'Comfort':
+      return 'PREMIUM';
+    case 'XL':
+      return 'PREMIUM'; // Or 'LUXURY' depending on your business logic
+    case 'Black':
+      return 'LUXURY';
+    default:
+      return undefined; // Or a default like 'STANDARD' if always required by backend
+    // but schema says optional
+  }
+};
+
+// Helper function to map frontend payment display to backend payment method enum
+const getPaymentMethodForServer = (frontendPaymentMethod) => {
+  if (frontendPaymentMethod.toLowerCase().includes('cash')) {
+    return 'CASH';
+  }
+  // Assuming any card-like string means CREDIT_CARD
+  if (frontendPaymentMethod.includes('Visa') || frontendPaymentMethod.includes('MasterCard') || frontendPaymentMethod.includes('Amex')) {
+    return 'CREDIT_CARD';
+  }
+  return undefined; // Or a default if needed, but schema says optional
+};
 
 const CustomerRequestRide = () => {
   const navigate = useNavigate();
@@ -132,25 +161,23 @@ const CustomerRequestRide = () => {
 
   const handleLocationSelect = (newLocationsUpdater) => {
     if (typeof newLocationsUpdater === 'function') {
-        setLocations(newLocationsUpdater);
+      setLocations(newLocationsUpdater);
     } else {
-        setLocations(newLocationsUpdater);
+      setLocations(newLocationsUpdater);
     }
   };
-  
+
   useEffect(() => {
     // This useEffect is just for logging, can be removed
     // console.log('Locations state updated in CustomerRequestRide:', locations);
   }, [locations]);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-if (!userId) { // Check userId from hook
-        setError("Authentication error. Please log in again.");
-        return;
+    if (!userId) {
+      setError("Authentication error. Please log in again.");
+      return;
     }
-    // ... (existing validations for locations and selectedRide) ...
     if (!locations.pickup?.address || !locations.pickup?.lat || !locations.pickup?.lng) {
       setError('Valid pickup location is required.');
       return;
@@ -164,29 +191,45 @@ if (!userId) { // Check userId from hook
       return;
     }
     setError('');
+
     try {
-      const rideData = {
-customerId: userId, // Add customerId from the hook
-        pickup_location: {
-          address: locations.pickup.address,
-          latitude: locations.pickup.lat,
-          longitude: locations.pickup.lng,
+      // Transform data to match server schema
+      const rideDataForServer = {
+        customerId: userId,
+        pickupLocation: {
+          type: 'Point',
+          coordinates: [locations.pickup.lng, locations.pickup.lat], // [longitude, latitude]
         },
-        dropoff_location: {
-          address: locations.dropoff.address,
-          latitude: locations.dropoff.lat,
-          longitude: locations.dropoff.lng,
+        dropoffLocation: {
+          type: 'Point',
+          coordinates: [locations.dropoff.lng, locations.dropoff.lat], // [longitude, latitude]
         },
-        ride_type: selectedRide,
-        payment_method: paymentMethod,
-        distance: distance,
       };
-      const response = await requestRide(rideData).unwrap();
+
+      const vehicleType = getVehicleTypeForServer(selectedRide);
+      if (vehicleType) {
+        rideDataForServer.vehicleType = vehicleType;
+      }
+
+      const serverPaymentMethod = getPaymentMethodForServer(paymentMethod);
+      if (serverPaymentMethod) {
+        rideDataForServer.paymentMethod = serverPaymentMethod;
+      }
+
+      // Note: 'distance' is removed as it's not in createRideSchema
+      // Note: 'address' for pickup/dropoff is not sent as it's not in coordinateSchema
+
+      console.log('Data being sent to server:', rideDataForServer); // For debugging
+
+      const response = await requestRide(rideDataForServer).unwrap();
       console.log('Ride requested successfully:', response);
       setRideStatus('pending');
     } catch (err) {
       console.error('Failed to request ride:', err);
-      setError(err.data?.message || err.error || 'Failed to request ride. Please try again.');
+      const errorMessage = err.data?.errors // Zod errors often come in an 'errors' array
+        ? err.data.errors.map(e => `${e.path.join('.')} - ${e.message}`).join(', ')
+        : err.data?.message || err.error || 'Failed to request ride. Please try again.';
+      setError(errorMessage);
     }
   };
 
@@ -214,7 +257,7 @@ customerId: userId, // Add customerId from the hook
     console.error("Google Maps API load error:", loadError);
     return <div className="request-ride-error"><p>Error loading maps. Please check your API key and internet connection, then refresh.</p></div>;
   }
-  
+
   if (!isLoaded) {
     return <div className="request-ride-loading"><p>Loading map...</p></div>;
   }
@@ -226,8 +269,8 @@ customerId: userId, // Add customerId from the hook
         <div className="request-ride-logo">Uber</div>
         <div className="request-ride-title">Request a Ride</div>
       </header>
-{authError && <p className="error-message" style={{textAlign: 'center', marginBottom: '15px'}}>Authentication Error: {authError}</p>}
-      {rideRequestError && <p className="error-message" style={{textAlign: 'center', marginBottom: '15px'}}>Ride Request Error: {rideRequestError.data?.message || rideRequestError.error}</p>}
+      {authError && <p className="error-message" style={{ textAlign: 'center', marginBottom: '15px' }}>Authentication Error: {authError}</p>}
+      {rideRequestError && <p className="error-message" style={{ textAlign: 'center', marginBottom: '15px' }}>Ride Request Error: {rideRequestError.data?.message || rideRequestError.error}</p>}
 
       <div className="request-ride-section">
         <h2 className="section-title">Enter Ride Details</h2>
@@ -261,15 +304,15 @@ customerId: userId, // Add customerId from the hook
               }}
             >
               {locations.pickup && locations.pickup.lat && locations.pickup.lng && (
-                <Marker 
-                  position={{ lat: locations.pickup.lat, lng: locations.pickup.lng }} 
-                  label="P" 
+                <Marker
+                  position={{ lat: locations.pickup.lat, lng: locations.pickup.lng }}
+                  label="P"
                 />
               )}
               {locations.dropoff && locations.dropoff.lat && locations.dropoff.lng && (
-                <Marker 
-                  position={{ lat: locations.dropoff.lat, lng: locations.dropoff.lng }} 
-                  label="D" 
+                <Marker
+                  position={{ lat: locations.dropoff.lat, lng: locations.dropoff.lng }}
+                  label="D"
                 />
               )}
             </GoogleMap>
