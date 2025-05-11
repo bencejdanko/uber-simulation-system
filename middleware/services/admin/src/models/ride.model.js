@@ -1,112 +1,61 @@
-// src/models/ride.model.js
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import mongoose, { Schema } from 'mongoose';
 
-// Define the schema for the ride model
-const rideSchema = new Schema({
-  rideId: {
-    type: String,
-    required: true,
-    unique: true,
-    match: /^\d{3}-\d{2}-\d{4}$/, // Ensure SSN format for rideId (xxx-xx-xxxx)
-  },
-  customerId: {
-    type: String,
-    required: true,
-    match: /^\d{3}-\d{2}-\d{4}$/, // Ensure SSN format for customerId (xxx-xx-xxxx)
-  },
-  driverId: {
-    type: String,
-    match: /^\d{3}-\d{2}-\d{4}$/, // Ensure SSN format for driverId (xxx-xx-xxxx) if assigned
-    default: null, // No driver assigned initially
-  },
-  pickupLocation: {
-    latitude: {
-      type: Number,
-      required: true,
-    },
-    longitude: {
-      type: Number,
-      required: true,
-    },
-    addressLine: {
-      type: String,
-      default: null, // Optional addressLine for pickup
-    },
-  },
-  dropoffLocation: {
-    latitude: {
-      type: Number,
-      required: true,
-    },
-    longitude: {
-      type: Number,
-      required: true,
-    },
-    addressLine: {
-      type: String,
-      default: null, // Optional addressLine for dropoff
-    },
-  },
+const RideSchema = new Schema({
+  customerId: { type: String, required: true },
+  driverId: { type: String },
   status: {
     type: String,
-    required: true,
-    enum: [
-      'REQUESTED',
-      'ACCEPTED',
-      'DRIVER_ARRIVED',
-      'IN_PROGRESS',
-      'COMPLETED',
-      'CANCELLED_CUSTOMER',
-      'CANCELLED_DRIVER',
-      'NO_DRIVERS_AVAILABLE',
-    ], // Enum of valid statuses
+    enum: ['REQUESTED', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'],
+    default: 'REQUESTED'
   },
-  requestTimestamp: {
-    type: Date,
-    required: true,
+  pickupLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
   },
-  acceptTimestamp: {
-    type: Date,
-    default: null, // Nullable if not accepted yet
+  dropoffLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
   },
-  pickupTimestamp: {
-    type: Date,
-    default: null, // Nullable if ride hasn't started
+  vehicleType: {
+    type: String,
+    enum: ['STANDARD', 'PREMIUM', 'LUXURY'],
+    required: true
   },
-  dropoffTimestamp: {
-    type: Date,
-    default: null, // Nullable if ride hasn't ended
+  paymentMethod: {
+    type: String,
+    enum: ['CASH', 'CREDIT_CARD', 'PAYPAL'],
+    required: true
   },
-  predictedFare: {
-    type: Number,
-    default: null, // Nullable until calculated
-  },
-  actualFare: {
-    type: Number,
-    default: null, // Nullable until ride completes
-  },
-  distance: {
-    type: Number,
-    default: null, // Nullable until ride completes
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now, // Automatically set the creation date
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now, // Automatically set the update date
-  },
+  estimatedFare: { type: Number },
+  actualFare: { type: Number },
+  cancellationReason: { type: String }
+}, {
+  timestamps: true
 });
 
-// Add pre-save hook to update updatedAt field automatically
-rideSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
+// Create geospatial index for pickup location
+RideSchema.index({ 'pickupLocation': '2dsphere' });
 
-// Create the model
-const Ride = mongoose.model('Ride', rideSchema);
+// Create compound index for status and driverId
+RideSchema.index({ status: 1, driverId: 1 });
 
-module.exports = Ride;
+// Create compound index for status and customerId
+RideSchema.index({ status: 1, customerId: 1 });
+
+const Ride = mongoose.model('Ride', RideSchema);
+
+export default Ride;
