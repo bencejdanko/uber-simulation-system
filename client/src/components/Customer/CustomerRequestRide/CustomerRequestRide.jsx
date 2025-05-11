@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRequestRideMutation } from '../../../api/apiSlice';
 import LocationSelection from './LocationSelection';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import useCustomerAuth from '../../../hooks/useCustomerAuth'; 
 import './CustomerRequestRide.css';
 import './LocationSelection.css';
@@ -39,10 +39,21 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 const KM_TO_MILES = 0.621371;
 
+// Define libraries array outside the component
+const LIBRARIES = ['places'];
+const GOOGLE_MAP_SCRIPT_ID = 'uber-google-maps-script'; // Define a static ID
+
 const CustomerRequestRide = () => {
   const navigate = useNavigate();
   const { userId, authChecked, error: authError } = useCustomerAuth('customerToken', '/login-customer');
   const [requestRide, { isLoading: isRequestingRide, error: rideRequestError }] = useRequestRideMutation();
+
+  // Call useJsApiLoader at the top level
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: GOOGLE_MAP_SCRIPT_ID,
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries: LIBRARIES,
+  });
 
   const [locations, setLocations] = useState({
     pickup: null,
@@ -116,7 +127,7 @@ const CustomerRequestRide = () => {
         setMapZoom(10);
       }
     }
-  }, [locations, map]);
+  }, [locations, map, isLoaded]); // Added isLoaded here as map operations might depend on it
 
 
   const handleLocationSelect = (newLocationsUpdater) => {
@@ -189,125 +200,132 @@ customerId: userId, // Add customerId from the hook
     setPaymentMethod(e.target.value);
   };
 
-if (!authChecked) {
+  // Conditional returns for auth now come AFTER all hook calls
+  if (!authChecked) {
     return <div className="request-ride-loading"><p>Authenticating...</p></div>;
   }
 
-  if (!userId && authChecked) {
+  if (!userId && authChecked) { // authChecked is true, but no userId (hook should have redirected)
     return <div className="request-ride-loading"><p>Session invalid. Redirecting to login...</p></div>;
   }
 
+  // Conditional returns for map loading
+  if (loadError) {
+    console.error("Google Maps API load error:", loadError);
+    return <div className="request-ride-error"><p>Error loading maps. Please check your API key and internet connection, then refresh.</p></div>;
+  }
+  
+  if (!isLoaded) {
+    return <div className="request-ride-loading"><p>Loading map...</p></div>;
+  }
+
+  // If we reach here, auth is checked, userId exists, and map script is loaded.
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
-      libraries={['places']}
-    >
-      <div className="request-ride-container">
-        <header className="request-ride-header">
-          <div className="request-ride-logo">Uber</div>
-          <div className="request-ride-title">Request a Ride</div>
-        </header>
+    <div className="request-ride-container">
+      <header className="request-ride-header">
+        <div className="request-ride-logo">Uber</div>
+        <div className="request-ride-title">Request a Ride</div>
+      </header>
 {authError && <p className="error-message" style={{textAlign: 'center', marginBottom: '15px'}}>Authentication Error: {authError}</p>}
-        {rideRequestError && <p className="error-message" style={{textAlign: 'center', marginBottom: '15px'}}>Ride Request Error: {rideRequestError.data?.message || rideRequestError.error}</p>}
+      {rideRequestError && <p className="error-message" style={{textAlign: 'center', marginBottom: '15px'}}>Ride Request Error: {rideRequestError.data?.message || rideRequestError.error}</p>}
 
-        <div className="request-ride-section">
-          <h2 className="section-title">Enter Ride Details</h2>
-          {error && <div className="error-message">{error}</div>}
-          {rideStatus === 'pending' ? (
-            <div className="pending-message">
-              Your ride is pending. <button onClick={handleCancel} className="cancel-button">Cancel Ride</button>
-            </div>
-          ) : rideStatus === 'cancelled' ? (
-            <div className="cancelled-message">Your ride has been cancelled.</div>
-          ) : (
-            <form onSubmit={handleSubmit} className="ride-form">
-              <LocationSelection onLocationSelect={handleLocationSelect} />
+      <div className="request-ride-section">
+        <h2 className="section-title">Enter Ride Details</h2>
+        {error && <div className="error-message">{error}</div>}
+        {rideStatus === 'pending' ? (
+          <div className="pending-message">
+            Your ride is pending. <button onClick={handleCancel} className="cancel-button">Cancel Ride</button>
+          </div>
+        ) : rideStatus === 'cancelled' ? (
+          <div className="cancelled-message">Your ride has been cancelled.</div>
+        ) : (
+          <form onSubmit={handleSubmit} className="ride-form">
+            <LocationSelection onLocationSelect={handleLocationSelect} />
 
-              {distance && (
-                <div className="distance-display">
-                  <p>Estimated Distance: <strong>{distance}</strong></p>
-                </div>
+            {distance && (
+              <div className="distance-display">
+                <p>Estimated Distance: <strong>{distance}</strong></p>
+              </div>
+            )}
+
+            <GoogleMap
+              mapContainerStyle={containerStyle}
+              center={mapCenter}
+              zoom={mapZoom}
+              onLoad={onLoad}
+              onUnmount={onUnmount}
+              options={{
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+              }}
+            >
+              {locations.pickup && locations.pickup.lat && locations.pickup.lng && (
+                <Marker 
+                  position={{ lat: locations.pickup.lat, lng: locations.pickup.lng }} 
+                  label="P" 
+                />
               )}
+              {locations.dropoff && locations.dropoff.lat && locations.dropoff.lng && (
+                <Marker 
+                  position={{ lat: locations.dropoff.lat, lng: locations.dropoff.lng }} 
+                  label="D" 
+                />
+              )}
+            </GoogleMap>
 
-              <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={mapCenter}
-                zoom={mapZoom}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-                options={{
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                }}
+            <div className="form-group">
+              <label>Ride Option</label>
+              <select
+                value={selectedRide}
+                onChange={(e) => setSelectedRide(e.target.value)}
+                className="ride-option-dropdown"
               >
-                {locations.pickup && locations.pickup.lat && locations.pickup.lng && (
-                  <Marker 
-                    position={{ lat: locations.pickup.lat, lng: locations.pickup.lng }} 
-                    label="P" 
-                  />
-                )}
-                {locations.dropoff && locations.dropoff.lat && locations.dropoff.lng && (
-                  <Marker 
-                    position={{ lat: locations.dropoff.lat, lng: locations.dropoff.lng }} 
-                    label="D" 
-                  />
-                )}
-              </GoogleMap>
+                <option value="">Select a Ride Option</option>
+                {rideOptions.map((option) => (
+                  <option key={option.type} value={option.type}>
+                    {option.type} - {option.priceRange} - {option.eta} - {option.capacity}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div className="form-group">
-                <label>Ride Option</label>
+            <div className="payment-method">
+              <h3>Payment Method</h3>
+              <div className="payment-details">
                 <select
-                  value={selectedRide}
-                  onChange={(e) => setSelectedRide(e.target.value)}
-                  className="ride-option-dropdown"
+                  value={paymentMethod}
+                  onChange={handleChangePaymentMethod}
+                  className="payment-method-dropdown"
                 >
-                  <option value="">Select a Ride Option</option>
-                  {rideOptions.map((option) => (
-                    <option key={option.type} value={option.type}>
-                      {option.type} - {option.priceRange} - {option.eta} - {option.capacity}
+                  {availablePaymentMethods.map((method, index) => (
+                    <option key={index} value={method}>
+                      {method}
                     </option>
                   ))}
                 </select>
               </div>
+            </div>
 
-              <div className="payment-method">
-                <h3>Payment Method</h3>
-                <div className="payment-details">
-                  <select
-                    value={paymentMethod}
-                    onChange={handleChangePaymentMethod}
-                    className="payment-method-dropdown"
-                  >
-                    {availablePaymentMethods.map((method, index) => (
-                      <option key={index} value={method}>
-                        {method}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <button type="submit" className="submit-button">
-                Request {selectedRide || 'Ride'}
-              </button>
-            </form>
-          )}
-        </div>
-
-        <div className="navigation-buttons">
-          <button className="nav-button" onClick={() => navigate('/')}>
-            Home
-          </button>
-          <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
-            Customer Dashboard
-          </button>
-          <button className="nav-button" onClick={() => navigate('/customer/ride-history')}>
-            Ride History
-          </button>
-        </div>
+            <button type="submit" className="submit-button">
+              Request {selectedRide || 'Ride'}
+            </button>
+          </form>
+        )}
       </div>
-    </LoadScript>
+
+      <div className="navigation-buttons">
+        <button className="nav-button" onClick={() => navigate('/')}>
+          Home
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>
+          Customer Dashboard
+        </button>
+        <button className="nav-button" onClick={() => navigate('/customer/ride-history')}>
+          Ride History
+        </button>
+      </div>
+    </div>
   );
 };
 
