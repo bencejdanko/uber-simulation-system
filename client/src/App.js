@@ -66,6 +66,10 @@ function App() {
           <Route path="/customer/billing-history" element={<CustomerBillingList userId={sub} />} />
           <Route path="/customer/ride-history" element={<CustomerRideHistory userId={sub} />} />
           <Route path="/customer/wallet" element={<Wallet userId={sub} />} />
+
+          <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} latitude={latitude} longitude={longitude} />} />
+          <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
+          <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />
         </Route>
 
           <Route path="/" element={<HomePage />} />
@@ -73,10 +77,6 @@ function App() {
           <Route path="/login-driver" element={<LoginDriver />} />
           <Route path="/register-customer" element={<RegisterCustomer />} />
           <Route path="/register-driver" element={<RegisterDriver />} />
-          
-          <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} latitude={latitude} longitude={longitude} />} />
-          <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
-          <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />
           
           <Route path="/login-admin" element={<LoginAdmin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard userId={sub} />} />

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
-const useCustomerAuth = (tokenKey = 'accessToken', loginPath = '/login-customer') => {
+const useDriverAuth = (tokenKey = 'accessToken', loginPath = '/login-driver') => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
   const [authChecked, setAuthChecked] = useState(false); // True when the check is complete
@@ -24,10 +24,10 @@ const useCustomerAuth = (tokenKey = 'accessToken', loginPath = '/login-customer'
           navigate(loginPath, { replace: true });
         } else if (decodedToken && decodedToken.sub) {
           // Role validation
-          if (decodedToken.roles && Array.isArray(decodedToken.roles) && decodedToken.roles.includes('CUSTOMER')) {
+          if (decodedToken.roles && Array.isArray(decodedToken.roles) && decodedToken.roles.includes('DRIVER')) {
             currentUserId = decodedToken.sub;
           } else {
-            console.error(`Token from '${tokenKey}' does not have the required 'CUSTOMER' role or 'roles' claim is invalid.`);
+            console.error(`Token from '${tokenKey}' does not have the required 'DRIVER' role or 'roles' claim is invalid.`);
             localStorage.removeItem(tokenKey);
             authError = "Access denied. Invalid user role for this section.";
             navigate(loginPath, { replace: true }); // Or a generic error page/home page
@@ -61,4 +61,4 @@ const useCustomerAuth = (tokenKey = 'accessToken', loginPath = '/login-customer'
   return { userId, authChecked, error };
 };
 
-export default useCustomerAuth;
+export default useDriverAuth;

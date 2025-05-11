@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetDriverByIdQuery, useGetRidesByDriverQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../../api/apiSlice';
+import { useGetDriverByIdQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../../api/apiSlice';
+import useDriverAuth from '../../../hooks/useDriverAuth'; // Import the driver auth hook
 import './DriverDashboard.css';
 
-const DriverDashboard = ({ userId, latitude, longitude }) => {
+// const DriverDashboard = ({ userId, latitude, longitude }) => { // userId prop removed
+const DriverDashboard = ({ latitude, longitude }) => {
   const navigate = useNavigate();
+  // Use the custom hook for driver authentication logic
+  const { userId, authChecked, error: authError } = useDriverAuth('accessToken', '/login-driver');
 
 // List of states for dropdown
   const statesList = [
@@ -16,10 +20,14 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
     'Wisconsin', 'Wyoming'
   ];
 
-  // Fetch driver data
-  const { data: driverData, error, isLoading } = useGetDriverByIdQuery(userId);
+  // Fetch driver data - skip if no userId or auth check not complete
+  const { data: driverData, error: driverApiError, isLoading: driverLoading } = useGetDriverByIdQuery(userId, {
+    skip: !userId || !authChecked,
+  });
   // const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
-  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "REQUESTED" });
+  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "REQUESTED" }, {
+    skip: !userId || !authChecked, // Also skip this if not authenticated
+  });
   const [updateDriverLocation] = useUpdateDriverLocationMutation();
   const [updateDriverProfile, { isLoading: isUpdating, error: updateError }] = useUpdateDriverProfileMutation();
 
@@ -59,13 +67,13 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
   useEffect(() => {
     if (driverData) {
       setFormData({
-        firstName: driverData.firstName,
-        lastName: driverData.lastName,
-        email: driverData.email,
-        phoneNumber: driverData.phoneNumber,
-        address: driverData.address || {},
-        carDetails: driverData.carDetails || {},
-        introduction: driverData.introduction || {},
+        firstName: driverData.firstName || '',
+        lastName: driverData.lastName || '',
+        email: driverData.email || '',
+        phoneNumber: driverData.phoneNumber || '',
+        address: driverData.address || { street: '', city: '', state: '', zipCode: '' },
+        carDetails: driverData.carDetails || { make: '', model: '', year: '', color: '', licensePlate: '' },
+        introduction: driverData.introduction || { imageUrl: '', videoUrl: '' },
         currentLocation: {
           latitude: driverData.currentLocation?.coordinates?.[1] || '',
           longitude: driverData.currentLocation?.coordinates?.[0] || ''
@@ -120,6 +128,11 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
   // Handle profile update form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!userId) {
+        console.error("No user ID available for profile update.");
+        // Optionally set an error state to display to the user
+        return;
+    }
     await updateDriverProfile({ driverId: userId, data: formData });
     setIsEditing(false);
   };
@@ -163,13 +176,39 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
     navigate('/'); // Or navigate('/')
   };
 
+  // Handle loading and auth states
+  if (!authChecked) {
+    return <div className="dashboard-loading"><p>Authenticating driver...</p></div>;
+  }
+
+  if (!userId) { // authChecked is true, but no userId (hook should have redirected)
+    return <div className="dashboard-loading"><p>Session invalid. Redirecting to login...</p></div>;
+  }
+
+  // At this point, authChecked is true and userId is available.
+  // Now handle API data loading and display.
+
+  if (driverLoading) {
+    return <div className="dashboard-loading"><p>Loading your dashboard...</p></div>;
+  }
+
+  if (driverApiError) {
+    return <div className="dashboard-error"><p>Error loading driver data: {driverApiError.message || 'Please try again.'}</p></div>;
+  }
+  
+  // Display authError from the hook if it exists
+  if (authError) {
+    return <div className="dashboard-error"><p>Authentication Error: {authError}</p></div>;
+  }
+
+
   return (
     <div className="driver-dashboard-container">
       <h1>Welcome to the Driver Dashboard</h1>
-      <p>This is the dashboard for drivers.</p>
+      {/* <p>This is the dashboard for drivers.</p> */} {/* Redundant with title */}
 
-      {isLoading && <p>Loading driver data...</p>}
-      {error && <p>Error loading driver data: {error.message}</p>}
+      {/* {isLoading && <p>Loading driver data...</p>} */} {/* Handled above */}
+      {/* {error && <p>Error loading driver data: {error.message}</p>} */} {/* Handled above */}
       {/* Display driver basic info */}
       {driverData && (
         <div className="driver-info">
@@ -337,6 +376,7 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
               <button type="button" onClick={handleCancel} disabled={isUpdating}>
                 Cancel
               </button>
+              {updateError && <p className="error-message">Update failed: {updateError.data?.message || updateError.error}</p>}
             </form>
           )}
         </div>
@@ -365,7 +405,7 @@ const DriverDashboard = ({ userId, latitude, longitude }) => {
         <button className="nav-button" onClick={() => navigate('/')}>Home</button>
         <button className="nav-button" onClick={() => navigate('/driver/manage-rides')}>Manage Rides</button>
         <button className="nav-button" onClick={() => navigate('/driver/earnings')}>Driver Earnings</button>
-        <button className="nav-button" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</button>
+        {/* <button className="nav-button" onClick={() => navigate('/admin/dashboard')}>Admin Dashboard</button> */} {/* Drivers likely shouldn't see this */}
         <button className="nav-button logout-button" onClick={handleLogout}>Logout</button>
       </div>
     </div>
