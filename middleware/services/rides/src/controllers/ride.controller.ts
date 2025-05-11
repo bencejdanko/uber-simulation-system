@@ -186,7 +186,7 @@ export const rideController = {
         throw new AppError('Authentication required', 401);
       }
 
-      const { status, latitude, longitude, radius, page, limit } = req.query;
+      const { status, latitude, longitude, radius, page, limit, customerId, driverId } = req.query;
 
       const filters: { [key: string]: any } = {
         status: status as string | undefined,
@@ -195,6 +195,8 @@ export const rideController = {
         radius: radius ? Number(radius) : undefined,
         page: page ? Number(page) : 1,
         limit: limit ? Number(limit) : 10,
+        customerId: customerId as string | undefined,
+        driverId: driverId as string | undefined
       };
 
       // Remove undefined filters to avoid issues with the service layer

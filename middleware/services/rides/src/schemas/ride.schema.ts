@@ -54,4 +54,6 @@ export const searchRidesSchema = z.object({
     .transform(Number)
     .optional()
     .default('5000'), // in meters
+  customerId: z.string().optional(),
+  driverId: z.string().optional(),
 });

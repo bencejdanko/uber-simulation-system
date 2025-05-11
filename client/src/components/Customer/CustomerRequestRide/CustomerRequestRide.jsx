@@ -272,6 +272,7 @@ const CustomerRequestRide = () => {
           type: 'Point',
           coordinates: [locations.dropoff.lng, locations.dropoff.lat], // [longitude, latitude]
         },
+        estimatedFare: estimatedFare,
       };
 
       const vehicleType = getVehicleTypeForServer(selectedRide);
