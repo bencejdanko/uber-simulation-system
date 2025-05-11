@@ -1,0 +1,444 @@
+/* Reset or base styles (if not already in a global CSS file) */
+/* These might be in a global index.css or App.css */
+/*
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+*/
+
+/* Styles for the main layout container that would wrap Navbar and page content */
+/* This class might live in a MainLayout.css if you create a MainLayout component */
+.customer-dashboard-layout { /* Or e.g., .main-layout */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Wrapper for the content specific to the customer dashboard page */
+/* This class is used in CustomerDashboard.jsx now */
+.customer-dashboard-content-wrapper {
+  padding: 20px;
+  /* If Navbar is fixed, add margin-top to push content below it.
+     This margin should ideally be on the content wrapper within a Layout component.
+     For now, assuming it's handled by a parent Layout component.
+     If CustomerDashboard is rendered directly under a fixed Navbar, it needs this:
+     margin-top: 60px;  Height of the fixed navbar 
+  flex-grow: 1; */
+}
+
+.customer-dashboard-content-wrapper h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.customer-info {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.customer-info h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.request-ride-prompt-section {
+  background-color: #eef4ff;
+  padding: 25px;
+  border-radius: 8px;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.request-ride-prompt-section h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.request-ride-prompt-section p {
+  color: #34495e;
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.request-ride-button {
+  background-color: #3498db;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.request-ride-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.request-ride-button:active {
+  transform: translateY(0);
+}
+
+/* .action-button might be a global style or defined here if specific */
+.action-button {
+  /* Define common action button styles if needed */
+}
+
+/* Top Navigation Bar Styles */
+.top-navbar {
+  background-color: #222; /* Dark background for navbar */
+  color: white;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px; /* Fixed height for navbar */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  position: fixed; /* Make navbar fixed at the top */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.navbar-brand {
+  font-size: 1.5em;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 15px; /* Space between nav buttons */
+}
+
+.navbar-button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.navbar-button:hover {
+  background-color: #444; /* Darker shade on hover */
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Space between action icons */
+}
+
+.wallet-icon-button,
+.profile-icon-button {
+  background-color: transparent; /* Adjusted from light grey */
+  border: none; /* Removed border */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5em; /* Increased icon size */
+  color: white; /* Make icons white */
+  transition: background-color 0.2s;
+}
+
+.wallet-icon-button:hover,
+.profile-icon-button:hover {
+  background-color: #555; /* Slightly darker background on hover */
+}
+
+.profile-icon-container {
+  position: relative; /* Keep relative for dropdown positioning */
+  /* Removed absolute positioning from here, it's now part of navbar flow */
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: 45px; /* Position below the icon, adjust as needed */
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0;
+  z-index: 1001; /* Ensure dropdown is above navbar content if overlapping */
+}
+
+.profile-dropdown-menu button {
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.95em;
+  color: #333; /* Text color for dropdown items */
+}
+
+.profile-dropdown-menu button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Main Dashboard Content Styles */
+.customer-dashboard-content {
+  padding: 20px;
+  margin-top: 60px; /* Add margin to push content below fixed navbar */
+  flex-grow: 1; /* Allow content to take remaining space */
+  /* background-color: #f4f7f6; */ /* Optional: background for content area */
+}
+
+.customer-dashboard-content h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.customer-info {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.customer-info h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.request-ride-prompt-section {
+  background-color: #eef4ff;
+  padding: 25px;
+  border-radius: 8px;
+  margin-top: 20px; /* Adjusted margin */
+  margin-bottom: 30px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.request-ride-prompt-section h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.request-ride-prompt-section p {
+  color: #34495e;
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.request-ride-button {
+  background-color: #3498db;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.request-ride-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.request-ride-button:active {
+  transform: translateY(0);
+}
+
+/* Remove old .navigation-buttons styles if they are no longer used */
+.navigation-buttons {
+  /* display: flex; */
+  /* justify-content: center; */
+  /* gap: 15px; */
+  /* margin-top: 30px; */
+  /* padding-bottom: 20px; */
+}
+
+/* .nav-button { ... } */
+/* .logout-button { ... } */
+
+.dashboard-container {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 2rem;
+}
+
+.navigation-buttons {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.nav-button {
+  background-color: #000;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.nav-button:hover {
+  background-color: #333;
+}
+
+.profile-icon-container {
+  position: absolute;
+  top: 20px; /* Adjust as needed */
+  right: 20px; /* Adjust as needed */
+  z-index: 100; /* Ensure it's above other content */
+}
+
+.profile-icon-button {
+  background-color: #f0f0f0; /* Light grey background */
+  border: 1px solid #ccc;
+  border-radius: 50%; /* Makes it circular */
+  width: 40px; /* Adjust size */
+  height: 40px; /* Adjust size */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2em; /* Adjust icon size */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s;
+}
+
+.profile-icon-button:hover {
+  background-color: #e0e0e0;
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: 50px; /* Position below the icon */
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 150px; /* Adjust as needed */
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0; /* Add some padding around the buttons */
+}
+
+.profile-dropdown-menu button {
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.95em;
+  color: #333;
+}
+
+.profile-dropdown-menu button:hover {
+  background-color: #f5f5f5;
+}
+
+/* Ensure the main container allows absolute positioning of children */
+.customer-dashboard-container {
+  position: relative; /* Add this if not already present */
+  padding-top: 70px; /* Add padding to prevent overlap with the absolute positioned icon */
+  /* ... other existing styles ... */
+}
+
+.request-ride-prompt-section {
+  background-color: #eef4ff; /* A light, inviting blue */
+  padding: 25px;
+  border-radius: 8px;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.request-ride-prompt-section h2 {
+  margin-top: 0;
+  color: #2c3e50; /* Darker blue/grey for heading */
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.request-ride-prompt-section p {
+  color: #34495e; /* Slightly lighter text color */
+  font-size: 1.1em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.request-ride-button { /* Can reuse .action-button or make specific */
+  background-color: #3498db; /* A vibrant blue */
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.request-ride-button:hover {
+  background-color: #2980b9; /* Darker shade on hover */
+  transform: translateY(-2px); /* Slight lift on hover */
+}
+
+.request-ride-button:active {
+  transform: translateY(0); /* Reset lift on click */
+}
+
+/* Adjust .action-button if you want common styling */
+.action-button {
+  /* ... existing styles or new common styles ... */
+  /* Example: */
+  /* padding: 10px 15px; */
+  /* border: none; */
+  /* border-radius: 4px; */
+  /* cursor: pointer; */
+  /* font-size: 1em; */
+  /* transition: background-color 0.3s ease; */
+}

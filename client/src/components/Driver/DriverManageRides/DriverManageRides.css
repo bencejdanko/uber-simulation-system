@@ -1,0 +1,121 @@
+.manage-rides-container {
+    font-family: Arial, sans-serif;
+    background-color: #f9fafb;
+    padding: 1rem;
+  }
+  
+  .manage-rides-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .manage-rides-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .manage-rides-title {
+    font-size: 1.25rem;
+  }
+  
+  .manage-rides-section {
+    background-color: #fff;
+    margin-top: 1rem;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .filter-section {
+    margin-bottom: 1rem;
+  }
+  
+  .status-filter {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+  }
+  
+  .rides-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .rides-table th,
+  .rides-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .status.pending {
+    color: #f59e0b; /* Amber for pending */
+  }
+  
+  .status.accepted {
+    color: #10b981; /* Green for accepted */
+  }
+  
+  .status.rejected {
+    color: #ef4444; /* Red for rejected */
+  }
+  
+  .status.completed {
+    color: #3b82f6; /* Blue for completed */
+  }
+  
+  .status.cancelled {
+    color: #9ca3af; /* Gray for cancelled */
+  }
+  
+  .accept-button {
+    background-color: #10b981;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+  }
+  
+  .reject-button {
+    background-color: #ef4444;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+  }
+
+  .navigation-buttons {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .nav-button {
+    background-color: #000;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .nav-button:hover {
+    background-color: #333;
+  }

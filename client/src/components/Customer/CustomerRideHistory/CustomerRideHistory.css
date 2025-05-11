@@ -1,0 +1,81 @@
+.rides-container {
+    font-family: Arial, sans-serif;
+    background-color: #f9fafb;
+    padding: 1rem;
+  }
+  
+  .rides-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #000;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
+  .rides-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .rides-title {
+    font-size: 1.25rem;
+  }
+  
+  .rides-section {
+    background-color: #fff;
+    margin-top: 1rem;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .rides-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .rides-table th,
+  .rides-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .status.completed {
+    color: #10b981;
+    font-weight: bold;
+  }
+  
+  .status.cancelled {
+    color: #ef4444;
+    font-weight: bold;
+  }
+
+  .navigation-buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .nav-button {
+    background-color: #000;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .nav-button:hover {
+    background-color: #333;
+  }
