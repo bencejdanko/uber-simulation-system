@@ -197,8 +197,9 @@ const CustomerRequestRide = () => {
 
   useEffect(() => {
     if (fareData) {
-      if (typeof fareData.estimatedFare === 'number') {
-        setEstimatedFare(fareData.estimatedFare);
+      console.log('Full fareData response:', fareData); // Added for detailed debugging
+      if (typeof fareData.fare === 'number') {
+        setEstimatedFare(fareData.fare);
       } else {
         // fareData is present, but estimatedFare is not a number (or missing)
         setEstimatedFare(null); // Set to null to prevent .toFixed errors
