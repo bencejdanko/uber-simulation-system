@@ -14,9 +14,6 @@ const RegisterCustomer = () => {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
-    address: '',
-    city: '',
-    zipCode: '',
     agreeToTerms: false,
   });
 
@@ -58,10 +55,6 @@ const RegisterCustomer = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
-
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = 'You must agree to the terms and conditions';
     }
@@ -81,7 +74,7 @@ const RegisterCustomer = () => {
     setErrors({});
 
     try {
-      const { confirmPassword, ...registrationData } = formData;
+      const { confirmPassword, address, city, zipCode, ...registrationData } = formData;
       await registerCustomer(registrationData).unwrap();
     } catch (err) {
       console.error('Failed to register customer:', err);
@@ -109,8 +102,8 @@ const RegisterCustomer = () => {
           <h2 className="title">Registration Complete!</h2>
           <p>Thank you for registering with Uber.</p>
           <p>You can now log in to your account.</p>
-          <button onClick={() => navigate('/')} className="button">
-            Go to Home
+          <button onClick={() => navigate('/login-customer')} className="button">
+            Go to Login
           </button>
         </div>
       </div>
@@ -200,63 +193,30 @@ const RegisterCustomer = () => {
             {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
           </div>
 
-          <div>
-            <label className="label">Address</label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className={`input ${errors.address ? 'input-error' : ''}`}
-            />
-            {errors.address && <p className="error-message">{errors.address}</p>}
-          </div>
-
-          <div>
-            <label className="label">City</label>
-            <input
-              type="text"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className={`input ${errors.city ? 'input-error' : ''}`}
-            />
-            {errors.city && <p className="error-message">{errors.city}</p>}
-          </div>
-
-          <div>
-            <label className="label">ZIP Code</label>
-            <input
-              type="text"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              className={`input ${errors.zipCode ? 'input-error' : ''}`}
-            />
-            {errors.zipCode && <p className="error-message">{errors.zipCode}</p>}
-          </div>
-
-          <div>
+          <div className="terms-container">
             <input
               type="checkbox"
+              id="agreeToTerms"
               name="agreeToTerms"
               checked={formData.agreeToTerms}
               onChange={handleChange}
               className="checkbox"
             />
-            <label className="label">I agree to Uber's Terms of Service and Privacy Policy</label>
-            {errors.agreeToTerms && <p className="error-message">{errors.agreeToTerms}</p>}
+            <label htmlFor="agreeToTerms" className="label checkbox-label">
+              I agree to Uber's Terms of Service and Privacy Policy
+            </label>
+            {errors.agreeToTerms && <p className="error-message terms-error">{errors.agreeToTerms}</p>}
           </div>
 
           <button type="submit" className="button" disabled={isLoading}>
             {isLoading ? 'Signing Up...' : 'Sign Up'}
           </button>
           {mutationError && (
-            <p className="error-message">
+            <p className="error-message form-error-message">
               {mutationError.data?.message || mutationError.error || 'Registration failed. Please try again.'}
             </p>
           )}
-          {errors.form && <p className="error-message">{errors.form}</p>}
+          {errors.form && <p className="error-message form-error-message">{errors.form}</p>}
         </form>
       </div>
     </div>
