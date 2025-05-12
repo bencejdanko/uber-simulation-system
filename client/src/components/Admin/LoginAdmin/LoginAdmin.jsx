@@ -1,62 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './LoginAdmin.css';
 
+// API base URL - pointing to the simple auth server
+const API_BASE_URL = 'http://localhost:8000';
+
 const LoginAdmin = () => {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@uber.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Clear any errors when input changes
+  useEffect(() => {
+    if (error) setError('');
+  }, [email, password]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
-      const response = await fetch('/api/v1/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      console.log('Attempting login with:', { email, password });
+      
+      // Make login request directly to the simple auth server
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/admin/login`, {
+        email,
+        password
       });
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
+
+      console.log('Login response:', response.data);
+
+      if (response.data && response.data.success) {
+        // Store token and user info
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('role', 'admin');
+        
+        // Redirect to admin dashboard
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid response from server');
       }
-      // You may want to store a token here
-      navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.message);
+      console.error('Login error:', err);
+      setError('Invalid credentials or server error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <h1 className="login-title">Admin Login</h1>
-      <form className="login-form" onSubmit={handleSubmit}>
+    <div className="admin-login-container">
+      <h2 className="admin-login-title">Admin Login</h2>
+      
+      <form className="admin-login-form" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="Email"
-          className="login-input"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
+        
         <input
           type="password"
           placeholder="Password"
-          className="login-input"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" className="login-button" disabled={loading}>
+        
+        <button 
+          type="submit" 
+          className="admin-login-button"
+          disabled={loading}
+        >
           {loading ? 'Logging in...' : 'Login'}
         </button>
+        
+        {error && <p className="admin-login-error">{error}</p>}
       </form>
-      {error && <div className="login-error">{error}</div>}
-      <button className="home-button" onClick={() => navigate('/')}>Home</button>
     </div>
   );
 };

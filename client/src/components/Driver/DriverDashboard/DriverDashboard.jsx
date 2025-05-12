@@ -122,8 +122,8 @@ const DriverDashboard = ({ latitude, longitude }) => {
 
       <div className="navigation-buttons">
         <button className="nav-button" onClick={() => navigate('/')}>Home</button>
-        {/* <button className="nav-button" onClick={() => navigate('/driver/manage-rides')}>Manage Rides</button> */}
-        {/* <button className="nav-button" onClick={() => navigate('/driver/earnings')}>Driver Earnings</button> */}
+        <button className="nav-button" onClick={() => navigate('/driver/manage-rides')}>Manage Rides</button>
+        <button className="nav-button" onClick={() => navigate('/driver/earnings')}>Driver Earnings</button>
         {/* Add other relevant dashboard navigation buttons here */}
         <button className="nav-button logout-button" onClick={handleLogout}>Logout</button>
       </div>

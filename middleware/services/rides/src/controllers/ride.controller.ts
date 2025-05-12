@@ -30,7 +30,7 @@ export const rideController = {
       const ride = await rideService.createRide(rideData);
 
       // Publish ride requested event
-      await kafkaService.publishRideRequested(ride);
+      // await kafkaService.publishRideRequested(ride);
 
       // Find and notify nearby drivers using cached locations
       const nearbyDrivers = await rideService.findNearbyDrivers(
@@ -62,8 +62,8 @@ export const rideController = {
         throw new AppError('Authentication required', 401);
       }
 
-      const { rideId } = req.params;
-      const ride = await rideService.getRideById(rideId);
+      const { id } = req.params;
+      const ride = await rideService.getRideById(id);
 
       if (!ride) {
         throw new AppError('Ride not found', 404);
@@ -118,13 +118,13 @@ export const rideController = {
         throw new AppError('Authentication required', 401);
       }
 
-      const { rideId } = req.params;
+      const { id: rideId } = req.params;
       const { reason } = req.body;
 
       // Get ride from cache or database
       const ride = await rideService.getRideById(rideId);
       if (!ride) {
-        throw new AppError('Ride not found', 404);
+        throw new AppError('[controller.cancelRide]: Ride not found', 404);
       }
 
       // Check if user has permission to cancel this ride
@@ -140,8 +140,9 @@ export const rideController = {
         throw new AppError('Failed to cancel ride', 500);
       }
 
+
       // Publish ride cancelled event
-      await kafkaService.publishRideCancelled(updatedRide, reason);
+      // await kafkaService.publishRideCancelled(updatedRide, reason);
 
       // Notify driver if assigned
       if (updatedRide.driverId) {
@@ -233,10 +234,10 @@ export const rideController = {
       });
 
       // Publish driver location updated event
-      await kafkaService.publishDriverLocationUpdated(req.user.userId, {
-        latitude,
-        longitude
-      });
+      // await kafkaService.publishDriverLocationUpdated(req.user.userId, {
+      //   latitude,
+      //   longitude
+      // });
 
       res.json({ message: 'Driver location updated successfully' });
     } catch (error) {
@@ -251,12 +252,17 @@ export const rideController = {
       }
 
       // Only drivers can accept rides
-      if (!req.user.roles.includes('DRIVER')) {
-        throw new AppError('Access denied', 403);
-      }
+      // if (!req.user.roles.includes('DRIVER')) {
+      //   throw new AppError('Access denied', 403);
+      // }
 
-      const { rideId } = req.params;
-      const ride = await rideService.getRideById(rideId);
+      const driverId = req.headers['x-jwt-claim-sub'] as string;
+
+      console.log('🔐 DriverId from JWT claim:', driverId);
+
+
+      const { id } = req.params;
+      const ride = await rideService.getRideById(id);
 
       if (!ride) {
         throw new AppError('Ride not found', 404);
@@ -267,20 +273,22 @@ export const rideController = {
       }
 
       const previousStatus = ride.status;
-      const updatedRide = await rideService.updateRide(rideId, {
+      const updatedRide = await rideService.updateRide(id, {
         status: 'ACCEPTED',
-        driverId: req.user.userId
+        driverId
       });
+
+      console.log('📄 Updated ride:', JSON.stringify(updatedRide, null, 2));
 
       if (!updatedRide) {
         throw new AppError('Failed to accept ride', 500);
       }
 
       // Publish status update and driver assignment events
-      await Promise.all([
-        kafkaService.publishRideStatusUpdated(updatedRide, previousStatus),
-        kafkaService.publishDriverAssigned(updatedRide)
-      ]);
+      // await Promise.all([
+      //   kafkaService.publishRideStatusUpdated(updatedRide, previousStatus),
+      //   kafkaService.publishDriverAssigned(updatedRide)
+      // ]);
 
       // Notify customer
       webSocketService.notifyRideAccepted(updatedRide, updatedRide.customerId);
@@ -302,8 +310,8 @@ export const rideController = {
         throw new AppError('Access denied', 403);
       }
 
-      const { rideId } = req.params;
-      const ride = await rideService.getRideById(rideId);
+      const { id } = req.params;
+      const ride = await rideService.getRideById(id);
 
       if (!ride) {
         throw new AppError('Ride not found', 404);
@@ -318,7 +326,7 @@ export const rideController = {
       }
 
       const previousStatus = ride.status;
-      const updatedRide = await rideService.updateRide(rideId, {
+      const updatedRide = await rideService.updateRide(id, {
         status: 'COMPLETED'
       });
 
@@ -339,5 +347,74 @@ export const rideController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
+
+  async updateRide(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new AppError('Authentication required', 401);
+      }
+
+      const { id } = req.params;
+      const updateData = req.body;
+      console.log('📄 Update data:', JSON.stringify(updateData, null, 2));
+      
+      // Get the ride to check permissions
+      const existingRide = await rideService.getRideById(id);
+      
+      if (!existingRide) {
+        throw new AppError('Ride not found', 404);
+      }
+
+      const driverId = req.headers['x-jwt-claim-sub'] as string;
+      updateData.driverId = driverId;
+      
+      // Check if user has permission to update this ride
+      // Allow customer, assigned driver, or admin
+      // if (existingRide.customerId !== req.user.userId && 
+      //     existingRide.driverId !== req.user.userId && 
+      //     !req.user.roles.includes('ADMIN')) {
+      //   throw new AppError('Access denied to update this ride', 403);
+      // }
+      
+      // Store previous status for event publishing
+      const previousStatus = existingRide.status;
+      
+      // Update the ride
+      const updatedRide = await rideService.updateRide(id, updateData);
+      
+      if (!updatedRide) {
+        throw new AppError('Failed to update ride', 500);
+      }
+      
+      // If status was changed, publish event
+      if (updateData.status && previousStatus !== updateData.status) {
+        //await kafkaService.publishRideStatusUpdated(updatedRide, previousStatus);
+        
+        // Additional notifications based on status
+        switch(updateData.status) {
+          case 'ACCEPTED':
+            if (updatedRide.driverId) {
+              //await kafkaService.publishDriverAssigned(updatedRide);
+              webSocketService.notifyRideAccepted(updatedRide, updatedRide.customerId);
+            }
+            break;
+          case 'COMPLETED':
+            webSocketService.notifyRideCompleted(updatedRide, updatedRide.customerId);
+            //await kafkaService.publishRideCompleted(updatedRide);
+            break;
+          case 'CANCELLED':
+            if (updatedRide.driverId) {
+              webSocketService.notifyRideCancellation(updatedRide, updatedRide.driverId);
+            }
+            //await kafkaService.publishRideCancelled(updatedRide);
+            break;
+        }
+      }
+      
+      res.json(updatedRide);
+    } catch (error) {
+      next(error);
+    }
+  },
 };

@@ -155,69 +155,71 @@ export class RideService {
 
   public async updateRide(rideId: string, updateData: Partial<IRide>): Promise<IRide | null> {
     try {
-      const updatePayload: any = { ...updateData };
-
-      // Transform pickupLocation if it exists and is in {latitude, longitude} format
-      if (updateData.pickupLocation && 
-          typeof (updateData.pickupLocation as any).latitude === 'number' && 
-          typeof (updateData.pickupLocation as any).longitude === 'number') {
-        const ploc = updateData.pickupLocation as any;
-        updatePayload.pickupLocation = {
-          type: 'Point',
-          coordinates: [ploc.longitude, ploc.latitude] // GeoJSON is [longitude, latitude]
-        };
-      } else if (updateData.pickupLocation) {
-        // If not in lat/lon format, assume it's already GeoJSON or handle error
-        updatePayload.pickupLocation = updateData.pickupLocation;
-      }
-
-      // Transform dropoffLocation similarly
-      if (updateData.dropoffLocation && 
-          typeof (updateData.dropoffLocation as any).latitude === 'number' && 
-          typeof (updateData.dropoffLocation as any).longitude === 'number') {
-        const dloc = updateData.dropoffLocation as any;
-        updatePayload.dropoffLocation = {
-          type: 'Point',
-          coordinates: [dloc.longitude, dloc.latitude] // GeoJSON is [longitude, latitude]
-        };
-      } else if (updateData.dropoffLocation) {
-        updatePayload.dropoffLocation = updateData.dropoffLocation;
-      }
-
+      console.log(`[RideService.updateRide] Attempting to update ride with ID: ${rideId}`, updateData);
       const ride = await Ride.findByIdAndUpdate(
         rideId,
-        { $set: updatePayload },
-        { new: true }
+        { $set: updateData },
+        { new: true, runValidators: true }
       );
 
-      if (ride) {
+      if (!ride) {
+        console.warn(`[RideService.updateRide] Ride not found with ID: ${rideId} for update.`);
+        return null;
+      }
+
+      console.log(`[RideService.updateRide] Ride ${rideId} updated successfully.`);
+      if (this.redisService && typeof this.redisService.cacheRide === 'function') {
         await this.redisService.cacheRide(ride);
+        console.log(`[RideService.updateRide] Ride ${rideId} updated in cache.`);
       }
       return ride;
     } catch (error) {
-      throw new AppError('Failed to update ride', 500);
+      console.error(`[RideService.updateRide] Error updating ride ${rideId}:`, error);
+      throw new AppError('Failed to update ride details', 500);
     }
   }
 
   public async cancelRide(rideId: string, reason?: string): Promise<IRide | null> {
+    const _id = rideId;
+    console.log(`[RideService.cancelRide] Attempting to cancel ride with _id: ${_id}, Reason: ${reason || 'No reason provided'}`);
+
     try {
-      const ride = await Ride.findByIdAndUpdate(
-        rideId,
-        {
-          $set: {
-            status: 'CANCELLED',
-            cancellationReason: reason
-          }
-        },
-        { new: true }
+      const updatePayload: any = {
+        status: 'CANCELLED',
+        updatedAt: new Date(),
+      };
+      if (reason) {
+        updatePayload.cancellationReason = reason;
+      }
+
+      const updatedRide = await Ride.findByIdAndUpdate(
+        _id,
+        { $set: updatePayload },
+        { new: true, runValidators: true }
       );
 
-      if (ride) {
-        await this.redisService.invalidateRide(rideId);
+      if (!updatedRide) {
+        console.warn(`[RideService.cancelRide] Ride not found with _id: ${_id} during findByIdAndUpdate for cancellation.`);
+        throw new AppError('Failed to cancel existing ride: Ride not found', 404);
       }
-      return ride;
+
+      console.log(`[RideService.cancelRide] Ride ${_id} status set to CANCELLED successfully.`);
+
+      if (this.redisService && typeof this.redisService.invalidateRide === 'function') {
+        await this.redisService.invalidateRide(_id);
+        console.log(`[RideService.cancelRide] Ride cache invalidated for ${_id}.`);
+      } else if (this.redisService && typeof this.redisService.cacheRide === 'function') {
+        await this.redisService.cacheRide(updatedRide);
+        console.log(`[RideService.cancelRide] Ride ${_id} updated in cache with cancelled status.`);
+      }
+
+      return updatedRide;
     } catch (error) {
-      throw new AppError('Failed to cancel ride', 500);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      console.error(`[RideService.cancelRide] Unexpected error cancelling ride ${_id}:`, error);
+      throw new AppError('Internal server error while attempting to cancel ride', 500);
     }
   }
 

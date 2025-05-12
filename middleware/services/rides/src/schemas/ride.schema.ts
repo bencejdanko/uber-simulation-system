@@ -23,6 +23,17 @@ export const updateRideStatusSchema = z.object({
   status: z.enum(['REQUESTED', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
 });
 
+// PATCH /rides/:id — Update any ride fields
+export const updateRideSchema = z.object({
+  status: z.enum(['REQUESTED', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
+  driverId: z.string().optional(),
+  vehicleType: z.enum(['STANDARD', 'PREMIUM', 'LUXURY']).optional(),
+  paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'PAYPAL']).optional(),
+  estimatedFare: z.number().positive().optional(),
+  actualFare: z.number().positive().optional(),
+  cancellationReason: z.string().min(1).max(500).optional(),
+});
+
 // PUT /rides/:id/complete — Mark ride complete
 export const completeRideSchema = z.object({}); // No body needed, so use an empty object
 

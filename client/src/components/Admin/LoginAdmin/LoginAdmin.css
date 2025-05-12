@@ -1,63 +1,108 @@
 /* ...existing code... */
-.login-container {
+.admin-login-container {
+  max-width: 400px;
+  margin: 8rem auto;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-login-title {
   text-align: center;
-  padding: 20px;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: #333;
 }
 
-.login-title {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.login-form {
+.admin-login-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 1rem;
 }
 
-.login-input {
-  margin: 10px 0;
-  padding: 10px;
-  width: 80%;
-  max-width: 300px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.admin-login-form input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
-.login-button {
-  padding: 10px 20px;
-  background-color: #007bff;
+.admin-login-form input:focus {
+  border-color: #1976d2;
+}
+
+.admin-login-button {
+  width: 100%;
+  background-color: #1976d2;
   color: white;
   border: none;
-  border-radius: 5px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 1rem;
   cursor: pointer;
+  transition: background-color 0.3s;
+  box-sizing: border-box;
 }
 
-.login-button:disabled {
-  background-color: #aaa;
+.admin-login-button:hover {
+  background-color: #1565c0;
+}
+
+.admin-login-button:disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
-.login-button:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.login-error {
+.admin-login-error {
   color: #d32f2f;
-  margin-top: 10px;
+  text-align: center;
+  margin-top: 0.5rem;
 }
 
 .home-button {
-  margin-top: 20px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
   padding: 8px 16px;
-  background-color: #222;
-  color: #fff;
+  background-color: #333;
+  color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .home-button:hover {
-  background-color: #444;
+  background-color: #555;
+}
+
+.admin-login-help {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.admin-login-help p {
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+}
+
+.admin-login-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 /* ...existing code... */
