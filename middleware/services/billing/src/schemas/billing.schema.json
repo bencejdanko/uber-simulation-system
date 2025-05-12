@@ -77,10 +77,11 @@
           "format": "date-time",
           "description": "ISO 8601 formatted date-time string for the pickup time."
         },
-        "dropoffTimestamp": {
-          "type": "string",
-          "format": "date-time",
-          "description": "ISO 8601 formatted date-time string for the dropoff time."
+        "rideLevel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Level of the ride, ranging from 0 to 4."
         },
         "distance": {
           "type": "number",
@@ -88,7 +89,7 @@
           "description": "Distance traveled in miles."
         }
       },
-      "required": ["pickupLocation", "dropoffLocation", "pickupTimestamp", "dropoffTimestamp"],
+      "required": ["pickupLocation", "dropoffLocation", "pickupTimestamp", "rideLevel"],
       "additionalProperties": false
     }
   }
