@@ -93,6 +93,33 @@ const DriverManageRides = ({ userId }) => {
     }
   };
 
+  const handleCancelRide = async (rideId) => {
+    try {
+      // Call the API to update the ride status to CANCELLED
+      await updateRide({
+        id: rideId,
+        status: 'CANCELLED'
+      }).unwrap();
+
+      // Update local state
+      setRides((prevRides) =>
+        prevRides.map((ride) =>
+          ride.id === rideId ? { ...ride, status: 'CANCELLED' } : ride
+        )
+      );
+      console.log(`Ride ${rideId} cancelled by driver.`);
+    } catch (error) {
+      console.error('Failed to cancel ride:', error);
+      if (error.data) {
+        setErrorMessage(error.data.message || 'Failed to cancel ride');
+      } else if (error.status) {
+        setErrorMessage(`Server error (${error.status}): Failed to cancel ride`);
+      } else {
+        setErrorMessage('Failed to cancel ride. Please try again.');
+      }
+    }
+  };
+
   const handleUpdateRideStatus = async (rideId, newStatus) => {
     try {
       // Call the API to update the ride status
@@ -199,6 +226,15 @@ const DriverManageRides = ({ userId }) => {
                       disabled={isUpdating}
                     >
                       Start Ride
+                    </button>
+                  )}
+                  {(ride.status === 'ACCEPTED' || ride.status === 'IN_PROGRESS') && (
+                    <button
+                      onClick={() => handleCancelRide(ride.id)}
+                      className="cancel-button"
+                      disabled={isUpdating}
+                    >
+                      Cancel Ride
                     </button>
                   )}
                   {ride.status === 'IN_PROGRESS' && (
