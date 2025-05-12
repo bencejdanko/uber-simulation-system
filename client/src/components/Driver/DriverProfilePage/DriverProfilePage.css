@@ -125,64 +125,71 @@
   }
   
   .action-button {
-    padding: 12px 25px; /* Larger buttons */
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    font-weight: 500;
+    background-color: #000; /* Match nav-button */
+    color: #fff; /* Match nav-button */
+    padding: 0.75rem 1.5rem; /* Match nav-button */
+    border-radius: 0.5rem; /* Match nav-button */
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 1rem; /* Match nav-button */
+    border: none; /* Match nav-button */
+    text-decoration: none; /* Match nav-button (important for Link as button) */
+    display: inline-flex; /* Match nav-button */
+    align-items: center; /* Match nav-button */
+    justify-content: center; /* Match nav-button */
+    transition: background-color 0.2s ease-in-out; /* Match nav-button */
+    /* Removed font-weight, text-transform, letter-spacing, and other transitions to match nav-button */
   }
   
   .action-button:hover:not(:disabled) {
-    transform: translateY(-1px); /* Slight lift on hover */
+    background-color: #333; /* Match nav-button hover */
+    /* Removed transform from original .action-button hover */
   }
+
   .action-button:active:not(:disabled) {
-    transform: translateY(0px); /* Press down effect */
+    /* Removed transform from original .action-button active state if not present in nav-button */
   }
-  
   
   .action-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    color: #666;
+    background-color: #6c757d; /* Match nav-button disabled */
+    cursor: not-allowed; /* Match nav-button disabled */
+    opacity: 0.65; /* Match nav-button disabled */
+    color: #fff; /* Ensure text color contrasts with disabled background */
     box-shadow: none;
   }
   
   .submit-button {
-    background-color: #2ecc71; /* Green for save/submit */
-    color: white;
+    /* background-color: #2ecc71; */ /* Color removed to match nav-button */
+    /* color: white; */ /* Color removed to match nav-button */
+    /* Specific submit-button styles (non-color related) can remain if any */
   }
   
   .submit-button:hover:not(:disabled) {
-    background-color: #27ae60; /* Darker green */
-    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+    /* background-color: #27ae60; */ /* Hover color removed */
+    /* box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3); */ /* Shadow removed if not part of nav-button style */
   }
   
   .cancel-button {
-    background-color: #e74c3c; /* Red for cancel */
-    color: white;
+    /* background-color: #e74c3c; */ /* Color removed to match nav-button */
+    /* color: white; */  /* Color removed to match nav-button */
   }
   
   .cancel-button:hover:not(:disabled) {
-    background-color: #c0392b; /* Darker red */
-    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+    /* background-color: #c0392b; */ /* Hover color removed */
+    /* box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); */ /* Shadow removed */
   }
   
   .back-button {
-    background-color: #3498db; /* Blue for back/navigation */
-    color: white;
-    text-decoration: none; /* For Link component */
-    display: inline-flex; /* Align text properly */
-    align-items: center;
-    justify-content: center;
+    /* background-color: #3498db; */ /* Color removed to match nav-button */
+    /* color: white; */ /* Color removed to match nav-button */
+    text-decoration: none; /* Keep for Link component if it wasn't part of .action-button already */
+    /* display: inline-flex; already in .action-button */
+    /* align-items: center; already in .action-button */
+    /* justify-content: center; already in .action-button */
   }
   
   .back-button:hover:not(:disabled) {
-    background-color: #2980b9; /* Darker blue */
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    /* background-color: #2980b9; */ /* Hover color removed */
+    /* box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); */ /* Shadow removed */
   }
   
   

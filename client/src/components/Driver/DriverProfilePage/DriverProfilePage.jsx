@@ -306,7 +306,7 @@ const DriverProfilePage = () => {
             <button 
               onClick={handleCancel} 
               disabled={isUpdating}
-              className="action-button cancel-button" 
+              className="action-button submit-button" 
             >
               Cancel
             </button>
@@ -319,7 +319,7 @@ const DriverProfilePage = () => {
             >
               Edit Profile
             </button>
-            <Link to="/driver/dashboard" className="action-button back-button">
+            <Link to="/driver/dashboard" className="action-button submit-button">
               Back to Dashboard
             </Link>
           </>

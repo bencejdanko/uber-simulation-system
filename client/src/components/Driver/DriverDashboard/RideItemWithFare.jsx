@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Added useState, useEffect
+import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { 
   useGetEstimatedFareQuery, 
   useGetCustomerByIdQuery,
@@ -11,6 +11,34 @@ const GEOCODING_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;  // Store t
 const REVERSE_GEOCODING_ENDPOINT = `https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key=${GEOCODING_API_KEY}`;
 // Example for Google: `https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key=YOUR_API_KEY`
 // Adjust the endpoint and response parsing based on your chosen geocoding service.
+
+// Helper function to convert degrees to radians
+const toRadians = (degrees) => {
+  return degrees * (Math.PI / 180);
+};
+
+// Haversine distance calculation
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the Earth in kilometers
+  // const R = 3958.8; // Radius of the Earth in miles
+
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+
+  lat1 = toRadians(lat1);
+  lat2 = toRadians(lat2);
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+
+  return distance; // Returns distance in kilometers
+  // To return in miles:
+  // const distanceMiles = distance * 0.621371;
+  // return distanceMiles;
+};
+
 
 const RideItemWithFare = ({ ride }) => {
   // Log the incoming ride object
@@ -52,13 +80,23 @@ const RideItemWithFare = ({ ride }) => {
   const [pickupAddressError, setPickupAddressError] = useState(null);
   const [dropoffAddressError, setDropoffAddressError] = useState(null);
 
+  // Calculate distance using useMemo to avoid recalculation on every render
+  const rideDistance = useMemo(() => {
+    if (ride.pickupLocation?.coordinates && ride.dropoffLocation?.coordinates) {
+      const [pickupLng, pickupLat] = ride.pickupLocation.coordinates;
+      const [dropoffLng, dropoffLat] = ride.dropoffLocation.coordinates;
+      const distKm = calculateDistance(pickupLat, pickupLng, dropoffLat, dropoffLng);
+      // You can format it or convert to miles here if needed
+      // Example: return `${distKm.toFixed(2)} km (${(distKm * 0.621371).toFixed(2)} mi)`;
+      const distMi = distKm * 0.621371; // Convert kilometers to miles
+      return `${distMi.toFixed(2)} mi`; 
+    }
+    return 'N/A';
+  }, [ride.pickupLocation?.coordinates, ride.dropoffLocation?.coordinates]);
+
   // Helper function to fetch address from coordinates
   const getAddressFromCoordinates = async (lat, lng) => {
     if (!lat || !lng) return 'Coordinates missing';
-    if (GEOCODING_API_KEY === 'YOUR_GOOGLE_MAPS_API_KEY_OR_OTHER_SERVICE_KEY') {
-      console.warn('Geocoding API key not set. Addresses will not be fetched.');
-      return 'Geocoding API key not set';
-    }
     try {
       const url = REVERSE_GEOCODING_ENDPOINT.replace('{lat}', lat).replace('{lng}', lng);
       const response = await fetch(url);
@@ -87,35 +125,45 @@ const RideItemWithFare = ({ ride }) => {
     const fetchPickupAddress = async () => {
       if (ride.pickupLocation?.coordinates) {
         setPickupAddressError(null);
+        setPickupAddress('Loading address...');
         const address = await getAddressFromCoordinates(
           ride.pickupLocation.coordinates[1], 
           ride.pickupLocation.coordinates[0]
         );
-        if (address.startsWith('Error')) setPickupAddressError(address);
-        setPickupAddress(address);
+        if (address.toLowerCase().startsWith('error:') || address === 'Geocoding API key not available' || address === 'Address not found') {
+            setPickupAddressError(address);
+            setPickupAddress('N/A');
+        } else {
+            setPickupAddress(address);
+        }
       } else {
         setPickupAddress('N/A');
       }
     };
     fetchPickupAddress();
-  }, [ride.pickupLocation?.coordinates]); // Re-run if pickup coordinates change
+  }, [ride.pickupLocation?.coordinates?.[0], ride.pickupLocation?.coordinates?.[1]]); // Re-run if pickup coordinates change
 
   useEffect(() => {
     const fetchDropoffAddress = async () => {
       if (ride.dropoffLocation?.coordinates) {
         setDropoffAddressError(null);
+        setDropoffAddress('Loading address...');
         const address = await getAddressFromCoordinates(
           ride.dropoffLocation.coordinates[1], 
           ride.dropoffLocation.coordinates[0]
         );
-        if (address.startsWith('Error')) setDropoffAddressError(address);
-        setDropoffAddress(address);
+        if (address.toLowerCase().startsWith('error:') || address === 'Geocoding API key not available' || address === 'Address not found') {
+            setDropoffAddressError(address);
+            setDropoffAddress('N/A');
+        } else {
+            setDropoffAddress(address);
+        }
       } else {
         setDropoffAddress('N/A');
       }
     };
     fetchDropoffAddress();
-  }, [ride.dropoffLocation?.coordinates]); // Re-run if dropoff coordinates change
+  }, [ride.dropoffLocation?.coordinates?.[0], ride.dropoffLocation?.coordinates?.[1]]); // Re-run if dropoff coordinates change
 
 
   const handleAcceptRide = async () => {
@@ -151,6 +199,9 @@ const RideItemWithFare = ({ ride }) => {
       </p>
       <p>
         <strong>Dropoff:</strong> {dropoffAddressError ? <span style={{color: 'red'}}>{dropoffAddressError}</span> : dropoffAddress}
+      </p>
+      <p>
+        <strong>Distance:</strong> {rideDistance}
       </p>
       <p>
         <strong>Estimated Fare:</strong> 
