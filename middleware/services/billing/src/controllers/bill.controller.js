@@ -197,20 +197,20 @@ const searchBills = async (req, res) => {
       });
     }
     
-    if (ride_id && !SSNGenerator.validate(ride_id)) {
-      return res.status(400).json({
-        error: 'invalid_id_format',
-        message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
-      });
-    }
+    // if (ride_id && !SSNGenerator.validate(ride_id)) {
+    //   return res.status(400).json({
+    //     error: 'invalid_id_format',
+    //     message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
+    //   });
+    // }
     
     // Validate payment status if provided
-    if (payment_status && !['PENDING', 'PAID', 'FAILED', 'VOID'].includes(payment_status)) {
-      return res.status(400).json({
-        error: 'invalid_payment_status',
-        message: 'Invalid payment status. Must be one of: PENDING, PAID, FAILED, VOID'
-      });
-    }
+    // if (payment_status && !['PENDING', 'PAID', 'FAILED', 'VOID'].includes(payment_status)) {
+    //   return res.status(400).json({
+    //     error: 'invalid_payment_status',
+    //     message: 'Invalid payment status. Must be one of: PENDING, PAID, FAILED, VOID'
+    //   });
+    // }
     
     // Validate date formats if provided
     if (start_date && isNaN(Date.parse(start_date))) {
