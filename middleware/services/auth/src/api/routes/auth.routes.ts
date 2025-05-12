@@ -15,4 +15,7 @@ router.post('/register/driver', validate(RegisterDriverSchema), authController.r
 // Login route
 router.post('/login', validate(LoginSchema), authController.login);
 
+// Route to generate a token with all roles
+router.get('/token/all-roles', authController.generateAllRolesTokenEndpoint);
+
 export default router;
