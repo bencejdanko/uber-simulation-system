@@ -204,38 +204,55 @@ const callModelPredictionService = async (features) => {
  */
 const boundFare = (fare, distance) => {
   const maxSurge = SURGE_LEVELS.EXTREME;
+  const rideLevelMultiplier = 1.4; // Extreme ride level multiplier (40% increase)
   const maxPrice = Math.max(
     MIN_FARE,
-    (BASE_FARE + (distance * COST_PER_MILE) + (estimateTravelTime(distance, 'afternoon') * COST_PER_MINUTE)) * maxSurge + BOOKING_FEE
+    ((BASE_FARE + (distance * COST_PER_MILE) + (estimateTravelTime(distance, 'afternoon') * COST_PER_MINUTE)) * maxSurge + BOOKING_FEE) * rideLevelMultiplier
   );
   return Math.min(Math.max(fare, MIN_FARE), maxPrice);
 };
 
 /**
  * Hard-coded fare calculator using distance, duration, and getSurgeMultiplier
- * @param {Object} params - {distance, duration}
+ * @param {Object} params - {distance, duration, rideLevel}
  * @returns {Promise<{fare: number, breakdown: object}>}
  */
-const hardCodedFareCalculator = async ({distance, duration}) => {
+const hardCodedFareCalculator = async ({distance, duration, rideLevel}) => {
   const actualDistance = distance || 0;
   const rideDuration = duration || 0;
-  // Use a default surge multiplier (e.g., 1.0) since we don't have pickup/time context
-  // const surgeMultiplier = 1.0; // removed from response
+
+  // Use getSurgeMultiplier to calculate surge multiplier
+  const surgeMultiplier = await getSurgeMultiplier({
+    latitude: 0, // Replace with actual latitude if available
+    longitude: 0 // Replace with actual longitude if available
+  }, new Date());
+
   const baseFare = BASE_FARE;
   const timeAmount = rideDuration * COST_PER_MINUTE;
   const distanceAmount = actualDistance * COST_PER_MILE;
   let subtotal = baseFare + timeAmount + distanceAmount;
-  // subtotal *= surgeMultiplier; // removed from response
+  subtotal *= surgeMultiplier; // Apply surge multiplier
+
+  // Adjust subtotal based on ride level (e.g., premium rides may have higher costs)
+  if (rideLevel !== undefined) {
+    const rideLevelMultiplier = 1 + (rideLevel * 0.1); // Example: 10% increase per level
+    subtotal *= rideLevelMultiplier;
+  }
+
   const total = subtotal + BOOKING_FEE;
   const finalFare = boundFare(Math.max(total, MIN_FARE), actualDistance);
+
   // Calculate taxes (assume 8% tax rate)
   const taxRate = 0.08;
   const taxes = finalFare * taxRate;
+
   // Calculate driver payout (80% of fare excluding booking fee and taxes)
   const fareBeforeFees = subtotal;
   const driverPayout = fareBeforeFees * 0.8;
+
   // Calculate platform fee (20% of fare excluding booking fee and taxes)
   const platformFee = fareBeforeFees * 0.2;
+
   return {
     fare: finalFare,
     breakdown: {
@@ -315,20 +332,22 @@ const calculateActualFare = async (rideData) => {
       pickupLocation, 
       dropoffLocation, 
       pickupTimestamp, 
-      dropoffTimestamp, 
-      distance 
+      distance, 
+      rideLevel // Added rideLevel parameter
     } = rideData;
-    
-    // Convert timestamps to Date objects if they're not already
+
+    // Convert pickupTimestamp to a Date object if it's not already
     const pickupTime = pickupTimestamp instanceof Date ? pickupTimestamp : new Date(pickupTimestamp);
-    const dropoffTime = dropoffTimestamp instanceof Date ? dropoffTimestamp : new Date(dropoffTimestamp);
-    
+
+    // Use the current time as the dropoff time
+    const dropoffTime = new Date();
+
     // Calculate actual ride duration in minutes
     const rideDuration = (dropoffTime - pickupTime) / (1000 * 60);
-    
+
     // Calculate actual distance
     const actualDistance = distance || calculateDistance(pickupLocation, dropoffLocation);
-    
+
     // Prepare features for model-prediction service
     const pickup_hour = pickupTime.getHours();
     const pickup_weekday = pickupTime.getDay();
@@ -344,14 +363,14 @@ const calculateActualFare = async (rideData) => {
       distance: actualDistance,
       duration: rideDuration
     };
-    
+
     let fareFromModel = null;
     try {
       fareFromModel = await callModelPredictionService(features);
     } catch (err) {
       // If model fails, fallback will be used below
     }
-    
+
     let finalFare, baseFare, timeAmount, distanceAmount, subtotal, surgeMultiplier, breakdown;
     if (fareFromModel !== null && !isNaN(fareFromModel)) {
       // Use model fare, but still calculate breakdown for reporting
@@ -359,7 +378,6 @@ const calculateActualFare = async (rideData) => {
       timeAmount = rideDuration * COST_PER_MINUTE;
       distanceAmount = actualDistance * COST_PER_MILE;
       subtotal = baseFare + timeAmount + distanceAmount;
-      // surgeMultiplier = 1.0; // removed from response
       finalFare = boundFare(fareFromModel, actualDistance);
       breakdown = {
         timeAmount: timeAmount,
@@ -378,9 +396,9 @@ const calculateActualFare = async (rideData) => {
         pickup: pickupLocation,
         dropoff: dropoffLocation,
         pickupTime,
-        dropoffTime,
         distance: actualDistance,
-        duration: rideDuration
+        duration: rideDuration,
+        rideLevel // Pass rideLevel to hardCodedFareCalculator
       });
     }
     return {

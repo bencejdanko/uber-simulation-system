@@ -94,15 +94,23 @@ const calculateActualFare = async (req, res) => {
       pickupLocation, 
       dropoffLocation, 
       pickupTimestamp, 
-      dropoffTimestamp, 
-      distance 
+      distance, 
+      rideLevel // New parameter for ride level
     } = req.body;
     
     // Validate request body
-    if (!pickupLocation || !dropoffLocation || !pickupTimestamp || !dropoffTimestamp) {
+    if (!pickupLocation || !dropoffLocation || !pickupTimestamp || rideLevel === undefined) {
       return res.status(400).json({
         error: 'missing_required_field',
-        message: 'Pickup location, dropoff location, pickup timestamp, and dropoff timestamp are required'
+        message: 'Pickup location, dropoff location, pickup timestamp, and ride level are required'
+      });
+    }
+    
+    // Validate ride level
+    if (isNaN(rideLevel) || rideLevel < 0 || rideLevel > 4) {
+      return res.status(400).json({
+        error: 'invalid_input',
+        message: 'Ride level must be a number between 0 and 4'
       });
     }
     
@@ -128,20 +136,11 @@ const calculateActualFare = async (req, res) => {
     
     // Validate timestamps
     const pickupTime = new Date(pickupTimestamp);
-    const dropoffTime = new Date(dropoffTimestamp);
     
-    if (isNaN(pickupTime.getTime()) || isNaN(dropoffTime.getTime())) {
+    if (isNaN(pickupTime.getTime())) {
       return res.status(400).json({
         error: 'invalid_date_format',
         message: 'Invalid timestamp format. Must be a valid ISO 8601 date string'
-      });
-    }
-    
-    // Validate that pickup time is before dropoff time
-    if (pickupTime >= dropoffTime) {
-      return res.status(400).json({
-        error: 'invalid_input',
-        message: 'Pickup time must be before dropoff time'
       });
     }
     
@@ -158,8 +157,8 @@ const calculateActualFare = async (req, res) => {
       pickupLocation,
       dropoffLocation,
       pickupTimestamp,
-      dropoffTimestamp,
-      distance
+      distance,
+      rideLevel // Pass ride level to the service
     });
     
     // Return the fare details
