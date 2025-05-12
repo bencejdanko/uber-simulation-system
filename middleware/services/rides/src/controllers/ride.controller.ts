@@ -234,10 +234,10 @@ export const rideController = {
       });
 
       // Publish driver location updated event
-      await kafkaService.publishDriverLocationUpdated(req.user.userId, {
-        latitude,
-        longitude
-      });
+      // await kafkaService.publishDriverLocationUpdated(req.user.userId, {
+      //   latitude,
+      //   longitude
+      // });
 
       res.json({ message: 'Driver location updated successfully' });
     } catch (error) {
@@ -256,6 +256,11 @@ export const rideController = {
       //   throw new AppError('Access denied', 403);
       // }
 
+      const driverId = req.headers['x-jwt-claim-sub'] as string;
+
+      console.log('🔐 DriverId from JWT claim:', driverId);
+
+
       const { id } = req.params;
       const ride = await rideService.getRideById(id);
 
@@ -270,8 +275,10 @@ export const rideController = {
       const previousStatus = ride.status;
       const updatedRide = await rideService.updateRide(id, {
         status: 'ACCEPTED',
-        driverId: req.user.userId
+        driverId
       });
+
+      console.log('📄 Updated ride:', JSON.stringify(updatedRide, null, 2));
 
       if (!updatedRide) {
         throw new AppError('Failed to accept ride', 500);
@@ -350,6 +357,7 @@ export const rideController = {
 
       const { id } = req.params;
       const updateData = req.body;
+      console.log('📄 Update data:', JSON.stringify(updateData, null, 2));
       
       // Get the ride to check permissions
       const existingRide = await rideService.getRideById(id);
@@ -357,6 +365,9 @@ export const rideController = {
       if (!existingRide) {
         throw new AppError('Ride not found', 404);
       }
+
+      const driverId = req.headers['x-jwt-claim-sub'] as string;
+      updateData.driverId = driverId;
       
       // Check if user has permission to update this ride
       // Allow customer, assigned driver, or admin
@@ -378,25 +389,25 @@ export const rideController = {
       
       // If status was changed, publish event
       if (updateData.status && previousStatus !== updateData.status) {
-        await kafkaService.publishRideStatusUpdated(updatedRide, previousStatus);
+        //await kafkaService.publishRideStatusUpdated(updatedRide, previousStatus);
         
         // Additional notifications based on status
         switch(updateData.status) {
           case 'ACCEPTED':
             if (updatedRide.driverId) {
-              await kafkaService.publishDriverAssigned(updatedRide);
+              //await kafkaService.publishDriverAssigned(updatedRide);
               webSocketService.notifyRideAccepted(updatedRide, updatedRide.customerId);
             }
             break;
           case 'COMPLETED':
             webSocketService.notifyRideCompleted(updatedRide, updatedRide.customerId);
-            await kafkaService.publishRideCompleted(updatedRide);
+            //await kafkaService.publishRideCompleted(updatedRide);
             break;
           case 'CANCELLED':
             if (updatedRide.driverId) {
               webSocketService.notifyRideCancellation(updatedRide, updatedRide.driverId);
             }
-            await kafkaService.publishRideCancelled(updatedRide);
+            //await kafkaService.publishRideCancelled(updatedRide);
             break;
         }
       }
