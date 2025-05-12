@@ -180,3 +180,18 @@ export const login = async (req: Request<{}, {}, LoginInput>, res: Response, nex
         next(error);
     }
 };
+
+export const generateAllRolesTokenEndpoint = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        // Placeholder logic for generating a token for all roles
+        const roles = ['CUSTOMER', 'DRIVER', 'ADMIN']; // Example roles
+        const token = TokenService.generateAccessToken({
+            userId: 'example-user-id',
+            userType: 'ADMIN' // Use a valid userType for token generation
+        });
+
+        res.status(200).json({ token });
+    } catch (error) {
+        next(error);
+    }
+};
