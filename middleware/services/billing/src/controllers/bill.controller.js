@@ -24,22 +24,34 @@ const createBill = async (req, res) => {
     } = req.body;
     
     // Check required fields
-    if (!rideId || !customerId || !driverId || !date || !pickupTime || !dropoffTime || 
-        !distanceCovered || !sourceLocation || !destinationLocation || 
-        !predictedAmount || !actualAmount) {
+    const missingFields = [];
+    if (!rideId) missingFields.push('rideId');
+    if (!customerId) missingFields.push('customerId');
+    if (!driverId) missingFields.push('driverId');
+    if (!date) missingFields.push('date');
+    if (!pickupTime) missingFields.push('pickupTime');
+    if (!dropoffTime) missingFields.push('dropoffTime');
+    if (!distanceCovered && distanceCovered !== 0) missingFields.push('distanceCovered');
+    if (!sourceLocation) missingFields.push('sourceLocation');
+    if (!destinationLocation) missingFields.push('destinationLocation');
+    if (!predictedAmount && predictedAmount !== 0) missingFields.push('predictedAmount');
+    if (!actualAmount && actualAmount !== 0) missingFields.push('actualAmount');
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
-        error: 'missing_required_field',
-        message: 'Missing required fields'
+      error: 'missing_required_field',
+      message: `Missing required field(s): ${missingFields.join(', ')}`,
+      missingFields
       });
     }
     
     // Validate ID formats
-    if (!SSNGenerator.validate(rideId)) {
-      return res.status(400).json({
-        error: 'invalid_id_format',
-        message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
-      });
-    }
+    // if (!SSNGenerator.validate(rideId)) {
+    //   return res.status(400).json({
+    //     error: 'invalid_id_format',
+    //     message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
+    //   });
+    // }
     
     if (!SSNGenerator.validate(customerId)) {
       return res.status(400).json({
@@ -54,13 +66,15 @@ const createBill = async (req, res) => {
         message: 'Invalid driver ID format. Must be in SSN format (xxx-xx-xxxx)'
       });
     }
+
+    
     
     // Validate location coordinates
-    if (!sourceLocation.latitude || !sourceLocation.longitude ||
-        !destinationLocation.latitude || !destinationLocation.longitude) {
+    if (!sourceLocation || !sourceLocation.coordinates || !Array.isArray(sourceLocation.coordinates) || sourceLocation.coordinates.length !== 2 ||
+        !destinationLocation || !destinationLocation.coordinates || !Array.isArray(destinationLocation.coordinates) || destinationLocation.coordinates.length !== 2) {
       return res.status(400).json({
         error: 'invalid_input',
-        message: 'Source and destination locations must include latitude and longitude'
+        message: 'Source and destination locations must be GeoJSON Points with a coordinates array [longitude, latitude]'
       });
     }
     
