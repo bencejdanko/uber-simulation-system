@@ -1,0 +1,63 @@
+{
+    "family": "admin-service",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::982081080014:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "admin-service",
+            "image": "982081080014.dkr.ecr.us-west-2.amazonaws.com/uber-simulation-admin-service:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "PORT",
+                    "value": "3000"
+                },
+                {
+                    "name": "MONGODB_URI",
+                    "value": "mongodb+srv://nairuiliu:GM1x6CHU2EIEEEYT@cluster236.4ozrrvt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster236"
+                },
+                {
+                    "name": "REDIS_HOST",
+                    "value": "172.31.12.251"
+                },
+                {
+                    "name": "REDIS_PORT",
+                    "value": "6379"
+                },
+                {
+                    "name": "REDIS_DB",
+                    "value": "0"
+                },
+                {
+                    "name": "KAFKA_BROKERS",
+                    "value": "172.31.0.137:29092"
+                },
+                {
+                    "name": "KAFKA_CLIENT_ID",
+                    "value": "admin-service-consumer"
+                },
+                {
+                    "name": "KAFKA_USER_REGISTERED_TOPIC",
+                    "value": "user-created"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/admin-service",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

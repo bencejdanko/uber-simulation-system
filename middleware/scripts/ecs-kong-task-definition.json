@@ -1,0 +1,25 @@
+{
+    "family": "kong",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "containerDefinitions": [
+        {
+            "name": "kong",
+            "image": "<ECR_REPOSITORY_URI>/kong:latest",
+            "essential": true,
+            "portMappings": [],
+            "environment": [
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/kong",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

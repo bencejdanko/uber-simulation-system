@@ -1,0 +1,79 @@
+{
+    "family": "auth-service",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::982081080014:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::982081080014:role/ecsTaskRole",
+    "containerDefinitions": [
+        {
+            "name": "auth-service",
+            "image": "982081080014.dkr.ecr.us-west-2.amazonaws.com/uber-simulation-auth-service:latest",
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "KAFKA_CLIENT_ID",
+                    "value": "auth-service-producer"
+                },
+                {
+                    "name": "BCRYPT_SALT_ROUNDS",
+                    "value": "10"
+                },
+                {
+                    "name": "PORT",
+                    "value": "3000"
+                },
+                {
+                    "name": "ACCESS_TOKEN_LIFE",
+                    "value": "60m"
+                },
+                {
+                    "name": "JWT_ISSUER",
+                    "value": "https://my-auth-service.com"
+                },
+                {
+                    "name": "ACCESS_TOKEN_KID",
+                    "value": "auth-service-key-1"
+                },
+                {
+                    "name": "MONGODB_URI",
+                    "value": "mongodb+srv://nairuiliu:GM1x6CHU2EIEEEYT@cluster236.4ozrrvt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster236"
+                },
+                {
+                    "name": "KAFKA_BROKERS",
+                    "value": "kafka-broker:29092"
+                },
+                {
+                    "name": "KAFKA_USER_REGISTERED_TOPIC",
+                    "value": "userregistered"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "ACCESS_TOKEN_PRIVATE_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:982081080014:secret:auth-service/private-key-Hsqf1j"
+                },
+                {
+                    "name": "ACCESS_TOKEN_PUBLIC_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:982081080014:secret:auth-service/public-key-f0I9WL"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/auth-service",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

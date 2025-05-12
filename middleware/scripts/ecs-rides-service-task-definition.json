@@ -1,0 +1,67 @@
+{
+    "family": "rides-service",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::982081080014:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "rides-service",
+            "image": "982081080014.dkr.ecr.us-west-2.amazonaws.com/uber-simulation-rides-service:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "PORT",
+                    "value": "3000"
+                },
+                {
+                    "name": "MONGODB_URI",
+                    "value": "mongodb+srv://nairuiliu:GM1x6CHU2EIEEEYT@cluster236.4ozrrvt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster236"
+                },
+                {
+                    "name": "KAFKA_BROKERS",
+                    "value": "kafka-broker:29092"
+                },
+                {
+                    "name": "KAFKA_CLIENT_ID",
+                    "value": "rides-service"
+                },
+                {
+                    "name": "KAFKA_RIDE_REQUESTED_TOPIC",
+                    "value": "ride-requested"
+                },
+                {
+                    "name": "KAFKA_RIDE_ACCEPTED_TOPIC",
+                    "value": "ride-accepted"
+                },
+                {
+                    "name": "KAFKA_RIDE_STARTED_TOPIC",
+                    "value": "ride-started"
+                },
+                {
+                    "name": "KAFKA_RIDE_COMPLETED_TOPIC",
+                    "value": "ride-completed"
+                },
+                {
+                    "name": "KAFKA_RIDE_CANCELLED_TOPIC",
+                    "value": "ride-cancelled"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/rides-service",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

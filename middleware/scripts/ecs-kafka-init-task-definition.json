@@ -1,0 +1,42 @@
+{
+    "family": "kafka-init",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::982081080014:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::982081080014:role/ecsTaskRole",
+    "containerDefinitions": [
+        {
+            "name": "kafka-init",
+            "image": "982081080014.dkr.ecr.us-west-2.amazonaws.com/kafka-init:latest",
+            "essential": true,
+            "environment": [
+                {
+                    "name": "KAFKA_BOOTSTRAP_SERVER",
+                    "value": "kafka-broker:9092"
+                },
+                {
+                    "name": "KAFKA_CREATE_TOPICS",
+                    "value": "userregistered:3:1,driver_location_updates:3:1,ride-completed:3:1"
+                },
+                {
+                    "name": "KAFKA_MAX_RETRIES",
+                    "value": "12"
+                },
+                {
+                    "name": "KAFKA_RETRY_INTERVAL",
+                    "value": "5"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/kafka-init",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+} 

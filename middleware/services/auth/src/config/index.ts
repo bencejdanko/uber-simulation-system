@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { z } from 'zod';
 
 // Define schema for environment variables for validation
@@ -7,8 +5,8 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     MONGODB_URI: z.string().url(),
-    ACCESS_TOKEN_PRIVATE_KEY_PATH: z.string(),
-    ACCESS_TOKEN_PUBLIC_KEY_PATH: z.string(),
+    ACCESS_TOKEN_PRIVATE_KEY: z.string(),
+    ACCESS_TOKEN_PUBLIC_KEY: z.string(),
     ACCESS_TOKEN_LIFE: z.string().default('60m'),
     ACCESS_TOKEN_KID: z.string(),
     JWT_ISSUER: z.string().url(),
@@ -17,18 +15,6 @@ const envSchema = z.object({
     KAFKA_USER_REGISTERED_TOPIC: z.string().default('user.registered'),
     BCRYPT_SALT_ROUNDS: z.coerce.number().default(10),
 });
-
-// Helper function to read key files
-const readKeyFile = (filePath: string): string => {
-    try {
-        // Resolve path relative to project root (assuming config is called from project root)
-        const absolutePath = path.resolve(process.cwd(), filePath);
-        return fs.readFileSync(absolutePath, 'utf-8');
-    } catch (error) {
-        console.error(`Error reading key file at ${filePath}:`, error);
-        process.exit(1); // Exit if keys are essential and missing
-    }
-};
 
 // Validate environment variables
 const parsedEnv = envSchema.safeParse(process.env);
@@ -40,10 +26,6 @@ if (!parsedEnv.success) {
 
 const env = parsedEnv.data;
 
-// Read keys from files specified in validated env vars
-const accessTokenPrivateKey = readKeyFile(env.ACCESS_TOKEN_PRIVATE_KEY_PATH);
-const accessTokenPublicKey = readKeyFile(env.ACCESS_TOKEN_PUBLIC_KEY_PATH);
-
 // Export typed config object
 const config = {
     env: env.NODE_ENV,
@@ -52,8 +34,8 @@ const config = {
         uri: env.MONGODB_URI,
     },
     jwt: {
-        accessTokenPrivateKey: accessTokenPrivateKey,
-        accessTokenPublicKey: accessTokenPublicKey,
+        accessTokenPrivateKey: env.ACCESS_TOKEN_PRIVATE_KEY,
+        accessTokenPublicKey: env.ACCESS_TOKEN_PUBLIC_KEY,
         accessTokenLife: env.ACCESS_TOKEN_LIFE,
         accessTokenKid: env.ACCESS_TOKEN_KID,
         issuer: env.JWT_ISSUER,
@@ -69,5 +51,5 @@ const config = {
     },
 } as const; // Use 'as const' for stronger type inference
 
-export type AppConfig = typeof config; // Export type for usage elsewhere
+export type AppConfig = typeof config;
 export default config;

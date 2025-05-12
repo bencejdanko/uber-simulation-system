@@ -1,0 +1,63 @@
+{
+    "family": "driver-service",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512",
+    "executionRoleArn": "arn:aws:iam::982081080014:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "driver-service",
+            "image": "982081080014.dkr.ecr.us-west-2.amazonaws.com/uber-simulation-driver-service:latest",
+            "essential": true,
+            "portMappings": [
+                {
+                    "containerPort": 3001,
+                    "protocol": "tcp"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "PORT",
+                    "value": "3001"
+                },
+                {
+                    "name": "KAFKA_BROKERS",
+                    "value": "kafka-broker:29092"
+                },
+                {
+                    "name": "KAFKA_CLIENT_ID",
+                    "value": "driver-service-consumer"
+                },
+                {
+                    "name": "KAFKA_LOCATION_UPDATES_TOPIC",
+                    "value": "driver-location-updates"
+                },
+                {
+                    "name": "MONGODB_URI",
+                    "value": "mongodb+srv://nairuiliu:GM1x6CHU2EIEEEYT@cluster236.4ozrrvt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster236"
+                },
+                {
+                    "name": "REDIS_URL",
+                    "value": "redis://redis-service:6379"
+                },
+                {
+                    "name": "DRIVER_SERVICE_CACHE_ENABLED",
+                    "value": "true"
+                },
+                {
+                    "name": "KAFKA_ENABLED",
+                    "value": "true"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/driver-service",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

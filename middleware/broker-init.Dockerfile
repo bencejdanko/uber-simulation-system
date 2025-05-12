@@ -1,12 +1,13 @@
-# Use a base image that has shell and Kafka client tools
-FROM apache/kafka:latest
+# Use Bitnami's Kafka image as base
+FROM bitnami/kafka:3.5
+
+USER root
+COPY broker-init.sh /app/broker-init.sh
+RUN chmod +x /app/broker-init.sh
+USER 1001
 
 # Set the working directory
-WORKDIR /opt/kafka
+WORKDIR /opt/bitnami/kafka
 
-# Copy the script from the build context into the image
-# Ensure the script has execute permissions
-COPY broker-init.sh /opt/kafka/broker-init.sh
-# RUN chmod +x /opt/kafka/broker-init.sh
-
-# The entrypoint will be set in docker-compose.yml to run this script
+# Set the entrypoint to our initialization script
+ENTRYPOINT ["/app/broker-init.sh"]
