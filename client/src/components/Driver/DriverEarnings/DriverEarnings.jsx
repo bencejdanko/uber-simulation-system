@@ -1,50 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverEarnings.css';
+import { useGetBillsByDriverQuery } from '../../../api/apiSlice';
 
-const DriverEarnings = () => {
+const DriverEarnings = ({ userId }) => {
   const navigate = useNavigate();
-
-  const [billingRecords, setBillingRecords] = useState([
-    {
-      id: 'B123-45-6789',
-      rideId: 'R123-45-6789',
-      date: '2025-04-15',
-      amount: '$25.00',
-      paymentStatus: 'Paid',
-    },
-    {
-      id: 'B123-45-6790',
-      rideId: 'R123-45-6790',
-      date: '2025-04-14',
-      amount: '$18.75',
-      paymentStatus: 'Pending',
-    },
-    {
-      id: 'B123-45-6791',
-      rideId: 'R123-45-6791',
-      date: '2025-04-13',
-      amount: '$0.00',
-      paymentStatus: 'Failed',
-    },
-  ]);
-
   const [filterStatus, setFilterStatus] = useState('');
+  const [billingRecords, setBillingRecords] = useState([]);
+
+  // Fetch billing records for the driver
+  const { data: billsData, isLoading, error } = useGetBillsByDriverQuery(userId);
+
+  useEffect(() => {
+    if (billsData) {
+      const formattedRecords = billsData.map((bill) => ({
+        id: bill.billingId,
+        rideId: bill.rideId,
+        date: new Date(bill.date).toLocaleDateString(),
+        amount: bill.actualAmount !== undefined ? `$${bill.actualAmount.toFixed(2)}` : 'N/A',
+        paymentStatus: bill.paymentStatus,
+        // Add more fields if needed for display
+      }));
+      setBillingRecords(formattedRecords);
+    }
+  }, [billsData]);
 
   const handleDownloadReceipt = (billingId) => {
     console.log(`Downloading receipt for billing ID: ${billingId}`);
     // Logic to download the receipt can be added here
-  };
-
-  const handleCancelPendingRide = (billingId) => {
-    setBillingRecords((prevRecords) =>
-      prevRecords.map((record) =>
-        record.id === billingId && record.paymentStatus === 'Pending'
-          ? { ...record, paymentStatus: 'Cancelled' }
-          : record
-      )
-    );
-    console.log(`Cancelled pending ride with billing ID: ${billingId}`);
   };
 
   const filteredBillingRecords = billingRecords.filter(
@@ -73,8 +56,12 @@ const DriverEarnings = () => {
             <option value="Pending">Pending</option>
             <option value="Failed">Failed</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="VOID">Void</option>
           </select>
         </div>
+
+        {isLoading && <p>Loading billing records...</p>}
+        {error && <p className="error-message">Error loading billing records: {error.message || 'Unknown error'}</p>}
 
         <table className="billing-table">
           <thead>
@@ -88,6 +75,11 @@ const DriverEarnings = () => {
             </tr>
           </thead>
           <tbody>
+            {filteredBillingRecords.length === 0 && !isLoading && (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center' }}>No billing records found.</td>
+              </tr>
+            )}
             {filteredBillingRecords.map((record) => (
               <tr key={record.id}>
                 <td>{record.id}</td>
@@ -100,21 +92,12 @@ const DriverEarnings = () => {
                   </span>
                 </td>
                 <td>
-                  {record.paymentStatus === 'Pending' ? (
-                    <button
-                      onClick={() => handleCancelPendingRide(record.id)}
-                      className="cancel-button"
-                    >
-                      Cancel Ride
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleDownloadReceipt(record.id)}
-                      className="download-button"
-                    >
-                      Download Receipt
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDownloadReceipt(record.id)}
+                    className="download-button"
+                  >
+                    Download Receipt
+                  </button>
                 </td>
               </tr>
             ))}
