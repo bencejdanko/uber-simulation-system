@@ -16,8 +16,6 @@ export const createRideSchema = z.object({
   vehicleType: z.enum(['STANDARD', 'PREMIUM', 'LUXURY']).optional(),
   paymentMethod: z.enum(['CREDIT_CARD', 'CASH']).optional(),
   customerId: z.string(), // injected from req.user.sub
-  estimatedFare: z.number().positive().optional(),
-  actualFare: z.number().positive().optional(),
 });
 
 // PUT /rides/:id/status — Update Ride Status

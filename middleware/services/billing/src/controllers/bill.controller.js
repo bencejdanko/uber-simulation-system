@@ -24,34 +24,22 @@ const createBill = async (req, res) => {
     } = req.body;
     
     // Check required fields
-    const missingFields = [];
-    if (!rideId) missingFields.push('rideId');
-    if (!customerId) missingFields.push('customerId');
-    if (!driverId) missingFields.push('driverId');
-    if (!date) missingFields.push('date');
-    if (!pickupTime) missingFields.push('pickupTime');
-    if (!dropoffTime) missingFields.push('dropoffTime');
-    if (!distanceCovered && distanceCovered !== 0) missingFields.push('distanceCovered');
-    if (!sourceLocation) missingFields.push('sourceLocation');
-    if (!destinationLocation) missingFields.push('destinationLocation');
-    if (!predictedAmount && predictedAmount !== 0) missingFields.push('predictedAmount');
-    if (!actualAmount && actualAmount !== 0) missingFields.push('actualAmount');
-
-    if (missingFields.length > 0) {
+    if (!rideId || !customerId || !driverId || !date || !pickupTime || !dropoffTime || 
+        !distanceCovered || !sourceLocation || !destinationLocation || 
+        !predictedAmount || !actualAmount) {
       return res.status(400).json({
-      error: 'missing_required_field',
-      message: `Missing required field(s): ${missingFields.join(', ')}`,
-      missingFields
+        error: 'missing_required_field',
+        message: 'Missing required fields'
       });
     }
     
     // Validate ID formats
-    // if (!SSNGenerator.validate(rideId)) {
-    //   return res.status(400).json({
-    //     error: 'invalid_id_format',
-    //     message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
-    //   });
-    // }
+    if (!SSNGenerator.validate(rideId)) {
+      return res.status(400).json({
+        error: 'invalid_id_format',
+        message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
+      });
+    }
     
     if (!SSNGenerator.validate(customerId)) {
       return res.status(400).json({
@@ -66,15 +54,13 @@ const createBill = async (req, res) => {
         message: 'Invalid driver ID format. Must be in SSN format (xxx-xx-xxxx)'
       });
     }
-
-    
     
     // Validate location coordinates
-    if (!sourceLocation || !sourceLocation.coordinates || !Array.isArray(sourceLocation.coordinates) || sourceLocation.coordinates.length !== 2 ||
-        !destinationLocation || !destinationLocation.coordinates || !Array.isArray(destinationLocation.coordinates) || destinationLocation.coordinates.length !== 2) {
+    if (!sourceLocation.latitude || !sourceLocation.longitude ||
+        !destinationLocation.latitude || !destinationLocation.longitude) {
       return res.status(400).json({
         error: 'invalid_input',
-        message: 'Source and destination locations must be GeoJSON Points with a coordinates array [longitude, latitude]'
+        message: 'Source and destination locations must include latitude and longitude'
       });
     }
     
@@ -197,20 +183,20 @@ const searchBills = async (req, res) => {
       });
     }
     
-    // if (ride_id && !SSNGenerator.validate(ride_id)) {
-    //   return res.status(400).json({
-    //     error: 'invalid_id_format',
-    //     message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
-    //   });
-    // }
+    if (ride_id && !SSNGenerator.validate(ride_id)) {
+      return res.status(400).json({
+        error: 'invalid_id_format',
+        message: 'Invalid ride ID format. Must be in SSN format (xxx-xx-xxxx)'
+      });
+    }
     
     // Validate payment status if provided
-    // if (payment_status && !['PENDING', 'PAID', 'FAILED', 'VOID'].includes(payment_status)) {
-    //   return res.status(400).json({
-    //     error: 'invalid_payment_status',
-    //     message: 'Invalid payment status. Must be one of: PENDING, PAID, FAILED, VOID'
-    //   });
-    // }
+    if (payment_status && !['PENDING', 'PAID', 'FAILED', 'VOID'].includes(payment_status)) {
+      return res.status(400).json({
+        error: 'invalid_payment_status',
+        message: 'Invalid payment status. Must be one of: PENDING, PAID, FAILED, VOID'
+      });
+    }
     
     // Validate date formats if provided
     if (start_date && isNaN(Date.parse(start_date))) {

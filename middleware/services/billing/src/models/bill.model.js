@@ -12,7 +12,7 @@ const BillSchema = new Schema({
   rideId: {
     type: String,
     required: true,
-    //match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
+    match: /^\d{3}-\d{2}-\d{4}$/, // SSN Format validation
     index: true
   },
   customerId: {
@@ -45,38 +45,32 @@ const BillSchema = new Schema({
     min: 0
   },
   sourceLocation: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: true
-    },
-    coordinates: {
-      type: [Number],
+    latitude: {
+      type: Number,
       required: true,
-      validate: {
-        validator: function(v) {
-          return Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number';
-        },
-        message: props => `${props.value} is not a valid longitude/latitude coordinates array!`
-      }
+      min: -90,
+      max: 90
+    },
+    longitude: {
+      type: Number,
+      required: true,
+      min: -180,
+      max: 180
     },
     addressLine: String
   },
   destinationLocation: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      required: true
-    },
-    coordinates: {
-      type: [Number],
+    latitude: {
+      type: Number,
       required: true,
-      validate: {
-        validator: function(v) {
-          return Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number';
-        },
-        message: props => `${props.value} is not a valid longitude/latitude coordinates array!`
-      }
+      min: -90,
+      max: 90
+    },
+    longitude: {
+      type: Number,
+      required: true,
+      min: -180,
+      max: 180
     },
     addressLine: String
   },
@@ -128,9 +122,8 @@ const BillSchema = new Schema({
 // Create indexes for efficient querying
 BillSchema.index({ date: 1 });
 BillSchema.index({ paymentStatus: 1 });
-// Update geospatial indexes to use 2dsphere for GeoJSON Point
-BillSchema.index({ sourceLocation: '2dsphere' });
-BillSchema.index({ destinationLocation: '2dsphere' });
+BillSchema.index({ 'sourceLocation.latitude': 1, 'sourceLocation.longitude': 1 });
+BillSchema.index({ 'destinationLocation.latitude': 1, 'destinationLocation.longitude': 1 });
 
 // Pre-save middleware to update the updatedAt field
 BillSchema.pre('save', function(next) {
