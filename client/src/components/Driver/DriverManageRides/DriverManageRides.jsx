@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUpdateRideMutation, useSearchRidesQuery } from '../../../api/apiSlice';
+import { useUpdateRideMutation, useSearchRidesQuery, useCreateBillMutation } from '../../../api/apiSlice';
 import './DriverManageRides.css';
 
 const DriverManageRides = ({ userId }) => {
@@ -8,6 +8,7 @@ const DriverManageRides = ({ userId }) => {
   const [filterStatus, setFilterStatus] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [updateRide, { isLoading: isUpdating, error: updateError }] = useUpdateRideMutation();
+  const [createBill, { isLoading: isCreatingBill, error: createBillError }] = useCreateBillMutation();
   
   // Fetch rides assigned to the current driver
   const { data: ridesData, isLoading, error } = useSearchRidesQuery({ 
@@ -31,6 +32,8 @@ const DriverManageRides = ({ userId }) => {
         dateTime: new Date(ride.createdAt).toLocaleString(),
         status: ride.status,
         fare: ride.estimatedFare ? `$${ride.estimatedFare.toFixed(2)}` : 'N/A',
+        // Store the original ride data for bill creation
+        originalData: ride
       }));
       setRides(formattedRides);
     }
@@ -123,7 +126,7 @@ const DriverManageRides = ({ userId }) => {
   const handleUpdateRideStatus = async (rideId, newStatus) => {
     try {
       // Call the API to update the ride status
-      await updateRide({
+      const updatedRide = await updateRide({
         id: rideId,
         status: newStatus
       }).unwrap();
@@ -135,8 +138,47 @@ const DriverManageRides = ({ userId }) => {
         )
       );
       console.log(`Ride ${rideId} status updated to ${newStatus}.`);
+      
+      // If the ride is completed, create a bill
+      if (newStatus === 'COMPLETED') {
+        // Find the ride in the local state to get the original data
+        const completedRide = rides.find(ride => ride.id === rideId);
+        
+        if (completedRide && completedRide.originalData) {
+          // Prepare bill data
+          const originalRide = completedRide.originalData;
+          const billData = {
+            rideId: rideId,
+            customerId: originalRide.customerId,
+            driverId: userId,
+            date: new Date().toISOString(),
+            pickupTime: originalRide.pickupTime || originalRide.createdAt,
+            dropoffTime: new Date().toISOString(),
+            distanceCovered: originalRide.distance || 0,
+            sourceLocation: originalRide.pickupLocation,
+            destinationLocation: originalRide.dropoffLocation,
+            predictedAmount: originalRide.estimatedFare || 0,
+            actualAmount: originalRide.estimatedFare || 0 // Using estimated fare as actual amount for now
+          };
+          
+          console.log('Creating bill with data:', billData);
+          
+          // Call the API to create a bill
+          const billResult = await createBill(billData).unwrap();
+          console.log('Bill created successfully:', billResult);
+        } else {
+          console.error('Could not create bill: Missing ride data');
+        }
+      }
     } catch (error) {
       console.error(`Failed to update ride to ${newStatus}:`, error);
+      if (error.data) {
+        setErrorMessage(error.data.message || `Failed to update ride to ${newStatus}`);
+      } else if (error.status) {
+        setErrorMessage(`Server error (${error.status}): Failed to update ride`);
+      } else {
+        setErrorMessage(`Failed to update ride to ${newStatus}. Please try again.`);
+      }
     }
   };
 
@@ -173,6 +215,7 @@ const DriverManageRides = ({ userId }) => {
         {isLoading && <p>Loading rides...</p>}
         {error && <p className="error-message">Error loading rides: {error.toString()}</p>}
         {updateError && <p className="error-message">Error updating ride: {updateError.toString()}</p>}
+        {createBillError && <p className="error-message">Error creating bill: {createBillError.toString()}</p>}
         {errorMessage && <p className="error-message">{errorMessage}</p>}
 
         <table className="rides-table">
