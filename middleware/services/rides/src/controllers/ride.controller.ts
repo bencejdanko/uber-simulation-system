@@ -30,7 +30,7 @@ export const rideController = {
       const ride = await rideService.createRide(rideData);
 
       // Publish ride requested event
-      await kafkaService.publishRideRequested(ride);
+      // await kafkaService.publishRideRequested(ride);
 
       // Find and notify nearby drivers using cached locations
       const nearbyDrivers = await rideService.findNearbyDrivers(
@@ -118,13 +118,13 @@ export const rideController = {
         throw new AppError('Authentication required', 401);
       }
 
-      const { rideId } = req.params;
+      const { id: rideId } = req.params;
       const { reason } = req.body;
 
       // Get ride from cache or database
       const ride = await rideService.getRideById(rideId);
       if (!ride) {
-        throw new AppError('Ride not found', 404);
+        throw new AppError('[controller.cancelRide]: Ride not found', 404);
       }
 
       // Check if user has permission to cancel this ride
@@ -140,8 +140,9 @@ export const rideController = {
         throw new AppError('Failed to cancel ride', 500);
       }
 
+
       // Publish ride cancelled event
-      await kafkaService.publishRideCancelled(updatedRide, reason);
+      // await kafkaService.publishRideCancelled(updatedRide, reason);
 
       // Notify driver if assigned
       if (updatedRide.driverId) {

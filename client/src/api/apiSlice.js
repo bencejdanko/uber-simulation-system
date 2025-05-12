@@ -74,7 +74,7 @@ export const apiSlice = createApi({
         result?.rides
           ? [
               ...result.rides.map(({ _id }) => ({ type: 'Ride', id: _id })),
-              { type: 'Ride', id: 'LIST_REQUESTED' }, // Specific tag for this search
+              { type: 'Ride', id: 'LIST_REQUESTED' }, // Specific tag for this asearch
             ]
           : [{ type: 'Ride', id: 'LIST_REQUESTED' }],
     }),
@@ -86,8 +86,12 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Ride', id }, { type: 'Ride', id: 'LIST_REQUESTED' }], // Invalidate the list of requested rides
     }),
-    cancelRide: builder.mutation({ 
-      query: (id) => ({ url: `/rides/${id}`, method: 'DELETE' }),
+    cancelRide: builder.mutation({
+      query: (id) => ({ // id is the rideId
+        url: `/rides/${id}/cancel`,
+        method: 'POST',
+        body: {} // Send an empty object as the body, as 'reason' is optional
+      }),
       invalidatesTags: (result, error, id) => [{ type: 'Ride', id }, { type: 'Ride', id: 'LIST_REQUESTED' }],
     }),
 
