@@ -52,13 +52,13 @@ services:
 
   - name: admin-service
     url: http://admin-service:3000
-    plugins:
-      - name: jwt
-        config:
-          key_claim_name: iss       # Look for the 'iss' claim in the JWT
-          claims_to_verify:       # Verify standard claims
-            - exp                 # Check token expiry
-          run_on_preflight: true
+    # plugins:
+    #   - name: jwt
+    #     config:
+    #       key_claim_name: iss       # Look for the 'iss' claim in the JWT
+    #       claims_to_verify:       # Verify standard claims
+    #         - exp                 # Check token expiry
+    #       run_on_preflight: true
     routes:
       - name: admin-routes
         paths:

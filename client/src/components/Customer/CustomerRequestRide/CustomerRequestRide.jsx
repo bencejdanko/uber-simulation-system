@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useRequestRideMutation, useGetEstimatedFareQuery } from '../../../api/apiSlice';
+import {
+  useRequestRideMutation,
+  useGetEstimatedFareQuery,
+  useSearchRidesQuery, // Changed from useGetRidesByCustomerQuery
+  useCancelRideMutation,
+} from '../../../api/apiSlice';
 import LocationSelection from './LocationSelection';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 import useCustomerAuth from '../../../hooks/useCustomerAuth';
@@ -72,12 +77,24 @@ const getPaymentMethodForServer = (frontendPaymentMethod) => {
   return undefined; // Or a default if needed, but schema says optional
 };
 
-const CustomerRequestRide = () => {
+const CustomerRequestRide = ({ userId: propUserId }) => {
   const navigate = useNavigate();
   const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
   const [requestRide, { isLoading: isRequestingRide, error: rideRequestError }] = useRequestRideMutation();
+  const [cancelExistingRideMutation, { isLoading: isCancellingRide, error: cancelRideError }] = useCancelRideMutation();
 
-  // Call useJsApiLoader at the top level
+  // Fetch existing rides for the customer
+  const {
+    data: customerRidesData,
+    isLoading: isLoadingCustomerRides,
+    error: customerRidesError,
+    refetch: refetchCustomerRides,
+  } = useSearchRidesQuery({ customerId: userId }, { // Changed to useSearchRidesQuery
+    skip: !userId || !authChecked,
+  });
+
+  const [existingActiveRide, setExistingActiveRide] = useState(null);
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: GOOGLE_MAP_SCRIPT_ID,
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -104,21 +121,20 @@ const CustomerRequestRide = () => {
   ]);
   const [error, setError] = useState('');
   const [rideStatus, setRideStatus] = useState('');
-  const [distance, setDistance] = useState(''); // State to store the calculated distance
-  const [estimatedFare, setEstimatedFare] = useState(null); // State for estimated fare
-  const [skipFareQuery, setSkipFareQuery] = useState(true); // State to control skipping of fare query
+  const [distance, setDistance] = useState('');
+  const [estimatedFare, setEstimatedFare] = useState(null);
+  const [skipFareQuery, setSkipFareQuery] = useState(true);
 
   const [map, setMap] = useState(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [mapZoom, setMapZoom] = useState(10);
 
-  // Prepare parameters for the fare query
   const vehicleTypeForFare = getVehicleTypeForServer(selectedRide);
   const {
     data: fareData,
     isLoading: isFareLoading,
     error: fareError,
-    refetch: refetchFare // To manually refetch if needed
+    refetch: refetchFare
   } = useGetEstimatedFareQuery(
     {
       pickupLat: locations.pickup?.lat,
@@ -127,8 +143,19 @@ const CustomerRequestRide = () => {
       dropoffLng: locations.dropoff?.lng,
       vehicleType: vehicleTypeForFare,
     },
-    { skip: skipFareQuery } // Skip initially and when parameters are not ready
+    { skip: skipFareQuery }
   );
+
+  useEffect(() => {
+    if (customerRidesData && Array.isArray(customerRidesData.rides)) {
+      const activeRide = customerRidesData.rides.find(
+        (ride) => ride.status === 'REQUESTED' || ride.status === 'PENDING'
+      );
+      setExistingActiveRide(activeRide || null);
+    } else {
+      setExistingActiveRide(null);
+    }
+  }, [customerRidesData]);
 
   const onLoad = useCallback(function callback(mapInstance) {
     setMap(mapInstance);
@@ -164,7 +191,7 @@ const CustomerRequestRide = () => {
         });
       }
     } else {
-      setDistance(''); // Clear distance if not all points are set
+      setDistance('');
       if (locations.pickup?.lat && locations.pickup?.lng) {
         setMapCenter({ lat: locations.pickup.lat, lng: locations.pickup.lng });
         setMapZoom(15);
@@ -176,9 +203,8 @@ const CustomerRequestRide = () => {
         setMapZoom(10);
       }
     }
-  }, [locations, map, isLoaded]); // Added isLoaded here as map operations might depend on it
+  }, [locations, map, isLoaded]);
 
-  // Effect to control fare query skipping and update estimated fare
   useEffect(() => {
     if (
       locations.pickup?.lat &&
@@ -186,46 +212,37 @@ const CustomerRequestRide = () => {
       locations.dropoff?.lat &&
       locations.dropoff?.lng &&
       selectedRide &&
-      getVehicleTypeForServer(selectedRide) // Ensure vehicle type is valid for server
+      getVehicleTypeForServer(selectedRide)
     ) {
-      setSkipFareQuery(false); // Enable the query
+      setSkipFareQuery(false);
     } else {
-      setSkipFareQuery(true); // Disable the query
-      setEstimatedFare(null); // Reset fare if inputs are incomplete
+      setSkipFareQuery(true);
+      setEstimatedFare(null);
     }
   }, [locations.pickup, locations.dropoff, selectedRide]);
 
   useEffect(() => {
     if (fareData) {
-      console.log('Full fareData response:', fareData); // Added for detailed debugging
+      console.log('Full fareData response:', fareData);
       if (typeof fareData.fare === 'number') {
         setEstimatedFare(fareData.fare);
       } else {
-        // fareData is present, but estimatedFare is not a number (or missing)
-        setEstimatedFare(null); // Set to null to prevent .toFixed errors
+        setEstimatedFare(null);
         if (fareData.hasOwnProperty('estimatedFare')) {
-          // If the key exists but value is not a number
           console.warn(
             `Estimated fare data received, but 'estimatedFare' is not a number:`,
             fareData.estimatedFare
           );
         } else {
-          // If the key 'estimatedFare' is missing from fareData
           console.warn(
             "Estimated fare data received, but 'estimatedFare' field is missing."
           );
         }
       }
     } else if (!isFareLoading && !skipFareQuery && !fareError) {
-      // If no fareData, not loading, query was attempted, and no error reported by the hook,
-      // it implies a successful response with no data or an issue not caught as an error.
-      // Ensure estimatedFare is null.
       setEstimatedFare(null);
     }
-    // If skipFareQuery is true, another useEffect handles setting estimatedFare to null.
-    // If isFareLoading is true, we wait for data or error.
-    // If fareError is true, we expect fareError object to be populated and handled by UI.
-  }, [fareData, isFareLoading, skipFareQuery, fareError]); // Added fareError to dependencies
+  }, [fareData, isFareLoading, skipFareQuery, fareError]);
 
   const handleLocationSelect = (newLocationsUpdater) => {
     if (typeof newLocationsUpdater === 'function') {
@@ -234,11 +251,6 @@ const CustomerRequestRide = () => {
       setLocations(newLocationsUpdater);
     }
   };
-
-  useEffect(() => {
-    // This useEffect is just for logging, can be removed
-    // console.log('Locations state updated in CustomerRequestRide:', locations);
-  }, [locations]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -261,16 +273,15 @@ const CustomerRequestRide = () => {
     setError('');
 
     try {
-      // Transform data to match server schema
       const rideDataForServer = {
         customerId: userId,
         pickupLocation: {
           type: 'Point',
-          coordinates: [locations.pickup.lng, locations.pickup.lat], // [longitude, latitude]
+          coordinates: [locations.pickup.lng, locations.pickup.lat],
         },
         dropoffLocation: {
           type: 'Point',
-          coordinates: [locations.dropoff.lng, locations.dropoff.lat], // [longitude, latitude]
+          coordinates: [locations.dropoff.lng, locations.dropoff.lat],
         },
         estimatedFare: estimatedFare,
       };
@@ -285,43 +296,57 @@ const CustomerRequestRide = () => {
         rideDataForServer.paymentMethod = serverPaymentMethod;
       }
 
-      // Note: 'distance' is removed as it's not in createRideSchema
-      // Note: 'address' for pickup/dropoff is not sent as it's not in coordinateSchema
-
-      console.log('Data being sent to server:', rideDataForServer); // For debugging
+      console.log('Data being sent to server:', rideDataForServer);
 
       const response = await requestRide(rideDataForServer).unwrap();
       console.log('Ride requested successfully:', response);
       setRideStatus('pending');
+      refetchCustomerRides();
     } catch (err) {
       console.error('Failed to request ride:', err);
-      const errorMessage = err.data?.errors // Zod errors often come in an 'errors' array
+      const errorMessage = err.data?.errors
         ? err.data.errors.map(e => `${e.path.join('.')} - ${e.message}`).join(', ')
         : err.data?.message || err.error || 'Failed to request ride. Please try again.';
       setError(errorMessage);
     }
   };
 
-  const handleCancel = () => {
-    console.log('Ride cancelled');
+  const handleCancelNewRide = () => {
+    console.log('New ride request cancelled by user before submission or during pending');
     setRideStatus('cancelled');
-    setDistance(''); // Clear distance on cancel
+    setDistance('');
+  };
+
+  const handleCancelExistingRide = async (rideId) => {
+    if (!rideId) {
+      setError("Cannot cancel ride: Ride ID is missing.");
+      return;
+    }
+    setError('');
+    try {
+      await cancelExistingRideMutation(rideId).unwrap();
+      console.log('Existing ride cancelled successfully');
+      setExistingActiveRide(null);
+      refetchCustomerRides();
+    } catch (err) {
+      console.error('Failed to cancel existing ride:', err);
+      const errorMessage = err.data?.message || err.error || 'Failed to cancel ride. Please try again.';
+      setError(errorMessage);
+    }
   };
 
   const handleChangePaymentMethod = (e) => {
     setPaymentMethod(e.target.value);
   };
 
-  // Conditional returns for auth now come AFTER all hook calls
   if (!authChecked) {
     return <div className="request-ride-loading"><p>Authenticating...</p></div>;
   }
 
-  if (!userId && authChecked) { // authChecked is true, but no userId (hook should have redirected)
+  if (!userId && authChecked) {
     return <div className="request-ride-loading"><p>Session invalid. Redirecting to login...</p></div>;
   }
 
-  // Conditional returns for map loading
   if (loadError) {
     console.error("Google Maps API load error:", loadError);
     return <div className="request-ride-error"><p>Error loading maps. Please check your API key and internet connection, then refresh.</p></div>;
@@ -331,7 +356,53 @@ const CustomerRequestRide = () => {
     return <div className="request-ride-loading"><p>Loading map...</p></div>;
   }
 
-  // If we reach here, auth is checked, userId exists, and map script is loaded.
+  if (isLoadingCustomerRides) {
+    return <div className="request-ride-loading"><p>Loading your ride information...</p></div>;
+  }
+
+  if (customerRidesError) {
+    return (
+      <div className="request-ride-error">
+        <p>Error loading your ride information: {customerRidesError.data?.message || customerRidesError.error}</p>
+        <button onClick={() => refetchCustomerRides()} className="nav-button">Try Again</button>
+      </div>
+    );
+  }
+
+  if (existingActiveRide) {
+    return (
+      <div className="request-ride-container existing-ride-details">
+        <header className="request-ride-header">
+          <div className="request-ride-logo">Uber</div>
+          <div className="request-ride-title">Your Active Ride</div>
+        </header>
+        {error && <p className="error-message" style={{ textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
+        {cancelRideError && <p className="error-message" style={{ textAlign: 'center', marginBottom: '15px' }}>Error cancelling ride: {cancelRideError.data?.message || cancelRideError.error}</p>}
+        <div className="ride-info">
+          <p><strong>Status:</strong> {existingActiveRide.status}</p>
+          {existingActiveRide.pickupLocation?.coordinates && (
+            <p><strong>Pickup:</strong> Approx. lat: {existingActiveRide.pickupLocation.coordinates[1].toFixed(4)}, lng: {existingActiveRide.pickupLocation.coordinates[0].toFixed(4)}</p>
+          )}
+          {existingActiveRide.dropoffLocation?.coordinates && (
+            <p><strong>Dropoff:</strong> Approx. lat: {existingActiveRide.dropoffLocation.coordinates[1].toFixed(4)}, lng: {existingActiveRide.dropoffLocation.coordinates[0].toFixed(4)}</p>
+          )}
+          {existingActiveRide.vehicleType && <p><strong>Vehicle Type:</strong> {existingActiveRide.vehicleType}</p>}
+        </div>
+        <button
+          onClick={() => handleCancelExistingRide(existingActiveRide._id)}
+          className="cancel-button"
+          disabled={isCancellingRide}
+        >
+          {isCancellingRide ? 'Cancelling...' : 'Cancel Ride'}
+        </button>
+        <div className="navigation-buttons" style={{ marginTop: '20px' }}>
+          <button className="nav-button" onClick={() => navigate('/')}>Home</button>
+          <button className="nav-button" onClick={() => navigate('/customer/dashboard')}>Dashboard</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="request-ride-container">
       <header className="request-ride-header">
@@ -346,7 +417,7 @@ const CustomerRequestRide = () => {
         {error && <div className="error-message">{error}</div>}
         {rideStatus === 'pending' ? (
           <div className="pending-message">
-            Your ride is pending. <button onClick={handleCancel} className="cancel-button">Cancel Ride</button>
+            Your ride is pending. <button onClick={handleCancelNewRide} className="cancel-button">Cancel Ride</button>
           </div>
         ) : rideStatus === 'cancelled' ? (
           <div className="cancelled-message">Your ride has been cancelled.</div>
@@ -360,14 +431,12 @@ const CustomerRequestRide = () => {
               </div>
             )}
 
-            {/* Display Estimated Fare */}
             <div className="form-group fare-section">
-              <label className="form-label" htmlFor="fare-details">Estimated Fare</label> {/* Assuming form-label class exists or add styles, added htmlFor */}
+              <label className="form-label" htmlFor="fare-details">Estimated Fare</label>
               {isFareLoading && <p className="fare-loading">Calculating fare...</p>}
               {fareError && (
-                <div className="error-message fare-error-details" id="fare-details"> {/* Changed to div for potentially multi-line content */}
+                <div className="error-message fare-error-details" id="fare-details">
                   <p>Error fetching fare: {fareError.data?.message || fareError.error || 'Could not retrieve fare.'}</p>
-                  {/* More detailed Zod-like error display */}
                   {fareError.data?.errors && Array.isArray(fareError.data.errors) && fareError.data.errors.length > 0 && (
                     <ul style={{ marginTop: '5px', fontSize: '0.9em', paddingLeft: '20px' }}>
                       {fareError.data.errors.map((err, index) => (
@@ -382,7 +451,6 @@ const CustomerRequestRide = () => {
                   <p>Estimated Fare: <strong>${estimatedFare.toFixed(2)}</strong></p>
                 </div>
               )}
-              {/* Message for when fare is not available after an attempt */}
               {!isFareLoading && !fareError && estimatedFare === null && !skipFareQuery && (
                  <p className="fare-not-available" id="fare-details">Estimated fare is currently unavailable. Please ensure all ride details are complete and correct.</p>
               )}

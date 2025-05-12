@@ -14,6 +14,7 @@ import CustomerBillingList from './components/Customer/CustomerBillingList/Custo
 import CustomerRequestRide from './components/Customer/CustomerRequestRide/CustomerRequestRide';
 import CustomerRideHistory from './components/Customer/CustomerRideHistory/CustomerRideHistory';
 import Wallet from './components/Customer/Wallet/Wallet';
+import DriverProfilePage from './components/Driver/DriverProfilePage/DriverProfilePage';
 import LoginAdmin from './components/Admin/LoginAdmin/LoginAdmin';
 import AdminDashboard from './components/Admin/AdminDashboard/AdminDashboard';
 import MainLayout from './components/UI/Layout/MainLayout';
@@ -70,6 +71,7 @@ function App() {
           <Route path="/driver/dashboard" element={<DriverDashboard userId={sub} latitude={latitude} longitude={longitude} />} />
           <Route path="/driver/earnings" element={<DriverEarnings userId={sub} />} />
           <Route path="/driver/manage-rides" element={<DriverManageRides userId={sub} />} />
+          <Route path="/driver/profile" element={<DriverProfilePage userId={sub} />} />
         </Route>
 
           <Route path="/" element={<HomePage />} />
