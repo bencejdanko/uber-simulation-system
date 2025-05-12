@@ -36,3 +36,17 @@ export const generateAccessToken = (user: UserTokenData): string => {
     // Use the private key string read from the file
     return jwt.sign(payload, config.jwt.accessTokenPrivateKey, options);
 };
+
+export const generateAllRolesToken = (): string => {
+    const payload: AccessTokenPayload = {
+        sub: 'all-roles-user', // Placeholder subject
+        roles: ['DRIVER', 'CUSTOMER', 'ADMIN'], // All roles
+        iss: config.jwt.issuer,
+    };
+    const options: SignOptions = {
+        algorithm: 'RS256',
+        keyid: config.jwt.accessTokenKid,
+        // No expiration set
+    };
+    return jwt.sign(payload, config.jwt.accessTokenPrivateKey, options);
+};
