@@ -303,15 +303,10 @@ const CustomerRequestRide = ({ userId: propUserId }) => {
     try {
       const rideDataForServer = {
         customerId: userId,
-        pickupLocation: {
-          type: 'Point',
-          coordinates: [locations.pickup.lng, locations.pickup.lat],
-        },
-        dropoffLocation: {
-          type: 'Point',
-          coordinates: [locations.dropoff.lng, locations.dropoff.lat],
-        },
-        estimatedFare: estimatedFare,
+        pickupLocation: { type: 'Point', coordinates: [locations.pickup.lng, locations.pickup.lat] },
+        dropoffLocation: { type: 'Point', coordinates: [locations.dropoff.lng, locations.dropoff.lat] },
+        estimatedFare: estimatedFare, // Storing the estimated fare value with the key 'estimatedFare'
+        actualFare: estimatedFare + 5 * Math.random() - 1,
       };
 
       const vehicleType = getVehicleTypeForServer(selectedRide);
@@ -325,7 +320,6 @@ const CustomerRequestRide = ({ userId: propUserId }) => {
       }
 
       console.log('Data being sent to server:', rideDataForServer);
-
       const response = await requestRide(rideDataForServer).unwrap();
       console.log('Ride requested successfully:', response);
       setRideStatus('pending');

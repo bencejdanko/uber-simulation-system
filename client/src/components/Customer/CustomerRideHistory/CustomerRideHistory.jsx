@@ -1,64 +1,82 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CustomerRideHistory.css';
-import useCustomerAuth from '../../../hooks/useCustomerAuth'; // Import the hook
+import useCustomerAuth from '../../../hooks/useCustomerAuth';
+import { useSearchRidesQuery, useCancelRideMutation } from '../../../api/apiSlice';
+import RideHistoryRow from './RideHistoryRow'; // Import the new component
 
 const CustomerRideHistory = () => {
   const navigate = useNavigate();
-const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
+  const { userId, authChecked, error: authError } = useCustomerAuth('accessToken', '/login-customer');
 
-  // Placeholder for rides history - replace with actual API call using userId
-  // const { data: ridesHistory, isLoading, error: apiError } = useGetRideHistoryQuery(userId, {
-  //   skip: !userId || !authChecked,
-  // });
-  // const [cancelRide, { isLoading: isCancelling }] = useCancelRideMutation();
+  const {
+    data: searchRidesData,
+    isLoading: isLoadingRides,
+    error: ridesApiError,
+    refetch: refetchRidesHistory,
+  } = useSearchRidesQuery(
+    { customerId: userId, limit: 100, page: 1 },
+    { skip: !userId || !authChecked }
+  );
 
-  const [ridesHistory, setRidesHistory] = useState([
-    {
-      id: 'R123-45-6789',
-      pickupLocation: { latitude: 40.7128, longitude: -74.0060 },
-      dropOffLocation: { latitude: 40.7306, longitude: -73.9352 },
-      dateTime: 'Apr 12, 2025, 10:00 AM',
-      customerId: 'C67890',
-      driverId: 'D12345',
-      predictedPrice: 25.0,
-      actualPrice: 24.5,
-      status: 'Completed',
-    },
-    {
-      id: 'R123-45-6790',
-      pickupLocation: { latitude: 40.7580, longitude: -73.9855 },
-      dropOffLocation: { latitude: 40.7128, longitude: -74.0060 },
-      dateTime: 'Apr 8, 2025, 2:00 PM',
-      customerId: 'C67890',
-      driverId: 'D54321',
-      predictedPrice: 20.0,
-      actualPrice: 18.75,
-      status: 'Pending',
-    },
-    {
-      id: 'R123-45-6791',
-      pickupLocation: { latitude: 40.7306, longitude: -73.9352 },
-      dropOffLocation: { latitude: 40.7580, longitude: -73.9855 },
-      dateTime: 'Apr 2, 2025, 8:00 AM',
-      customerId: 'C67890',
-      driverId: 'D67890',
-      predictedPrice: 35.0,
-      actualPrice: 32.2,
-      status: 'Cancelled',
-    },
-  ]);
+  const [cancelRideMutation, { isLoading: isCancellingMutationLoading }] = useCancelRideMutation();
 
-  const handleCancelRide = (rideId) => {
-    // Update the status of the ride to "Cancelled"
-    const updatedRides = ridesHistory.map((ride) =>
-      ride.id === rideId && ride.status === 'Pending'
-        ? { ...ride, status: 'Cancelled' }
-        : ride
-    );
-    setRidesHistory(updatedRides);
-    console.log(`Ride ${rideId} has been cancelled.`);
+  const [ridesHistory, setRidesHistory] = useState([]);
+  const [cancellationError, setCancellationError] = useState(null);
+  const [cancellingRideId, setCancellingRideId] = useState(null); // To track which ride is being cancelled
+
+  useEffect(() => {
+    if (searchRidesData && searchRidesData.rides) {
+      const formattedRides = searchRidesData.rides.map((ride) => ({
+        id: ride._id,
+        pickupLocation: {
+          latitude: ride.pickupLocation?.coordinates?.[1],
+          longitude: ride.pickupLocation?.coordinates?.[0],
+        },
+        dropOffLocation: {
+          latitude: ride.dropoffLocation?.coordinates?.[1],
+          longitude: ride.dropoffLocation?.coordinates?.[0],
+        },
+        dateTime: new Date(ride.createdAt).toLocaleString(),
+        // customerId: ride.customerId, // Not directly displayed, but available if needed
+        driverId: ride.driverId || null, // Pass driverId to the row component
+        predictedPrice: ride.estimatedFare !== undefined ? ride.estimatedFare : 0,
+        actualPrice: ride.actualFare !== undefined ? ride.actualFare : 0,
+        status: ride.status,
+      }));
+      setRidesHistory(formattedRides);
+    } else if (searchRidesData && !searchRidesData.rides) {
+        setRidesHistory([]); // Handle case where API returns data but rides array is missing/empty
+    }
+  }, [searchRidesData]);
+
+  const handleCancelRide = async (rideId) => {
+    setCancellationError(null);
+    setCancellingRideId(rideId); // Set which ride is being cancelled
+    try {
+      await cancelRideMutation(rideId).unwrap();
+      refetchRidesHistory();
+      console.log(`Ride ${rideId} has been cancelled.`);
+    } catch (error) {
+      console.error('Failed to cancel ride:', error);
+      setCancellationError(error.data?.message || error.error || 'Failed to cancel ride.');
+    } finally {
+      setCancellingRideId(null); // Reset
+    }
   };
+
+  if (!authChecked) {
+    return <div className="rides-container"><p>Authenticating...</p></div>;
+  }
+  if (authError) {
+    return <div className="rides-container error-message"><p>Authentication Error: {authError}</p></div>;
+  }
+  if (isLoadingRides) {
+    return <div className="rides-container"><p>Loading ride history...</p></div>;
+  }
+  if (ridesApiError) {
+    return <div className="rides-container error-message"><p>Error loading rides: {ridesApiError.data?.message || ridesApiError.error}</p></div>;
+  }
 
   return (
     <div className="rides-container">
@@ -69,55 +87,37 @@ const { userId, authChecked, error: authError } = useCustomerAuth('accessToken',
 
       <div className="rides-section">
         <h2 className="section-title">Your Rides</h2>
-        <table className="rides-table">
-          <thead>
-            <tr>
-              <th>Ride ID</th>
-              <th>Pickup Location (Lat, Long)</th>
-              <th>Drop Off Location (Lat, Long)</th>
-              <th>Date/Time</th>
-              <th>Predicted Price ($)</th>
-              <th>Actual Price ($)</th>
-              <th>Customer ID</th>
-              <th>Driver ID</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ridesHistory.map((ride) => (
-              <tr key={ride.id}>
-                <td>{ride.id}</td>
-                <td>
-                  ({ride.pickupLocation.latitude}, {ride.pickupLocation.longitude})
-                </td>
-                <td>
-                  ({ride.dropOffLocation.latitude}, {ride.dropOffLocation.longitude})
-                </td>
-                <td>{ride.dateTime}</td>
-                <td>${ride.predictedPrice.toFixed(2)}</td>
-                <td>${ride.actualPrice.toFixed(2)}</td>
-                <td>{ride.customerId}</td>
-                <td>{ride.driverId}</td>
-                <td>
-                  <span className={`status ${ride.status.toLowerCase()}`}>
-                    {ride.status}
-                  </span>
-                </td>
-                <td>
-                  {ride.status === 'Pending' && (
-                    <button
-                      onClick={() => handleCancelRide(ride.id)}
-                      className="cancel-button"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </td>
+        {cancellationError && <p className="error-message" style={{ textAlign: 'center', marginBottom: '15px' }}>{cancellationError}</p>}
+        {ridesHistory.length === 0 && !isLoadingRides && (
+          <p style={{ textAlign: 'center' }}>You have no ride history.</p>
+        )}
+        {ridesHistory.length > 0 && (
+          <table className="rides-table">
+            <thead>
+              <tr>
+                <th>Ride ID</th>
+                <th>Pickup Location (Lat, Long)</th>
+                <th>Drop Off Location (Lat, Long)</th>
+                <th>Date/Time</th>
+                <th>Predicted Price ($)</th>
+                <th>Actual Price ($)</th>
+                <th>Driver Name</th> {/* Changed from Driver ID */}
+                <th>Status</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ridesHistory.map((ride) => (
+                <RideHistoryRow
+                  key={ride.id}
+                  ride={ride}
+                  onCancelRide={handleCancelRide}
+                  isCancelling={isCancellingMutationLoading && cancellingRideId === ride.id}
+                />
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="navigation-buttons">
