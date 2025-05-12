@@ -1,33 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverEarnings.css';
+import { useGetBillsByDriverQuery } from '../../../api/apiSlice';
 
 const DriverEarnings = () => {
   const navigate = useNavigate();
 
-  const [billingRecords, setBillingRecords] = useState([
-    {
-      id: 'B123-45-6789',
-      rideId: 'R123-45-6789',
-      date: '2025-04-15',
-      amount: '$25.00',
-      paymentStatus: 'Paid',
-    },
-    {
-      id: 'B123-45-6790',
-      rideId: 'R123-45-6790',
-      date: '2025-04-14',
-      amount: '$18.75',
-      paymentStatus: 'Pending',
-    },
-    {
-      id: 'B123-45-6791',
-      rideId: 'R123-45-6791',
-      date: '2025-04-13',
-      amount: '$0.00',
-      paymentStatus: 'Failed',
-    },
-  ]);
+  const [billingRecords, setBillingRecords] = useState([]);
 
   const [filterStatus, setFilterStatus] = useState('');
 
