@@ -101,18 +101,15 @@ export const apiSlice = createApi({
 
     // Pricing Endpoints
     getPricing: builder.query({
-      query: (params) => ({ url: '/pricing/actual', params }),
-    }),
-    getEstimatedFare: builder.query({
-      query: ({ pickupLat, pickupLng, dropoffLat, dropoffLng, vehicleType, requestTime }) => ({
-        url: '/pricing/predict',
-        params: {
-          pickupLatitude: pickupLat,
-          pickupLongitude: pickupLng,
-          dropoffLatitude: dropoffLat,
-          dropoffLongitude: dropoffLng,
-          vehicleType,
-          ...(requestTime && { requestTime }), // Include requestTime if provided
+      query: ({ pickupLocation, dropoffLocation, pickupTimestamp, rideLevel, distance }) => ({
+        url: '/pricing/actual',
+        method: 'POST',
+        body: {
+          pickupLocation,
+          dropoffLocation,
+          pickupTimestamp,
+          rideLevel,
+          distance,
         },
       }),
     }),
@@ -191,7 +188,6 @@ export const {
 
   // Pricing
   useGetPricingQuery,
-  useGetEstimatedFareQuery,
 
   // Auth Hooks
   useLoginDriverMutation,

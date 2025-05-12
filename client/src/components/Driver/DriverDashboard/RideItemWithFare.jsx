@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { 
-  useGetEstimatedFareQuery, 
+  useGetPricingQuery, // Updated from useGetEstimatedFareQuery
   useGetCustomerByIdQuery,
   useUpdateRideMutation 
 } from '../../../api/apiSlice'; 
@@ -23,7 +23,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   // const R = 3958.8; // Radius of the Earth in miles
 
   const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
+  const dLon = toRadians(lon2 - lat1);
 
   lat1 = toRadians(lat1);
   lat2 = toRadians(lat2);
@@ -63,9 +63,22 @@ const RideItemWithFare = ({ ride }) => {
   // Log if the fare query is being skipped
   console.log(`RideItemWithFare - Should skip Fare Query for Ride ID ${ride._id || ride.id}?`, shouldSkipFareQuery);
   
-  const { data: fareData, error: fareError, isLoading: fareLoading } = useGetEstimatedFareQuery(fareQueryParams, {
-    skip: shouldSkipFareQuery,
-  });
+  const { data: fareData, error: fareError, isLoading: fareLoading } = useGetPricingQuery(
+    {
+      pickupLocation: {
+        latitude: ride.pickupLat,
+        longitude: ride.pickupLng,
+      },
+      dropoffLocation: {
+        latitude: ride.dropoffLat,
+        longitude: ride.dropoffLng,
+      },
+      pickupTimestamp: ride.pickupTimestamp,
+      rideLevel: ride.vehicleType,
+      distance: ride.distance,
+    },
+    { skip: shouldSkipFareQuery }
+  );
 
   // Fetch customer details
   const { data: customerData, error: customerError, isLoading: customerLoading } = useGetCustomerByIdQuery(ride.customerId, {

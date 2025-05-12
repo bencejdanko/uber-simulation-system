@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useRequestRideMutation,
-  useGetEstimatedFareQuery,
+  useGetPricingQuery, // Updated from useGetEstimatedFareQuery
   useSearchRidesQuery, // Changed from useGetRidesByCustomerQuery
   useCancelRideMutation,
 } from '../../../api/apiSlice';
@@ -65,6 +65,23 @@ const getVehicleTypeForServer = (frontendRideType) => {
   }
 };
 
+// Helper function to map frontend ride types to backend vehicle types
+const getVehicleTypeForRideLevel = (frontendRideType) => {
+  switch (frontendRideType) {
+    case 'UberX':
+      return 0;
+    case 'Comfort':
+      return 1;
+    case 'XL':
+      return 2; // Or 'LUXURY' depending on your business logic
+    case 'Black':
+      return 3;
+    default:
+      return 0; // Or a default like 'STANDARD' if always required by backend
+    // but schema says optional
+  }
+};
+
 // Helper function to map frontend payment display to backend payment method enum
 const getPaymentMethodForServer = (frontendPaymentMethod) => {
   if (frontendPaymentMethod.toLowerCase().includes('cash')) {
@@ -123,7 +140,7 @@ const CustomerRequestRide = ({ userId: propUserId }) => {
   const [rideStatus, setRideStatus] = useState('');
   const [distance, setDistance] = useState('');
   const [estimatedFare, setEstimatedFare] = useState(null);
-  const [skipFareQuery, setSkipFareQuery] = useState(true);
+  const [skipFareQuery, setSkipFareQuery] = useState(false);
 
   const [map, setMap] = useState(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
@@ -135,13 +152,24 @@ const CustomerRequestRide = ({ userId: propUserId }) => {
     isLoading: isFareLoading,
     error: fareError,
     refetch: refetchFare
-  } = useGetEstimatedFareQuery(
+  } = useGetPricingQuery(
     {
-      pickupLat: locations.pickup?.lat,
-      pickupLng: locations.pickup?.lng,
-      dropoffLat: locations.dropoff?.lat,
-      dropoffLng: locations.dropoff?.lng,
-      vehicleType: vehicleTypeForFare,
+      pickupLocation: {
+        latitude: locations.pickup?.lat,
+        longitude: locations.pickup?.lng,
+      },
+      dropoffLocation: {
+        latitude: locations.dropoff?.lat,
+        longitude: locations.dropoff?.lng,
+      },
+      pickupTimestamp: new Date().toISOString(), // Example timestamp
+      rideLevel: getVehicleTypeForRideLevel(selectedRide),
+      distance: calculateDistance(
+        locations.pickup?.lat,
+        locations.pickup?.lng,
+        locations.dropoff?.lat,
+        locations.dropoff?.lng
+      ),
     },
     { skip: skipFareQuery }
   );
