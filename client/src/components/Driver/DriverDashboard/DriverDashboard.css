@@ -23,3 +23,59 @@
   .nav-button:hover {
     background-color: #333;
   }
+
+/* Styles for the "Requested Rides" section */
+.requested-rides {
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.requested-rides h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.rides-list {
+  list-style-type: none; /* Removes default list bullets */
+  padding: 0;
+  margin: 0;
+  display: flex; /* Optional: if you want a horizontal layout or more control */
+  flex-direction: column; /* Stack items vertically */
+  gap: 1rem; /* Space between ride items */
+}
+
+.ride-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: left; /* Align text to the left within each item */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ride-item p {
+  margin: 0.5rem 0; /* Space out the paragraphs within each item */
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.ride-item p strong {
+  color: #333;
+}
+
+/* Error and loading messages styling (optional, but good for consistency) */
+.dashboard-loading p,
+.dashboard-error p,
+.requested-rides > p { /* For "No rides currently requested." message */
+  font-size: 1rem;
+  color: #777;
+  padding: 1rem;
+}
+
+.error-message { /* General error message styling if used elsewhere */
+  color: #d9534f; /* A reddish color for errors */
+  font-weight: bold;
+}
