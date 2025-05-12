@@ -68,8 +68,28 @@ export const apiSlice = createApi({
     listRides: builder.query({ query: (params) => ({ url: '/rides', params }) }),
     // getRidesByCustomer: builder.query({ query: (customer_id) => `/rides?customer_id=${customer_id}` }),
     // getRidesByDriver: builder.query({ query: (driver_id) => `/rides?driver_id=${driver_id}` }),
-    searchRides: builder.query({ query: (params) => ({ url: '/rides/search', params }) }),
-    cancelRide: builder.mutation({ query: (id) => ({ url: `/rides/${id}`, method: 'DELETE' }) }),
+    searchRides: builder.query({ 
+      query: (params) => ({ url: '/rides/search', params }),
+      providesTags: (result, error, arg) =>
+        result?.rides
+          ? [
+              ...result.rides.map(({ _id }) => ({ type: 'Ride', id: _id })),
+              { type: 'Ride', id: 'LIST_REQUESTED' }, // Specific tag for this search
+            ]
+          : [{ type: 'Ride', id: 'LIST_REQUESTED' }],
+    }),
+    updateRide: builder.mutation({
+      query: ({ id, ...patch }) => ({
+        url: `/rides/${id}`,
+        method: 'PATCH',
+        body: patch,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Ride', id }, { type: 'Ride', id: 'LIST_REQUESTED' }], // Invalidate the list of requested rides
+    }),
+    cancelRide: builder.mutation({ 
+      query: (id) => ({ url: `/rides/${id}`, method: 'DELETE' }),
+      invalidatesTags: (result, error, id) => [{ type: 'Ride', id }, { type: 'Ride', id: 'LIST_REQUESTED' }],
+    }),
 
     // Billing Endpoints
     createBill: builder.mutation({ query: (data) => ({ url: '/bills', method: 'POST', body: data }) }),
@@ -159,6 +179,7 @@ export const {
   useGetRidesByDriverQuery,
   useCancelRideMutation,
   useSearchRidesQuery,
+  useUpdateRideMutation,
 
   // Billing
   useCreateBillMutation,
