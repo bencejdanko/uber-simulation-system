@@ -7,7 +7,8 @@ import {
   updateRideStatusSchema,
   cancelRideSchema,
   findNearbyDriversSchema,
-  searchRidesSchema
+  searchRidesSchema,
+  updateRideSchema
 } from '../schemas/ride.schema';
 
 const router = Router();
@@ -56,6 +57,13 @@ router.post(
   '/:id/cancel',
   validateRequest({ body: cancelRideSchema }),
   rideController.cancelRide
+);
+
+// 🔄 Update ride details (patch method for partial updates)
+router.patch(
+  '/:id',
+  validateRequest({ body: updateRideSchema }),
+  rideController.updateRide
 );
 
 export const rideRoutes = router;
