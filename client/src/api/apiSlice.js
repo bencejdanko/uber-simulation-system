@@ -66,8 +66,8 @@ export const apiSlice = createApi({
     requestRide: builder.mutation({ query: (data) => ({ url: '/rides', method: 'POST', body: data }) }),
     getRideById: builder.query({ query: (id) => `/rides/${id}` }),
     listRides: builder.query({ query: (params) => ({ url: '/rides', params }) }),
-    getRidesByCustomer: builder.query({ query: (customer_id) => `/rides?customer_id=${customer_id}` }),
-    getRidesByDriver: builder.query({ query: (driver_id) => `/rides?driver_id=${driver_id}` }),
+    // getRidesByCustomer: builder.query({ query: (customer_id) => `/rides?customer_id=${customer_id}` }),
+    // getRidesByDriver: builder.query({ query: (driver_id) => `/rides?driver_id=${driver_id}` }),
     searchRides: builder.query({ query: (params) => ({ url: '/rides/search', params }) }),
     cancelRide: builder.mutation({ query: (id) => ({ url: `/rides/${id}`, method: 'DELETE' }) }),
 

@@ -4,7 +4,13 @@ const { Schema } = mongoose;
 // Define the customer schema
 const customerSchema = new Schema(
   {
-    firstName: {
+    customerId: {
+    type: String,
+    required: true,
+    match: /^\d{3}-\d{2}-\d{4}$/,
+    unique: true
+  },
+  firstName: {
       type: String,
       required: true
     },

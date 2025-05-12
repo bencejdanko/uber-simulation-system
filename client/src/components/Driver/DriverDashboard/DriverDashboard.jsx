@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGetDriverByIdQuery, useUpdateDriverProfileMutation, useUpdateDriverLocationMutation, useSearchRidesQuery } from '../../../api/apiSlice';
 import useDriverAuth from '../../../hooks/useDriverAuth'; // Import the driver auth hook
+import RideItemWithFare from './RideItemWithFare'; // Import the new component
 import './DriverDashboard.css';
 
 // const DriverDashboard = ({ userId, latitude, longitude }) => { // userId prop removed
@@ -24,8 +25,8 @@ const DriverDashboard = ({ latitude, longitude }) => {
   const { data: driverData, error: driverApiError, isLoading: driverLoading } = useGetDriverByIdQuery(userId, {
     skip: !userId || !authChecked,
   });
-  // const { data: rides, error: ridesError, isLoading: ridesLoading } = useGetRidesByDriverQuery(userId);
-  const { data: rides, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "REQUESTED" }, {
+  // Fetch rides with status "REQUESTED"
+  const { data: ridesResponse, error: ridesError, isLoading: ridesLoading } = useSearchRidesQuery({ status: "REQUESTED" }, {
     skip: !userId || !authChecked, // Also skip this if not authenticated
   });
   const [updateDriverLocation] = useUpdateDriverLocationMutation();
@@ -155,9 +156,14 @@ const DriverDashboard = ({ latitude, longitude }) => {
     setIsEditing(false);
   };
 
+  // Extract the actual rides array from the response
+  const actualRides = ridesResponse?.rides;
 
-  // Get the most recent ride (assumes first is latest)
-  const latestRide = rides?.[0];
+  // The existing 'latestRide' and 'pickup' logic might be less relevant
+  // if you are displaying a full list of requested rides.
+  // Consider if this specific display is still needed or how it should interact
+  // with the new list. For now, it will show the first ride from the "REQUESTED" list.
+  const latestRide = actualRides?.[0];
   const pickup = latestRide?.pickupLocation;
 
   // Handle logout functionality
@@ -205,11 +211,7 @@ const DriverDashboard = ({ latitude, longitude }) => {
   return (
     <div className="driver-dashboard-container">
       <h1>Welcome to the Driver Dashboard</h1>
-      {/* <p>This is the dashboard for drivers.</p> */} {/* Redundant with title */}
-
-      {/* {isLoading && <p>Loading driver data...</p>} */} {/* Handled above */}
-      {/* {error && <p>Error loading driver data: {error.message}</p>} */} {/* Handled above */}
-      {/* Display driver basic info */}
+      {/* ... existing driver info and edit form ... */}
       {driverData && (
         <div className="driver-info">
           <h2>Driver Information</h2>
@@ -222,6 +224,7 @@ const DriverDashboard = ({ latitude, longitude }) => {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
+              {/* ... existing form inputs ... */}
               <div>
                 <label>First Name:</label>
                 <input
@@ -382,15 +385,23 @@ const DriverDashboard = ({ latitude, longitude }) => {
         </div>
       )}
 
-      {ridesLoading && <p>Loading ride data...</p>}
-      {ridesError && <p>Error loading ride data: {ridesError.message}</p>}
-      {pickup && (
-        <div className="customer-location">
-          <h3>Customer Pickup Location</h3>
-          <p>Latitude: {pickup.latitude}</p>
-          <p>Longitude: {pickup.longitude}</p>
-        </div>
-      )}
+      {/* Section to display "REQUESTED" rides */}
+      <div className="requested-rides">
+        <h2>Requested Rides</h2>
+        {ridesLoading && <p>Loading requested rides...</p>}
+        {ridesError && <p className="error-message">Error loading rides: {ridesError.data?.message || ridesError.error || 'An unknown error occurred'}</p>}
+        {actualRides && actualRides.length > 0 ? (
+          <ul className="rides-list">
+            {actualRides.map((ride) => (
+              <RideItemWithFare key={ride._id || ride.id} ride={ride} />
+            ))}
+          </ul>
+        ) : (
+          !ridesLoading && !ridesError && <p>No rides currently requested.</p>
+        )}
+      </div>
+
+      {/* This section might be redundant or need adjustment if you're listing all rides above */}
 
       {location && (
         <div className="device-location">

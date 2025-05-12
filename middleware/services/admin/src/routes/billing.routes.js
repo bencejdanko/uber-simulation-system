@@ -4,7 +4,7 @@ const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.get('/', auth, getAllBills);
-router.get('/:billing_id', auth, getBillById);
+router.get('/', getAllBills);
+router.get('/:billing_id', getBillById);
 
 module.exports = router;
