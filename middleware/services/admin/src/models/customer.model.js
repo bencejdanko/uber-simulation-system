@@ -1,95 +1,49 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+// Use import/export syntax if using ES modules (common in modern Node.js/frontend builds)
+import mongoose, { Schema } from 'mongoose';
 
-// Define the customer schema
-const customerSchema = new Schema(
-  {
-    customerId: {
-    type: String,
-    required: true,
-    match: /^\d{3}-\d{2}-\d{4}$/,
-    unique: true
+// If using CommonJS (older Node.js style, default in some setups)
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+
+
+// The interfaces are removed as they are TypeScript-only features
+// interface ICustomerAddress { ... }
+// export interface ICustomer extends Document { ... }
+
+// The type parameter is removed as it's a TypeScript-only feature
+// const CustomerSchema = new Schema<ICustomer>({ ... });
+const CustomerSchema = new Schema({
+  // Note: The regex match on _id seems unusual for a typical Mongoose ID,
+  // but the conversion preserves your original schema definition.
+  _id: { type: String, match: /^\d{3}-\d{2}-\d{4}$/, required: true },
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true },
+  phoneNumber: { type: String, required: true },
+  address: {
+    // Mongoose handles nested objects by defining them directly in the schema
+    street: { type: String }, // Added explicit type object for consistency
+    city: { type: String },
+    state: { type: String },
+    // Note: zipCode was optional (?) in interface, but schema defines match regex
+    zipCode: { type: String, match: /^\d{5}(-\d{4})?$/ }
   },
-  firstName: {
-      type: String,
-      required: true
-    },
-    lastName: {
-      type: String,
-      required: true
-    },
-    address: {
-      street: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      zipCode: { type: String, required: true, match: /^\d{5}(?:[-\s]\d{4})?$/ }  // Zip code validation (e.g., 12345 or 12345-6789)
-    },
-    phoneNumber: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String,
-      required: true,
-      match: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/  // Email format validation
-    },
-    creditCardDetails: {
-      last4Digits: {
-        type: String,
-        required: true,
-        match: /^\d{4}$/  // Ensure it is exactly 4 digits
-      },
-      cardType: {
-        type: String,
-        required: true,
-        enum: ['Visa', 'MasterCard', 'American Express', 'Discover']  // Limiting to common card types
-      },
-      expiryMonth: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 12
-      },
-      expiryYear: {
-        type: Number,
-        required: true
-      }
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-      default: 5  // Default rating for customers
-    },
-    reviews: [
-      {
-        reviewId: { type: String },
-        driverId: { type: String },
-        rating: { type: Number, min: 1, max: 5 },
-        comment: { type: String },
-        timestamp: { type: Date, default: Date.now }
-      }
-    ],
-    ridesHistory: [
-      {
-        rideId: { type: String },
-        date: { type: Date },
-        fare: { type: Number }
-      }
-    ],
-    createdAt: {
-      type: Date,
-      default: Date.now
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now
-    }
-  },
-  { timestamps: true }  // Automatically manages createdAt and updatedAt fields
-);
+  rating: { type: Number, default: 5.0 }, // Default value is handled by Mongoose in JS
+  creditCardId: { type: String }, // Added explicit type object
+  createdAt: { type: Date, default: Date.now }, // Manual default
+  updatedAt: { type: Date, default: Date.now } // Manual default
+});
 
-// Create the Customer model
-const Customer = mongoose.model('Customer', customerSchema);
+// Optional: Add timestamps option for automatic `createdAt` and `updatedAt` management
+// This is the standard Mongoose way and often preferred over manual defaults.
+// BillSchema.set('timestamps', true);
+// Or pass as option: new Schema({}, { timestamps: true });
+// If using `timestamps: true`, you would remove the individual `createdAt` and `updatedAt` fields from the schema definition object.
 
-module.exports = Customer;
+
+// The type parameter is removed as it's a TypeScript-only feature
+// export default mongoose.model<ICustomer>('Customer', CustomerSchema);
+export default mongoose.model('Customer', CustomerSchema); // In JS, you just provide the name and schema
+
+// If using CommonJS:
+// module.exports = mongoose.model('Customer', CustomerSchema);

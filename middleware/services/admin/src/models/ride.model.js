@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose, { Schema } from 'mongoose';
 
-const RideSchema = new mongoose.Schema({
+const RideSchema = new Schema({
   customerId: { type: String, required: true },
   driverId: { type: String },
   status: {
@@ -16,14 +16,7 @@ const RideSchema = new mongoose.Schema({
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true,
-      validate: {
-        validator: function(val) {
-          // Longitude between -180 and 180, Latitude between -90 and 90
-          return val[0] >= -180 && val[0] <= 180 && val[1] >= -90 && val[1] <= 90;
-        },
-        message: 'Invalid coordinates'
-      }
+      required: true
     }
   },
   dropoffLocation: {
@@ -34,14 +27,7 @@ const RideSchema = new mongoose.Schema({
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
-      required: true,
-      validate: {
-        validator: function(val) {
-          // Longitude between -180 and 180, Latitude between -90 and 90
-          return val[0] >= -180 && val[0] <= 180 && val[1] >= -90 && val[1] <= 90;
-        },
-        message: 'Invalid coordinates'
-      }
+      required: true
     }
   },
   vehicleType: {
@@ -54,16 +40,15 @@ const RideSchema = new mongoose.Schema({
     enum: ['CASH', 'CREDIT_CARD', 'PAYPAL'],
     required: true
   },
-  estimatedFare: { type: Number, default: 0 },
-  actualFare: { type: Number, default: 0 },
+  estimatedFare: { type: Number },
+  actualFare: { type: Number },
   cancellationReason: { type: String }
 }, {
   timestamps: true
 });
 
-// Create geospatial index for pickup location and dropoff location
+// Create geospatial index for pickup location
 RideSchema.index({ 'pickupLocation': '2dsphere' });
-RideSchema.index({ 'dropoffLocation': '2dsphere' });
 
 // Create compound index for status and driverId
 RideSchema.index({ status: 1, driverId: 1 });
@@ -73,4 +58,4 @@ RideSchema.index({ status: 1, customerId: 1 });
 
 const Ride = mongoose.model('Ride', RideSchema);
 
-module.exports = Ride;  // CommonJS syntax for exporting
+export default Ride;
