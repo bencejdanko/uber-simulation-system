@@ -51,13 +51,13 @@ const GOOGLE_MAP_SCRIPT_ID = 'uber-google-maps-script'; // Define a static ID
 // Helper function to map frontend ride types to backend vehicle types
 const getVehicleTypeForServer = (frontendRideType) => {
   switch (frontendRideType) {
-    case 'UberX':
+    case 'Boom':
       return 'STANDARD';
-    case 'Comfort':
+    case 'Boom X':
       return 'PREMIUM';
-    case 'XL':
+    case 'Freedom':
       return 'PREMIUM'; // Or 'LUXURY' depending on your business logic
-    case 'Black':
+    case 'Freedom Plus':
       return 'LUXURY';
     default:
       return undefined; // Or a default like 'STANDARD' if always required by backend
@@ -68,13 +68,13 @@ const getVehicleTypeForServer = (frontendRideType) => {
 // Helper function to map frontend ride types to backend vehicle types
 const getVehicleTypeForRideLevel = (frontendRideType) => {
   switch (frontendRideType) {
-    case 'UberX':
+    case 'Boom':
       return 0;
-    case 'Comfort':
+    case 'Boom X':
       return 1;
-    case 'XL':
+    case 'Freedom':
       return 2; // Or 'LUXURY' depending on your business logic
-    case 'Black':
+    case 'Freedom Plus':
       return 3;
     default:
       return 0; // Or a default like 'STANDARD' if always required by backend
@@ -123,10 +123,10 @@ const CustomerRequestRide = ({ userId: propUserId }) => {
     dropoff: null
   });
   const [rideOptions] = useState([
-    { type: 'UberX', priceRange: '$16–$20', eta: '5 min', capacity: '4 seats' },
-    { type: 'Comfort', priceRange: '$18–$23', eta: '6 min', capacity: '4 seats' },
-    { type: 'XL', priceRange: '$25–$30', eta: '8 min', capacity: '6 seats' },
-    { type: 'Black', priceRange: '$40–$50', eta: '10 min', capacity: '4 seats' },
+    { type: 'Boom', priceRange: '$16–$20', eta: '5 min', capacity: '4 seats' },
+    { type: 'Boom X', priceRange: '$18–$23', eta: '6 min', capacity: '4 seats' },
+    { type: 'Freedom', priceRange: '$25–$30', eta: '8 min', capacity: '6 seats' },
+    { type: 'Freedom Plus', priceRange: '$40–$50', eta: '10 min', capacity: '4 seats' },
   ]);
   const [selectedRide, setSelectedRide] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Visa •••• 1234');
