@@ -78,7 +78,7 @@ const Navbar = () => {
       <div className="navbar-links">
         <button className="navbar-button" onClick={() => navigate('/customer/request-ride')}>Ride</button>
         <button className="navbar-button" onClick={() => navigate('/driver/dashboard')}>Drive</button>
-        <button className="navbar-button" onClick={() => navigate('/business')}>Business</button>
+        <button className="navbar-button" onClick={() => navigate('/login-admin')}>Business</button>
       </div>
       <div className="navbar-actions">
         {userRole && ( // Only show profile icon if a role is determined (i.e., user is logged in)

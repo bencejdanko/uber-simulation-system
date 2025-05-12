@@ -212,7 +212,7 @@ const DriverManageRides = ({ userId }) => {
                       </button>
                       <button
                         onClick={() => handleRejectRide(ride.id)}
-                        className="reject-button"
+                        className="accept-button"
                         disabled={isUpdating}
                       >
                         Reject
@@ -222,7 +222,7 @@ const DriverManageRides = ({ userId }) => {
                   {ride.status === 'ACCEPTED' && (
                     <button
                       onClick={() => handleUpdateRideStatus(ride.id, 'IN_PROGRESS')}
-                      className="start-button"
+                      className="ride-action-button" // Changed from "start-button"
                       disabled={isUpdating}
                     >
                       Start Ride
@@ -231,7 +231,7 @@ const DriverManageRides = ({ userId }) => {
                   {(ride.status === 'ACCEPTED' || ride.status === 'IN_PROGRESS') && (
                     <button
                       onClick={() => handleCancelRide(ride.id)}
-                      className="cancel-button"
+                      className="ride-action-button" // Changed from "cancel-button"
                       disabled={isUpdating}
                     >
                       Cancel Ride
@@ -259,12 +259,6 @@ const DriverManageRides = ({ userId }) => {
         </button>
         <button className="nav-button" onClick={() => navigate('/driver/dashboard')}>
           Driver Dashboard
-        </button>
-        <button className="nav-button" onClick={() => navigate('/driver/earnings')}>
-          Driver Earnings
-        </button>
-        <button className="nav-button" onClick={() => navigate('/admin/dashboard')}>
-          Admin Dashboard
         </button>
       </div>
     </div>

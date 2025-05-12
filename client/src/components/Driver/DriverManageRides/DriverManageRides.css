@@ -82,22 +82,31 @@
   }
   
   .accept-button {
-    background-color: #10b981;
-    color: #fff;
-    padding: 0.5rem 1rem;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 8px 12px;
+    margin: 5px;
     border: none;
-    border-radius: 0.375rem;
+    border-radius: 4px;
     cursor: pointer;
-    margin-right: 0.5rem;
+  }
+  
+  .accept-button:hover {
+    background-color: #45a049;
   }
   
   .reject-button {
-    background-color: #ef4444;
-    color: #fff;
-    padding: 0.5rem 1rem;
+    background-color: #f44336; /* Red */
+    color: white;
+    padding: 8px 12px;
+    margin: 5px;
     border: none;
-    border-radius: 0.375rem;
+    border-radius: 4px;
     cursor: pointer;
+  }
+  
+  .reject-button:hover {
+    background-color: #da190b;
   }
 
   .navigation-buttons {
@@ -118,4 +127,42 @@
   
   .nav-button:hover {
     background-color: #333;
+  }
+
+  .ride-action-button {
+    padding: 8px 12px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .ride-action-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .ride-action-button:disabled {
+    background-color: #f9f9f9;
+    color: #aaa;
+    cursor: not-allowed;
+    border-color: #ddd;
+  }
+
+  .complete-button {
+    background-color: #000000; 
+    padding: 8px 12px;
+    margin: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .complete-button:hover {
+    background-color: #bce0bb;
   }
