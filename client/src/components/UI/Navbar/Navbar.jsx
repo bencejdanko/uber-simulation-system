@@ -101,7 +101,8 @@ const Navbar = () => {
                   <>
                     {/* Assuming driver profile is part of their dashboard */}
                     <button onClick={() => handleDropdownNavigation('/driver/profile')}>My Profile</button>
-                    <button onClick={() => handleDropdownNavigation('/driver/ride-history')}>History</button>
+                    <button onClick={() => handleDropdownNavigation('/driver/manage-rides')}>Manage Rides</button>
+                    <button onClick={() => handleDropdownNavigation('/driver/earnings')}>Payment</button>
                     {/* Add other driver-specific links here if needed, e.g., Earnings */}
                     {/* <button onClick={() => handleDropdownNavigation('/driver/earnings')}>Earnings</button> */}
                   </>

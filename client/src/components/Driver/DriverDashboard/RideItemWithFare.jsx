@@ -19,17 +19,20 @@ const toRadians = (degrees) => {
 
 // Haversine distance calculation
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) { // Added null check
+    return null;
+  }
   const R = 6371; // Radius of the Earth in kilometers
   // const R = 3958.8; // Radius of the Earth in miles
 
   const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lat1);
+  const dLon = toRadians(lon2 - lon1); 
 
   lat1 = toRadians(lat1);
   lat2 = toRadians(lat2);
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+          Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2); 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
 
@@ -39,46 +42,13 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   // return distanceMiles;
 };
 
+const KM_TO_MILES_CONVERSION_FACTOR = 0.621371;
 
-const RideItemWithFare = ({ ride }) => {
+
+const RideItemWithFare = ({ ride, driverLocation }) => { // Added driverLocation prop
   // Log the incoming ride object
-  console.log(`RideItemWithFare - Ride ID: ${ride._id || ride.id}`, ride);
-
-  const fareQueryParams = {
-    pickupLat: ride.pickupLocation?.coordinates?.[1],
-    pickupLng: ride.pickupLocation?.coordinates?.[0],
-    dropoffLat: ride.dropoffLocation?.coordinates?.[1],
-    dropoffLng: ride.dropoffLocation?.coordinates?.[0],
-    vehicleType: ride.vehicleType,
-    // requestTime: ride.createdAt, // Optional
-  };
-
-  // Log parameters being sent to the fare query
-  console.log(`RideItemWithFare - Fare Query Params for Ride ID ${ride._id || ride.id}:`, fareQueryParams);
-
-  const shouldSkipFareQuery = !fareQueryParams.pickupLat || !fareQueryParams.pickupLng || 
-                             !fareQueryParams.dropoffLat || !fareQueryParams.dropoffLng || 
-                             !fareQueryParams.vehicleType;
-
-  // Log if the fare query is being skipped
-  console.log(`RideItemWithFare - Should skip Fare Query for Ride ID ${ride._id || ride.id}?`, shouldSkipFareQuery);
-  
-  const { data: fareData, error: fareError, isLoading: fareLoading } = useGetPricingQuery(
-    {
-      pickupLocation: {
-        latitude: ride.pickupLat,
-        longitude: ride.pickupLng,
-      },
-      dropoffLocation: {
-        latitude: ride.dropoffLat,
-        longitude: ride.dropoffLng,
-      },
-      pickupTimestamp: ride.pickupTimestamp,
-      rideLevel: ride.vehicleType,
-      distance: ride.distance,
-    },
-    { skip: shouldSkipFareQuery }
-  );
+  // console.log(`RideItemWithFare - Ride ID: ${ride._id || ride.id}`, ride);
+  // console.log(`RideItemWithFare - Driver Location:`, driverLocation);
 
   // Fetch customer details
   const { data: customerData, error: customerError, isLoading: customerLoading } = useGetCustomerByIdQuery(ride.customerId, {
@@ -93,19 +63,92 @@ const RideItemWithFare = ({ ride }) => {
   const [pickupAddressError, setPickupAddressError] = useState(null);
   const [dropoffAddressError, setDropoffAddressError] = useState(null);
 
-  // Calculate distance using useMemo to avoid recalculation on every render
-  const rideDistance = useMemo(() => {
+  // Calculate ride distance in KM (for the pricing API) and in MI (for display)
+  const { rideDistanceKm, rideDistanceMi } = useMemo(() => {
     if (ride.pickupLocation?.coordinates && ride.dropoffLocation?.coordinates) {
       const [pickupLng, pickupLat] = ride.pickupLocation.coordinates;
       const [dropoffLng, dropoffLat] = ride.dropoffLocation.coordinates;
+      
+      // console.log(`Calculating ride distance for Ride ID: ${ride._id}. Pickup: [${pickupLng}, ${pickupLat}], Dropoff: [${dropoffLng}, ${dropoffLat}]`);
+
       const distKm = calculateDistance(pickupLat, pickupLng, dropoffLat, dropoffLng);
-      // You can format it or convert to miles here if needed
-      // Example: return `${distKm.toFixed(2)} km (${(distKm * 0.621371).toFixed(2)} mi)`;
-      const distMi = distKm * 0.621371; // Convert kilometers to miles
-      return `${distMi.toFixed(2)} mi`; 
+      if (distKm === null) return { rideDistanceKm: null, rideDistanceMi: 'N/A' };
+      
+      const distMi = distKm * KM_TO_MILES_CONVERSION_FACTOR; 
+      return { rideDistanceKm: distKm, rideDistanceMi: `${distMi.toFixed(2)} mi` };
     }
-    return 'N/A';
+    return { rideDistanceKm: null, rideDistanceMi: 'N/A' };
   }, [ride.pickupLocation?.coordinates, ride.dropoffLocation?.coordinates]);
+
+  // Prepare parameters for useGetPricingQuery
+  const fareQueryParams = useMemo(() => {
+    if (
+      ride.pickupLocation &&
+      ride.dropoffLocation &&
+      ride.createdAt && // Assuming createdAt is the pickupTimestamp
+      ride.vehicleType &&
+      rideDistanceKm !== null
+    ) {
+      return {
+        pickupLocation: ride.pickupLocation, // Already { type: 'Point', coordinates: [lng, lat] }
+        dropoffLocation: ride.dropoffLocation, // Already { type: 'Point', coordinates: [lng, lat] }
+        pickupTimestamp: ride.createdAt, // Or new Date().toISOString() for a new request
+        rideLevel: ride.vehicleType,
+        distance: rideDistanceKm, // Distance in KM
+      };
+    }
+    return null;
+  }, [
+    ride.pickupLocation,
+    ride.dropoffLocation,
+    ride.createdAt,
+    ride.vehicleType,
+    rideDistanceKm,
+  ]);
+
+  const shouldSkipFareQuery = !fareQueryParams;
+
+  // console.log(`RideItemWithFare - Fare Query Params for Ride ID ${ride._id || ride.id}: `, fareQueryParams);
+  // console.log(`RideItemWithFare - Should skip Fare Query for Ride ID ${ride._id || ride.id}?`, shouldSkipFareQuery);
+
+
+  const { 
+    data: fetchedFareData, 
+    error: fetchedFareError, 
+    isLoading: isFetchingFare 
+  } = useGetPricingQuery(fareQueryParams, {
+    skip: shouldSkipFareQuery,
+  });
+  
+  // console.log(`RideItemWithFare - Fetched Fare Query Result for Ride ID ${ride._id || ride.id}: `, { fetchedFareData, fetchedFareError, isFetchingFare });
+
+
+  // Calculate distance from driver to pickup location
+  const distanceToPickup = useMemo(() => {
+    if (driverLocation && ride.pickupLocation?.coordinates) {
+      const pickupLat = ride.pickupLocation.coordinates[1];
+      const pickupLng = ride.pickupLocation.coordinates[0];
+      
+      if (typeof pickupLat === 'number' && typeof pickupLng === 'number' &&
+          typeof driverLocation.latitude === 'number' && typeof driverLocation.longitude === 'number') {
+        
+        const distKm = calculateDistance(
+          driverLocation.latitude,
+          driverLocation.longitude,
+          pickupLat,
+          pickupLng
+        );
+
+        if (distKm !== null) {
+          const distMi = distKm * KM_TO_MILES_CONVERSION_FACTOR;
+          return `${distMi.toFixed(2)} mi away`;
+        }
+        return "Distance unavailable";
+      }
+      return "Invalid location data";
+    }
+    return "Driver location N/A";
+  }, [driverLocation, ride.pickupLocation?.coordinates]);
 
   // Helper function to fetch address from coordinates
   const getAddressFromCoordinates = async (lat, lng) => {
@@ -197,8 +240,7 @@ const RideItemWithFare = ({ ride }) => {
   };
 
   // Log the results from the queries
-  console.log(`RideItemWithFare - Fare Query Result for Ride ID ${ride._id || ride.id}:`, { fareData, fareError, fareLoading });
-  console.log(`RideItemWithFare - Customer Query Result for Ride ID ${ride._id || ride.id} (Customer ID: ${ride.customerId}):`, { customerData, customerError, customerLoading });
+  // console.log(`RideItemWithFare - Customer Query Result for Ride ID ${ride._id || ride.id} (Customer ID: ${ride.customerId}):`, { customerData, customerError, customerLoading });
 
 
   return (
@@ -214,13 +256,14 @@ const RideItemWithFare = ({ ride }) => {
         <strong>Dropoff:</strong> {dropoffAddressError ? <span style={{color: 'red'}}>{dropoffAddressError}</span> : dropoffAddress}
       </p>
       <p>
-        <strong>Distance:</strong> {rideDistance}
+        <strong>Ride Distance:</strong> {rideDistanceMi} {/* Display distance in miles */}
       </p>
       <p>
-        <strong>Estimated Fare:</strong> 
-        {fareLoading && 'Loading fare...'}
-        {fareError && `Error: ${fareError.data?.message || fareError.error || 'Could not fetch fare'}`}
-        {fareData && fareData.estimatedFare !== undefined ? `$${fareData.estimatedFare.toFixed(2)}` : (!fareLoading && !fareError ? 'N/A' : '')}
+        <strong>Distance to Pickup:</strong> {distanceToPickup}
+      </p>
+      <p>
+        <strong>Estimated Fare: </strong> 
+        {ride.estimatedFare !== undefined && ride.estimatedFare !== null ? `$${Number(ride.estimatedFare).toFixed(2)}` : 'N/A'}
       </p>
       <button 
         onClick={handleAcceptRide} 
