@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './LoginAdmin.css';
 
-// API base URL - pointing to the simple auth server
-const API_BASE_URL = 'http://localhost:8000';
+// API base URL - pointing to our mock auth server
+const API_BASE_URL = 'http://localhost:3001';
 
 const LoginAdmin = () => {
   const [email, setEmail] = useState('admin@uber.com');
@@ -26,7 +26,7 @@ const LoginAdmin = () => {
     try {
       console.log('Attempting login with:', { email, password });
       
-      // Make login request directly to the simple auth server
+      // Make login request directly to the mock auth server
       const response = await axios.post(`${API_BASE_URL}/api/v1/auth/admin/login`, {
         email,
         password

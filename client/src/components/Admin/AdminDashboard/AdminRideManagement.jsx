@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminDriverForm.css';
 
+const API_BASE_URL = 'http://localhost:3001/api/v1';
+
 const AdminRideManagement = () => {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,22 +19,16 @@ const AdminRideManagement = () => {
   // Fetch rides from API
   const fetchRides = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await axios.get('/api/v1/admin/rides', {
-        params: {
-          status: filterStatus !== 'ALL' ? filterStatus : undefined,
-          startDate: dateRange.startDate || undefined,
-          endDate: dateRange.endDate || undefined
-        }
-      });
-      
-      if (response.data && response.data.data) {
-        setRides(response.data.data);
+      const response = await axios.get(`${API_BASE_URL}/admin/rides`);
+      if (response.data && response.data.success) {
+        setRides(response.data.data || []);
+      } else {
+        setError('Failed to fetch rides');
       }
-    } catch (err) {
-      console.error('Error fetching rides:', err);
-      setError('Failed to fetch rides. Please try again.');
+    } catch (error) {
+      console.error('Error fetching rides:', error);
+      setError('Error fetching rides. Please try again.');
     } finally {
       setLoading(false);
     }

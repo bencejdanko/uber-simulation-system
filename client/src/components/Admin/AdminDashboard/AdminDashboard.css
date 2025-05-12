@@ -406,3 +406,43 @@
 .status-unknown {
   color: #777;
 }
+
+/* Refresh Controls for Overview Tab */
+.admin-overview-container .refresh-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 4px;
+}
+
+.admin-overview-container .last-updated {
+  margin-right: auto;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.admin-overview-container .refresh-select {
+  margin-right: 10px;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+}
+
+.admin-overview-container .refresh-button {
+  background-color: #f0f2f5;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-overview-container .refresh-button:hover {
+  background-color: #e2e6ea;
+}

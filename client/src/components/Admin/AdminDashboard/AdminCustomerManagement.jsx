@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AdminDriverForm.css';
 
+const API_BASE_URL = 'http://localhost:3001/api/v1';
+
 const AdminCustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,21 +16,22 @@ const AdminCustomerManagement = () => {
     lastName: '',
     email: '',
     phone: '',
-    status: 'ACTIVE'
+    status: 'active'
   });
 
   // Fetch customers from API
   const fetchCustomers = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const response = await axios.get('/api/v1/admin/customers');
-      if (response.data && response.data.data) {
-        setCustomers(response.data.data);
+      const response = await axios.get(`${API_BASE_URL}/admin/customers`);
+      if (response.data && response.data.success) {
+        setCustomers(response.data.data || []);
+      } else {
+        setError('Failed to fetch customers');
       }
-    } catch (err) {
-      console.error('Error fetching customers:', err);
-      setError('Failed to fetch customers. Please try again.');
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      setError('Error fetching customers. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,7 @@ const AdminCustomerManagement = () => {
       lastName: '',
       email: '',
       phone: '',
-      status: 'ACTIVE'
+      status: 'active'
     });
     setShowForm(true);
   };
@@ -96,21 +99,35 @@ const AdminCustomerManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     try {
+      console.log('Form data:', formData);
+      
       if (selectedCustomer) {
         // Update existing customer
-        await axios.put(`/api/v1/admin/customers/${selectedCustomer.id}`, formData);
+        const response = await axios.put(`${API_BASE_URL}/admin/customers/${selectedCustomer._id}`, formData);
+        if (response.data && response.data.success) {
+          setShowForm(false);
+          fetchCustomers();
+        } else {
+          setError(response.data?.error || 'Failed to update customer');
+          setLoading(false);
+        }
       } else {
         // Add new customer
-        await axios.post('/api/v1/admin/customers', formData);
+        const response = await axios.post(`${API_BASE_URL}/admin/customers`, formData);
+        if (response.data && response.data.success) {
+          setShowForm(false);
+          fetchCustomers();
+        } else {
+          setError(response.data?.error || 'Failed to add customer');
+          setLoading(false);
+        }
       }
-      
-      setShowForm(false);
-      fetchCustomers();
     } catch (err) {
       console.error('Error saving customer:', err);
-      setError('Failed to save customer. Please try again.');
+      setError(err.response?.data?.error || 'Failed to save customer. Please try again.');
       setLoading(false);
     }
   };
@@ -178,9 +195,9 @@ const AdminCustomerManagement = () => {
             value={formData.status}
             onChange={handleInputChange}
           >
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="PENDING">Pending</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="suspended">Suspended</option>
           </select>
         </div>
         
@@ -229,21 +246,17 @@ const AdminCustomerManagement = () => {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
-                <th>Rides</th>
-                <th>Total Spent</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {customers.map(customer => (
-                <tr key={customer.id}>
-                  <td>{customer.id}</td>
+                <tr key={customer._id}>
+                  <td>{customer._id}</td>
                   <td>{`${customer.firstName} ${customer.lastName}`}</td>
                   <td>{customer.email}</td>
                   <td>{customer.phone}</td>
-                  <td>{customer.ridesCount || 0}</td>
-                  <td>${(customer.totalSpent || 0).toFixed(2)}</td>
                   <td>
                     <span className={`status-badge ${customer.status.toLowerCase()}`}>
                       {customer.status}
