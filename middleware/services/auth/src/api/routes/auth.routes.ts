@@ -15,4 +15,7 @@ router.post('/register/driver', validate(RegisterDriverSchema), authController.r
 // Login route
 router.post('/login', validate(LoginSchema), authController.login);
 
+// Admin login route
+router.post('/admin/login', authController.adminLogin);
+
 export default router;

@@ -1,0 +1,8 @@
+[
+  { "city": "New York", "value": 1245 },
+  { "city": "Los Angeles", "value": 862 },
+  { "city": "Chicago", "value": 573 },
+  { "city": "Houston", "value": 421 },
+  { "city": "Phoenix", "value": 312 },
+  { "city": "Philadelphia", "value": 245 }
+] 
