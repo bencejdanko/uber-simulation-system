@@ -4,7 +4,7 @@ import { getAccessToken } from '../utils/getAccessToken';
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:8000/api/v1', // Base URL for all relative paths
+    baseUrl: process.env.REACT_APP_API_BASE_URL + 'api/v1', // Base URL for all relative paths
     prepareHeaders: (headers, { getState }) => {
       const token = getAccessToken();
       if (token) {
