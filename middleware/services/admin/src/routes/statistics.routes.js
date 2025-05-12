@@ -6,6 +6,6 @@ const auth = require('../middlewares/auth');
 const router = express.Router();
 
 // Example route for statistics
-router.get('/', auth, getStatistics);
+router.get('/', getStatistics);
 
 module.exports = router;
